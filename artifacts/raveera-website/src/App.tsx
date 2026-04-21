@@ -20,7 +20,7 @@ const T = {
   en: {
     nav: { cases: "Cases", about: "About Us", services: "Services", team: "Team", contact: "Contact" },
     hero: {
-      badge: "Rave'era Group  Concerts & Marketing Agency",
+      badge: "Rave'era Group · Concerts & Marketing Agency",
       line1: "We Build Events",
       line2: "That Sell",
       sub: "Conferences · Festivals · Corporate Events",
@@ -137,7 +137,7 @@ const T = {
     },
     about: {
       idx: "02", sub: "Agency", title: "About Us",
-      headline: "Rave'era Group  Concerts & Marketing Agency. Full-cycle event partner.",
+      headline: "Rave'era Group · Concerts & Marketing Agency. Full-cycle event partner.",
       p1: "An event company from Kyiv on the market since 2012, with over 10 years of hands-on experience in organizing large-scale entertainment, cultural, and social events.",
       p2: "The company started with large student and club events and over the years has executed hundreds of events with leading venues across Kyiv — regular parties, afterparties, festivals, concerts, and large-scale social projects.",
       p3: "Key projects: StudFest, StudMiss, Holi Fest, MusicBox Fest, charity balls for Kyiv City Administration.",
@@ -224,7 +224,7 @@ const T = {
       desc: "Professionals who create unforgettable events.",
       members: [
         { name: "Bohdan Chekan", role: "CEO & Co-Founder", desc: "Marketing, brand, client acquisition", img: "/images/team-bogdan.jpg" },
-        { name: "Yaroslav", role: "CMO & IT & Co-Founder", desc: "Strategy, IT systems, client coordination, technical production, marketing", img: "/images/team-yaroslav.jpg" },
+        { name: "Yaroslav", role: "CMO, IT Lead & Co-Founder", desc: "Strategy, IT systems, client coordination, technical production, marketing", img: "/images/team-yaroslav.jpg" },
       ],
     },
     contact: {
@@ -260,7 +260,7 @@ const T = {
   uk: {
     nav: { cases: "Кейси", about: "Про нас", services: "Послуги", team: "Команда", contact: "Контакт" },
     hero: {
-      badge: "Rave'era Group  Concerts & Marketing Agency",
+      badge: "Rave'era Group · Concerts & Marketing Agency",
       line1: "Ми Будуємо Події,",
       line2: "Які Продають",
       sub: "Конференції · Фестивалі · Корпоративні заходи",
@@ -377,7 +377,7 @@ const T = {
     },
     about: {
       idx: "02", sub: "Агентство", title: "Про Нас",
-      headline: "Rave'era Group  Concerts & Marketing Agency. Повноциклове івент-партнерство.",
+      headline: "Rave'era Group · Concerts & Marketing Agency. Повноциклове івент-партнерство.",
       p1: "Івент-компанія з Києва на ринку з 2012 року, з понад 10 роками практичного досвіду в організації масштабних розважальних, культурних і соціальних подій.",
       p2: "Компанія почала з великих студентських і клубних заходів, а з роками провела сотні подій у партнерстві з провідними майданчиками Києва — вечірки, afterparty, фестивалі, концерти та масштабні соціальні проєкти.",
       p3: "Ключові проєкти: StudFest, StudMiss, Holi Fest, MusicBox Fest, благодійні бали для КМДА.",
@@ -455,7 +455,7 @@ const T = {
         {
           title: "Активності та Wow-ефекти",
           desc: "Ми не просто організовуємо події — ми створюємо емоції.",
-          tags: ["Інтерактивні зони", "Геймифікація", "Конкурси"],
+          tags: ["Інтерактивні зони", "Гейміфікація", "Конкурси"],
         },
       ],
     },
@@ -464,7 +464,7 @@ const T = {
       desc: "Професіонали, що створюють незабутні події.",
       members: [
         { name: "Богдан Чекан", role: "CEO та Співзасновник", desc: "Маркетинг, бренд, залучення клієнтів", img: "/images/team-bogdan.jpg" },
-        { name: "Ярослав", role: "CMO & IT та Співзасновник", desc: "Стратегія, IT-системи, координація клієнтів, технічний продакшн, маркетинг", img: "/images/team-yaroslav.jpg" },
+        { name: "Ярослав", role: "CMO, IT Lead та Співзасновник", desc: "Стратегія, IT-системи, координація клієнтів, технічний продакшн, маркетинг", img: "/images/team-yaroslav.jpg" },
       ],
     },
     contact: {
@@ -558,6 +558,8 @@ export default function App() {
 
   const { scrollY, scrollYProgress } = useScroll();
   useEffect(() => scrollY.on("change", (v) => setNavScrolled(v > 50)), [scrollY]);
+
+  useEffect(() => { document.documentElement.lang = lang === "uk" ? "uk" : "en"; }, [lang]);
 
   useEffect(() => {
     const ids = ["hero", "cases", "about", "ravepass", "services", "team", "contact"];
