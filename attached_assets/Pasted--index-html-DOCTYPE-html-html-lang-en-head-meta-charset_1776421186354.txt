@@ -1,0 +1,164 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Rave'era Group — Event Agency & Conference Organization" />
+  <title>Rave'era Group | Event Agency</title>
+  <script src="[cdn.tailwindcss.com](https://cdn.tailwindcss.com/3.4.1)"></script>
+  <script src="[unpkg.com](https://unpkg.com/alpinejs)" defer></script>
+  <style>
+    body { scroll-behavior: smooth; }
+    html { background-color: #000; color: white; font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-black text-white">
+
+<!-- HEADER -->
+<header class="p-6 flex flex-col md:flex-row justify-between items-center border-b border-white/10">
+  <div class="text-center md:text-left">
+    <h1 class="text-3xl font-bold tracking-tight">EVENT AGENCY</h1>
+    <p class="text-gray-400 mt-2">900 West 20th Street, Suite 1001<br>Baltimore, MD 21202</p>
+  </div>
+  <nav class="mt-4 md:mt-0 space-x-6 text-gray-300">
+    <a href="#cases" class="hover:text-green-400 transition">Cases</a>
+    <a href="#about" class="hover:text-green-400 transition">About</a>
+    <a href="#services" class="hover:text-green-400 transition">Services</a>
+    <a href="#team" class="hover:text-green-400 transition">Team</a>
+    <a href="#contact" class="hover:text-green-400 transition">Contact</a>
+  </nav>
+</header>
+
+<!-- OUR CASES -->
+<section id="cases" class="py-20 container mx-auto px-6">
+  <h2 class="text-4xl font-bold mb-10 text-center text-green-400">OUR CASES</h2>
+  <div class="grid md:grid-cols-3 gap-6">
+    <img src="img-0.jpeg" alt="Case 1" class="rounded-lg hover:shadow-[0_0_15px_#00FF88] transition">
+    <img src="img-1.jpeg" alt="Case 2" class="rounded-lg hover:shadow-[0_0_15px_#00FF88] transition">
+    <img src="img-2.jpeg" alt="Case 3" class="rounded-lg hover:shadow-[0_0_15px_#00FF88] transition">
+  </div>
+</section>
+
+<!-- ABOUT US -->
+<section id="about" class="py-20 bg-[#111]">
+  <div class="container mx-auto px-6">
+    <h2 class="text-4xl font-bold mb-10 text-green-400 text-center">ABOUT US</h2>
+    <p class="text-gray-300 max-w-3xl mx-auto text-center mb-12">
+      Evans is a global event management agency specializing in conferences, corporate gatherings, and creative experiences.
+      We design and deliver unforgettable live and virtual events for top-tier clients worldwide.
+    </p>
+    <div class="flex flex-wrap justify-center gap-6">
+      <img src="img-3.jpeg" class="w-64 rounded-lg hover:opacity-90 transition" alt="">
+      <img src="img-4.jpeg" class="w-64 rounded-lg hover:opacity-90 transition" alt="">
+    </div>
+  </div>
+</section>
+
+<!-- TRUSTED BY -->
+<section class="py-20 bg-black">
+  <h2 class="text-4xl font-bold mb-10 text-center text-green-400">TRUSTED BY</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 px-10">
+    <img src="img-5.jpeg" alt="" class="opacity-70 hover:opacity-100 transition">
+    <img src="img-6.jpeg" alt="" class="opacity-70 hover:opacity-100 transition">
+    <img src="img-7.jpeg" alt="" class="opacity-70 hover:opacity-100 transition">
+  </div>
+</section>
+
+<!-- OUR SERVICES -->
+<section id="services" class="py-20 bg-[#111]">
+  <div class="container mx-auto px-6">
+    <h2 class="text-4xl font-bold mb-12 text-center text-green-400">OUR SERVICES</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="p-6 bg-[#0c0c0c] rounded-lg border border-white/10 hover:shadow-[0_0_15px_#00FF88] transition">
+        <h3 class="text-2xl font-semibold text-green-400 mb-4">Concept & Creativity</h3>
+        <ul class="text-gray-300 space-y-2">
+          <li>Creative concept development</li>
+          <li>Art direction & scenography</li>
+          <li>Brand activation planning</li>
+        </ul>
+      </div>
+      <div class="p-6 bg-[#0c0c0c] rounded-lg border border-white/10 hover:shadow-[0_0_15px_#00FF88] transition">
+        <h3 class="text-2xl font-semibold text-green-400 mb-4">Event Production</h3>
+        <ul class="text-gray-300 space-y-2">
+          <li>Full event logistics</li>
+          <li>Stage design & setup</li>
+          <li>On-site coordination</li>
+        </ul>
+      </div>
+      <div class="p-6 bg-[#0c0c0c] rounded-lg border border-white/10 hover:shadow-[0_0_15px_#00FF88] transition">
+        <h3 class="text-2xl font-semibold text-green-400 mb-4">Tech & Streaming</h3>
+        <ul class="text-gray-300 space-y-2">
+          <li>Live streaming setup</li>
+          <li>Virtual platforms</li>
+          <li>Hybrid events</li>
+        </ul>
+      </div>
+      <div class="p-6 bg-[#0c0c0c] rounded-lg border border-white/10 hover:shadow-[0_0_15px_#00FF88] transition">
+        <h3 class="text-2xl font-semibold text-green-400 mb-4">Marketing & Media</h3>
+        <ul class="text-gray-300 space-y-2">
+          <li>Social media campaigns</li>
+          <li>PR management</li>
+          <li>Content creation</li>
+        </ul>
+      </div>
+      <div class="p-6 bg-[#0c0c0c] rounded-lg border border-white/10 hover:shadow-[0_0_15px_#00FF88] transition">
+        <h3 class="text-2xl font-semibold text-green-400 mb-4">Sponsorship & Partners</h3>
+        <ul class="text-gray-300 space-y-2">
+          <li>Brand partnerships</li>
+          <li>Investor outreach</li>
+          <li>Strategic collaborations</li>
+        </ul>
+      </div>
+      <div class="p-6 bg-[#0c0c0c] rounded-lg border border-white/10 hover:shadow-[0_0_15px_#00FF88] transition">
+        <h3 class="text-2xl font-semibold text-green-400 mb-4">Analytics & Reporting</h3>
+        <ul class="text-gray-300 space-y-2">
+          <li>Performance metrics</li>
+          <li>ROI analysis</li>
+          <li>Post-event debriefs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OUR TEAM -->
+<section id="team" class="py-20 bg-black">
+  <h2 class="text-4xl font-bold mb-10 text-center text-green-400">OUR TEAM</h2>
+  <div class="container mx-auto px-6 grid sm:grid-cols-2 md:grid-cols-3 gap-8">
+    <div class="p-4 text-center">
+      <img src="img-10.jpeg" alt="" class="w-40 h-40 rounded-full mx-auto mb-4 object-cover">
+      <h4 class="text-xl font-semibold">Gregory Peterson</h4>
+      <p class="text-gray-400">Head of Production</p>
+    </div>
+    <div class="p-4 text-center">
+      <img src="img-11.jpeg" alt="" class="w-40 h-40 rounded-full mx-auto mb-4 object-cover">
+      <h4 class="text-xl font-semibold">Melissa Andrews</h4>
+      <p class="text-gray-400">Creative Director</p>
+    </div>
+    <div class="p-4 text-center">
+      <img src="img-9.jpeg" alt="" class="w-40 h-40 rounded-full mx-auto mb-4 object-cover">
+      <h4 class="text-xl font-semibold">Michael Barnes</h4>
+      <p class="text-gray-400">Event Coordinator</p>
+    </div>
+  </div>
+</section>
+
+<!-- READY TO COLLABORATE -->
+<section id="contact" class="py-20 bg-[#111] text-center">
+  <h2 class="text-4xl font-bold mb-6 text-green-400">READY TO COLLABORATE</h2>
+  <p class="text-gray-400 mb-10">Let’s create unforgettable live and virtual events together.</p>
+  <a href="mailto:contact@evans.com"
+     class="inline-block border border-green-400 px-8 py-3 rounded-full text-green-400 font-semibold hover:bg-green-400 hover:text-black transition shadow-[0_0_10px_#00FF88]">
+     CONTACT US
+  </a>
+  <p class="mt-8 text-gray-500 text-sm">www.evans.com</p>
+</section>
+
+<!-- FOOTER -->
+<footer class="py-6 border-t border-white/10 text-center text-gray-500 text-sm">
+  © 2024 Rave’era Group. All rights reserved.
+</footer>
+
+</body>
+</html>
