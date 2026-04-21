@@ -526,7 +526,14 @@ const G = "#00FF88";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function BrandLine({ className = "" }: { className?: string }) {
+function BrandLine({ className = "", compact = false }: { className?: string; compact?: boolean }) {
+  if (compact) {
+    return (
+      <span className={className}>
+        Rave<span style={{ color: G }}>'</span>era Group
+      </span>
+    );
+  }
   return (
     <span className={className}>
       Rave<span style={{ color: G }}>'</span>era Group{" "}
@@ -603,9 +610,10 @@ export default function App() {
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/[0.06]" : ""}`}
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
-          <button onClick={() => scrollTo("hero")} className="text-sm md:text-base font-black tracking-tight uppercase leading-none text-white hover:opacity-80 transition-opacity whitespace-nowrap">
-            <BrandLine />
+        <div className="max-w-7xl 2xl:max-w-[1500px] mx-auto px-4 sm:px-6 md:px-10 lg:px-12 h-14 sm:h-16 md:h-20 flex items-center justify-between gap-3">
+          <button onClick={() => scrollTo("hero")} className="text-xs sm:text-sm md:text-base font-black tracking-tight uppercase leading-none text-white hover:opacity-80 transition-opacity whitespace-nowrap min-w-0 truncate">
+            <span className="lg:hidden"><BrandLine compact /></span>
+            <span className="hidden lg:inline"><BrandLine /></span>
           </button>
 
           {/* Desktop nav */}
