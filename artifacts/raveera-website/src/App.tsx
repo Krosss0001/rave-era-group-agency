@@ -20,7 +20,7 @@ const T = {
   en: {
     nav: { cases: "Cases", about: "About Us", services: "Services", team: "Team", contact: "Contact" },
     hero: {
-      badge: "Rave'era Group · Concerts & Marketing Agency",
+      badge: "Rave'era Group  Concerts & Marketing Agency",
       line1: "We Build Events",
       line2: "That Sell",
       sub: "Conferences · Festivals · Corporate Events",
@@ -47,6 +47,7 @@ const T = {
           date: "May 12, 2026",
           meta: "Flagship hybrid SUV · ComAutoTrans 2026",
           img: "/images/case-zeekr.jpg",
+          fit: "cover" as const,
           desc: "Official Ukrainian launch of the flagship Zeekr 9X hybrid SUV — a full Online-to-Offline (O2O) campaign tailored to the scale and innovation of the Zeekr brand.",
           bullets: [
             "Comprehensive Online-to-Offline marketing strategy",
@@ -59,26 +60,12 @@ const T = {
           ],
         },
         {
-          title: "NCrypto Conference 2025",
-          category: "Conference · Web3",
-          date: "April 27, 2025",
-          meta: "2,500+ attendees · 100+ expo companies",
-          img: "/images/case-1.png",
-          desc: "The main meeting point for Ukraine's crypto and Web3 community — uniting market leaders, startups, investors, and media in one space.",
-          bullets: [
-            "End-to-end event promotion with B2B & B2C sales:",
-            "Strategic partnerships and sponsor relations",
-            "Marketing campaign and sales management",
-            "Venue security and intelligent access logistics",
-            "Turnkey production of an exclusive Afterparty",
-          ],
-        },
-        {
           title: "SMART COMMERCE FORUM KYIV-2026",
           category: "Forum · Commerce",
           date: "2026",
           meta: "The main event for product business in Ukraine",
           img: "/images/case-smart-commerce.jpg",
+          fit: "contain" as const,
           desc: "End-to-end work on event promotion and sales (B2B & B2C) for Ukraine's leading commerce forum.",
           bullets: [
             "Strategic partnerships and sponsor relations",
@@ -91,6 +78,7 @@ const T = {
           date: "June 21, 2025",
           meta: "Largest capital festival of 2025 · Kyiv Ice Stadium",
           img: "/images/case-music-box.jpg",
+          fit: "contain" as const,
           desc: "Full-cycle work on event concept creation, promotion, and B2B/B2C sales for Kyiv's biggest festival of 2025.",
           bullets: [
             "Concept creation and sales architecture",
@@ -100,17 +88,34 @@ const T = {
           ],
         },
         {
+          title: "NCrypto Conference 2025",
+          category: "Conference · Web3",
+          date: "April 27, 2025",
+          meta: "2,500+ attendees · 100+ expo companies",
+          img: "/images/case-1.png",
+          fit: "cover" as const,
+          desc: "The main meeting point for Ukraine's crypto and Web3 community — uniting market leaders, startups, investors, and media in one space.",
+          bullets: [
+            "End-to-end event promotion with B2B & B2C sales:",
+            "Strategic partnerships and sponsor relations",
+            "Marketing campaign and sales management",
+            "Venue security and intelligent access logistics",
+            "Turnkey production of an exclusive Afterparty",
+          ],
+        },
+        {
           title: "E-Commerce Conference 2025",
           category: "Conference · Retail",
           date: "October 13, 2025",
           meta: "2,000+ attendees · 70+ expo companies",
           img: "/images/case-2.png",
+          fit: "cover" as const,
           desc: "United the strongest players in Ukraine's eCommerce market as a platform for sharing practical experience and real cases.",
           bullets: [
-            "Expo zone for eCommerce services and brands",
-            "Convenient entry and navigation for large guest flow",
-            "Online streaming for remote participants",
-            "Evening afterparty with artist performances",
+            "End-to-end event promotion with B2B & B2C sales:",
+            "Strategic partnerships and sponsor relations",
+            "Marketing campaign and sales management",
+            "Venue security and intelligent access logistics",
           ],
         },
         {
@@ -119,23 +124,24 @@ const T = {
           date: "October 12, 2025",
           meta: "2,500+ attendees · Flagship crypto event",
           img: "/images/case-3.png",
+          fit: "cover" as const,
           desc: "A flagship crypto conference combined with a ceremonial award show honoring the best companies and industry leaders.",
           bullets: [
-            "Full conference program",
-            "Award ceremony on the main stage",
-            "Directing, lighting, sound, and show production",
-            "Headline performance by Chico & Qatoshi",
+            "End-to-end event promotion with B2B & B2C sales:",
+            "Strategic partnerships and sponsor relations",
+            "Marketing campaign and sales management",
+            "Venue security and intelligent access logistics",
           ],
         },
       ],
     },
     about: {
       idx: "02", sub: "Agency", title: "About Us",
-      headline: "Rave'era Group — Concerts & Marketing Agency. Full-cycle event partner.",
+      headline: "Rave'era Group  Concerts & Marketing Agency. Full-cycle event partner.",
       p1: "An event company from Kyiv on the market since 2012, with over 10 years of hands-on experience in organizing large-scale entertainment, cultural, and social events.",
       p2: "The company started with large student and club events and over the years has executed hundreds of events with leading venues across Kyiv — regular parties, afterparties, festivals, concerts, and large-scale social projects.",
       p3: "Key projects: StudFest, StudMiss, Holi Fest, MusicBox Fest, charity balls for Kyiv City Administration.",
-      quote: "Today, Rave'era Group Agency is a systematic event agency combining creativity, production, marketing, and work with large audiences.",
+      quote: "Today, Rave'era Group Concerts & Marketing Agency is a systematic event agency combining creativity, production, marketing, and work with large audiences.",
     },
     ravepass: {
       badge: "Proprietary Ticketing Technology",
@@ -254,7 +260,7 @@ const T = {
   uk: {
     nav: { cases: "Кейси", about: "Про нас", services: "Послуги", team: "Команда", contact: "Контакт" },
     hero: {
-      badge: "Rave'era Group · Concerts & Marketing Agency",
+      badge: "Rave'era Group  Concerts & Marketing Agency",
       line1: "Ми Будуємо Події,",
       line2: "Які Продають",
       sub: "Конференції · Фестивалі · Корпоративні заходи",
@@ -281,6 +287,7 @@ const T = {
           date: "12 травня 2026",
           meta: "Флагманський гібридний позашляховик · ComAutoTrans 2026",
           img: "/images/case-zeekr.jpg",
+          fit: "cover" as const,
           desc: "Офіційна презентація флагманського гібридного позашляховика Zeekr 9X в Україні — комплексна Online-to-Offline (O2O) кампанія, адаптована під масштаб та інноваційність бренду Zeekr.",
           bullets: [
             "Комплексна маркетингова стратегія (Online-to-Offline)",
@@ -293,26 +300,12 @@ const T = {
           ],
         },
         {
-          title: "NCrypto Conference 2025",
-          category: "Конференція · Web3",
-          date: "27 квітня 2025",
-          meta: "2 500+ учасників · 100+ компаній на expo",
-          img: "/images/case-1.png",
-          desc: "Головна точка зустрічі крипто- та Web3-спільноти України — об'єднала лідерів ринку, стартапи, інвесторів і медіа в одному просторі.",
-          bullets: [
-            "Комплексна робота з промовшином заходу та продажі b2b, b2c:",
-            "Стратегічне партнерство та робота зі спонсорами",
-            "Маркетингова кампанія та управління продажами",
-            "Безпека локації та інтелектуальна логістика пропуску",
-            "Організація ексклюзивного Afterparty «під ключ»",
-          ],
-        },
-        {
           title: "SMART COMMERCE FORUM KYIV-2026",
           category: "Форум · Комерція",
           date: "2026",
           meta: "Головна подія для товарного бізнесу в Україні",
           img: "/images/case-smart-commerce.jpg",
+          fit: "contain" as const,
           desc: "Комплексна робота з промовшином заходу та продажі b2b, b2c для головної події товарного бізнесу України.",
           bullets: [
             "Стратегічне партнерство та робота зі спонсорами",
@@ -325,6 +318,7 @@ const T = {
           date: "21 червня 2025",
           meta: "Найбільший столичний фестиваль 2025 · Льодовий стадіон, Київ",
           img: "/images/case-music-box.jpg",
+          fit: "contain" as const,
           desc: "Комплексна робота з створення ідеї заходу, промовшином заходу, та продажі b2b, b2c для найбільшого столичного фестивалю 2025 року.",
           bullets: [
             "Створення ідеї заходу та архітектури продаж",
@@ -334,17 +328,34 @@ const T = {
           ],
         },
         {
+          title: "NCrypto Conference 2025",
+          category: "Конференція · Web3",
+          date: "27 квітня 2025",
+          meta: "2 500+ учасників · 100+ компаній на expo",
+          img: "/images/case-1.png",
+          fit: "cover" as const,
+          desc: "Головна точка зустрічі крипто- та Web3-спільноти України — об'єднала лідерів ринку, стартапи, інвесторів і медіа в одному просторі.",
+          bullets: [
+            "Комплексна робота з промовшином заходу та продажі b2b, b2c:",
+            "Стратегічне партнерство та робота зі спонсорами",
+            "Маркетингова кампанія та управління продажами",
+            "Безпека локації та інтелектуальна логістика пропуску",
+            "Організація ексклюзивного Afterparty «під ключ»",
+          ],
+        },
+        {
           title: "E-Commerce Conference 2025",
           category: "Конференція · Рітейл",
           date: "13 жовтня 2025",
           meta: "2 000+ учасників · 70+ компаній на expo",
           img: "/images/case-2.png",
+          fit: "cover" as const,
           desc: "Об'єднала найсильніших гравців ринку eCommerce України і стала майданчиком для обміну практичним досвідом і реальними кейсами.",
           bullets: [
-            "Expo-зона для eCommerce-сервісів та брендів",
-            "Зручна зона входу та навігація для великого потоку гостей",
-            "Онлайн-трансляція для дистанційних учасників",
-            "Вечірній afterparty з виступами артистів",
+            "Комплексна робота з промовшином заходу та продажі b2b, b2c:",
+            "Стратегічне партнерство та робота зі спонсорами",
+            "Маркетингова кампанія та управління продажами",
+            "Безпека локації та інтелектуальна логістика пропуску",
           ],
         },
         {
@@ -353,23 +364,24 @@ const T = {
           date: "12 жовтня 2025",
           meta: "2 500+ учасників · Флагманська крипто-подія",
           img: "/images/case-3.png",
+          fit: "cover" as const,
           desc: "Флагманська крипто-конференція у поєднанні з церемонією нагородження кращих компаній та лідерів індустрії.",
           bullets: [
-            "Повна конференційна програма",
-            "Церемонія нагородження на головній сцені",
-            "Режисура, світло, звук і шоу-продакшн",
-            "Хедлайн-перформанс від Chico & Qatoshi",
+            "Комплексна робота з промовшином заходу та продажі b2b, b2c:",
+            "Стратегічне партнерство та робота зі спонсорами",
+            "Маркетингова кампанія та управління продажами",
+            "Безпека локації та інтелектуальна логістика пропуску",
           ],
         },
       ],
     },
     about: {
       idx: "02", sub: "Агентство", title: "Про Нас",
-      headline: "Rave'era Group — Concerts & Marketing Agency. Повноциклове івент-партнерство.",
+      headline: "Rave'era Group  Concerts & Marketing Agency. Повноциклове івент-партнерство.",
       p1: "Івент-компанія з Києва на ринку з 2012 року, з понад 10 роками практичного досвіду в організації масштабних розважальних, культурних і соціальних подій.",
       p2: "Компанія почала з великих студентських і клубних заходів, а з роками провела сотні подій у партнерстві з провідними майданчиками Києва — вечірки, afterparty, фестивалі, концерти та масштабні соціальні проєкти.",
       p3: "Ключові проєкти: StudFest, StudMiss, Holi Fest, MusicBox Fest, благодійні бали для КМДА.",
-      quote: "Сьогодні Rave'era Group Agency — це системне івент-агентство, що поєднує креатив, продакшн, маркетинг і роботу з великою аудиторією.",
+      quote: "Сьогодні Rave'era Group Concerts & Marketing Agency — це системне івент-агентство, що поєднує креатив, продакшн, маркетинг і роботу з великою аудиторією.",
     },
     ravepass: {
       badge: "Власна технологія квиткового сервісу",
@@ -580,8 +592,13 @@ export default function App() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/[0.06]" : ""}`}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
-          <button onClick={() => scrollTo("hero")} className="font-black tracking-tighter uppercase text-lg hover:opacity-80 transition-opacity">
-            Rave'era<span style={{ color: G }}>.</span>
+          <button onClick={() => scrollTo("hero")} className="text-left flex flex-col leading-none hover:opacity-80 transition-opacity">
+            <span className="font-black tracking-tighter uppercase text-lg">
+              Rave'era<span style={{ color: G }}>.</span>
+            </span>
+            <span className="hidden sm:block text-[8px] md:text-[9px] font-mono uppercase tracking-[0.2em] text-white/40 mt-1">
+              Group · Concerts & Marketing Agency
+            </span>
           </button>
 
           {/* Desktop nav */}
@@ -711,24 +728,6 @@ export default function App() {
         </motion.div>
       </section>
 
-      {/* ── Trusted By ── */}
-      <section className="py-8 border-y border-white/[0.05] bg-[#020202] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-12">
-            <p className="text-[9px] font-mono uppercase tracking-[0.24em] text-white/18 shrink-0 whitespace-nowrap">{tr.trusted.label}</p>
-            <div className="w-px h-6 bg-white/[0.06] shrink-0 hidden sm:block" />
-            <div className="flex flex-wrap items-center gap-x-7 gap-y-2.5">
-              {tr.trusted.items.map((name, i) => (
-                <motion.span key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
-                  className="text-[10px] font-black tracking-[0.2em] uppercase text-white/15 hover:text-white/50 transition-colors duration-300 cursor-default">
-                  {name}
-                </motion.span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── Cases ── */}
       <section id="cases" className="py-24 md:py-36 px-6 md:px-12">
         <div className="max-w-7xl mx-auto">
@@ -749,15 +748,17 @@ export default function App() {
                 <motion.div key={i} variants={fadeUp} className={`grid grid-cols-1 lg:grid-cols-2 gap-10 items-center ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}>
                   {/* Image side */}
                   <div className={`${i % 2 === 1 ? "lg:order-2" : ""}`}>
-                    <div className="relative overflow-hidden aspect-video bg-zinc-900 group">
+                    <div className="relative overflow-hidden aspect-video bg-black group">
                       <img src={c.img} alt={c.title}
-                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-103 grayscale group-hover:grayscale-0 opacity-65 group-hover:opacity-90" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                      <div className="absolute inset-0 border border-white/0 group-hover:border-[#00FF88]/20 transition-colors duration-500" />
-                      <div className="absolute top-4 left-4">
-                        <span className="text-[9px] font-mono uppercase tracking-[0.2em] px-2.5 py-1 bg-black/70 backdrop-blur-sm text-white/55">{c.category}</span>
+                        className={`w-full h-full transition-all duration-700 group-hover:scale-105 ${c.fit === "contain" ? "object-contain" : "object-cover"}`} />
+                      {c.fit !== "contain" && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                      )}
+                      <div className="absolute inset-0 border border-white/0 group-hover:border-[#00FF88]/30 transition-colors duration-500" />
+                      <div className="absolute top-4 left-4 z-10">
+                        <span className="text-[9px] font-mono uppercase tracking-[0.2em] px-2.5 py-1 bg-black/80 backdrop-blur-sm text-white/70 border border-white/10">{c.category}</span>
                       </div>
-                      <div className="absolute bottom-4 left-4 text-[9px] font-mono text-white/30">{c.date}</div>
+                      <div className="absolute bottom-4 left-4 text-[9px] font-mono text-white/60 z-10 px-2 py-1 bg-black/70 backdrop-blur-sm">{c.date}</div>
                     </div>
                   </div>
                   {/* Text side */}
@@ -898,6 +899,38 @@ export default function App() {
               ))}
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ── Trusted By (Marquee) ── */}
+      <section className="py-14 md:py-20 border-y border-white/[0.06] bg-[#020202] overflow-hidden relative">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at center, ${G}05, transparent 70%)` }} />
+        <div className="max-w-7xl mx-auto px-6 md:px-12 mb-8 relative z-10">
+          <div className="flex items-center justify-between gap-6 flex-wrap">
+            <div className="flex items-center gap-4">
+              <span className="w-8 h-px" style={{ background: G }} />
+              <p className="text-[10px] font-mono uppercase tracking-[0.28em]" style={{ color: G }}>{tr.trusted.label}</p>
+            </div>
+            <p className="text-[10px] font-mono text-white/25 uppercase tracking-[0.2em]">{tr.trusted.items.length}+ {lang === "en" ? "Brands & Partners" : "Брендів і Партнерів"}</p>
+          </div>
+        </div>
+        <div className="relative z-10 group">
+          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#020202] to-transparent z-20 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#020202] to-transparent z-20 pointer-events-none" />
+          <div className="flex overflow-hidden">
+            <motion.div
+              className="flex shrink-0 gap-12 md:gap-16 pr-12 md:pr-16 items-center"
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+            >
+              {[...tr.trusted.items, ...tr.trusted.items].map((name, i) => (
+                <span key={i} className="text-xl md:text-3xl font-black tracking-tighter uppercase text-white/30 hover:text-white whitespace-nowrap transition-colors duration-300 cursor-default flex items-center gap-12 md:gap-16">
+                  {name}
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: G, boxShadow: `0 0 14px ${G}` }} />
+                </span>
+              ))}
+            </motion.div>
+          </div>
         </div>
       </section>
 
