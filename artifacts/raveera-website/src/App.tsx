@@ -594,14 +594,8 @@ export default function App() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/[0.06]" : ""}`}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
-          <button onClick={() => scrollTo("hero")} className="flex items-baseline gap-2.5 md:gap-3 hover:opacity-80 transition-opacity">
-            <span className="font-black tracking-tighter uppercase text-lg leading-none">
-              Rave'era<span style={{ color: G }}>.</span>
-            </span>
-            <span className="hidden md:inline-block w-px h-3 bg-white/15 self-center" />
-            <span className="hidden md:inline text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 leading-none whitespace-nowrap">
-              Group · Concerts &amp; Marketing Agency
-            </span>
+          <button onClick={() => scrollTo("hero")} className="text-sm md:text-base font-black tracking-tight uppercase leading-none text-white hover:opacity-80 transition-opacity whitespace-nowrap">
+            Rave'era Group · Concerts &amp; Marketing Agency
           </button>
 
           {/* Desktop nav */}
@@ -1041,10 +1035,8 @@ export default function App() {
       <footer className="py-12 px-6 md:px-12 border-t border-white/[0.05] bg-[#020202]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
           <div>
-            <div className="flex items-baseline gap-3 flex-wrap mb-3">
-              <div className="text-xl font-black uppercase tracking-tighter leading-none">Rave'era<span style={{ color: G }}>.</span></div>
-              <span className="w-px h-3 bg-white/15 self-center" />
-              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/45 leading-none whitespace-nowrap">Group · Concerts &amp; Marketing Agency</p>
+            <div className="text-sm md:text-base font-black uppercase tracking-tight leading-none text-white mb-4 whitespace-nowrap">
+              Rave'era Group · Concerts &amp; Marketing Agency
             </div>
             <p className="text-xs text-white/30 leading-relaxed">{tr.footer.tagline}</p>
             <p className="text-xs text-white/20 mt-1">{tr.footer.sub}</p>
