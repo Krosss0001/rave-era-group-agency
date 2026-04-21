@@ -526,6 +526,16 @@ const G = "#00FF88";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function BrandLine({ className = "" }: { className?: string }) {
+  return (
+    <span className={className}>
+      Rave<span style={{ color: G }}>'</span>era Group{" "}
+      <span style={{ color: G }}>·</span> Concerts{" "}
+      <span style={{ color: G }}>&amp;</span> Marketing Agency
+    </span>
+  );
+}
+
 function SectionLabel({ idx, sub }: { idx: string; sub: string }) {
   return (
     <motion.div variants={fadeIn} className="flex items-center gap-3 mb-5">
@@ -595,7 +605,7 @@ export default function App() {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
           <button onClick={() => scrollTo("hero")} className="text-sm md:text-base font-black tracking-tight uppercase leading-none text-white hover:opacity-80 transition-opacity whitespace-nowrap">
-            Rave'era Group · Concerts &amp; Marketing Agency
+            <BrandLine />
           </button>
 
           {/* Desktop nav */}
@@ -688,7 +698,14 @@ export default function App() {
               </AnimatePresence>
             </motion.h1>
 
-            <motion.p variants={fadeUp} className="mt-6 text-base md:text-lg text-white/35 font-light tracking-wide">{tr.hero.sub}</motion.p>
+            <motion.p variants={fadeUp} className="mt-6 text-base md:text-lg text-white/45 font-light tracking-wide">
+              {tr.hero.sub.split(" · ").map((word, i, arr) => (
+                <span key={i}>
+                  {word}
+                  {i < arr.length - 1 && <span className="mx-2.5" style={{ color: G }}>·</span>}
+                </span>
+              ))}
+            </motion.p>
 
             <motion.div variants={fadeUp} className="mt-10 flex flex-wrap items-center gap-5">
               <button onClick={() => scrollTo("contact")}
@@ -735,9 +752,10 @@ export default function App() {
                 <motion.h2 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-[0.88]">{tr.cases.title}</motion.h2>
                 <motion.p variants={fadeIn} className="text-white/35 text-sm mt-4 max-w-xs leading-relaxed">{tr.cases.desc}</motion.p>
               </div>
-              <motion.button variants={fadeIn} className="shrink-0 text-[10px] font-mono tracking-[0.2em] uppercase text-white/25 hover:text-white flex items-center gap-2 transition-colors group">
-                {tr.cases.viewAll} <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </motion.button>
+              <motion.div variants={fadeIn} className="shrink-0 flex items-center gap-3 text-[10px] font-mono tracking-[0.2em] uppercase text-white/30 whitespace-pre-line leading-tight">
+                <span className="font-black text-3xl md:text-4xl tracking-tighter leading-none" style={{ color: G }}>{String(tr.cases.items.length).padStart(2,"0")}</span>
+                <span>{lang === "en" ? "Featured\nCases" : "Топ\nКейсів"}</span>
+              </motion.div>
             </div>
 
             <div className="space-y-20">
@@ -760,12 +778,18 @@ export default function App() {
                   </div>
                   {/* Text side */}
                   <div className={`${i % 2 === 1 ? "lg:order-1" : ""}`}>
-                    <div className="text-[10px] font-mono text-white/25 mb-3 tracking-widest">{c.meta}</div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-[10px] font-mono font-bold tracking-[0.22em]" style={{ color: G }}>
+                        {String(i + 1).padStart(2, "0")} / {String(tr.cases.items.length).padStart(2, "0")}
+                      </span>
+                      <span className="h-px flex-1 bg-gradient-to-r from-[#00FF88]/30 to-transparent" />
+                    </div>
+                    <div className="text-[10px] font-mono text-white/30 mb-3 tracking-widest uppercase">{c.meta}</div>
                     <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-4" style={{ color: i === 0 ? G : "white" }}>{c.title}</h3>
                     <p className="text-white/55 text-sm leading-relaxed mb-6">{c.desc}</p>
                     <ul className="space-y-2">
                       {c.bullets.map((b, j) => (
-                        <li key={j} className="flex items-start gap-2.5 text-sm text-white/40">
+                        <li key={j} className="flex items-start gap-2.5 text-sm text-white/45">
                           <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: G }} />
                           {b}
                         </li>
@@ -792,8 +816,9 @@ export default function App() {
                 <motion.p variants={fadeUp} className="text-sm text-white/45 leading-relaxed mb-4">{tr.about.p2}</motion.p>
                 <motion.p variants={fadeUp} className="text-sm text-white/30 leading-relaxed mb-10">{tr.about.p3}</motion.p>
 
-                <motion.blockquote variants={fadeUp} className="border-l-2 pl-6 py-1 italic text-white/60 text-sm leading-relaxed" style={{ borderColor: G }}>
-                  "{tr.about.quote}"
+                <motion.blockquote variants={fadeUp} className="relative border-l-2 pl-8 py-2 italic text-white/65 text-base leading-relaxed" style={{ borderColor: G }}>
+                  <span className="absolute -left-1 -top-3 font-black select-none leading-none" style={{ color: G, fontSize: "3.5rem", textShadow: `0 0 30px ${G}40` }}>“</span>
+                  {tr.about.quote}
                 </motion.blockquote>
 
                 <motion.div variants={fadeUp} className="mt-10 grid grid-cols-3 gap-5 pt-8 border-t border-white/[0.06]">
@@ -848,17 +873,42 @@ export default function App() {
               </motion.div>
             </div>
             <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-video lg:aspect-square bg-zinc-900 overflow-hidden border border-white/[0.07]">
-              <img src="/images/case-1.png" alt={tr.ravepass.title} className="w-full h-full object-cover opacity-30" />
-              <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/30 to-black/70" />
-              <div className="absolute inset-0 flex items-center justify-center px-8">
+              className="relative aspect-video lg:aspect-square bg-[#040404] overflow-hidden border border-white/[0.07] group">
+              {/* Pattern grid */}
+              <div className="absolute inset-0 opacity-25" style={{
+                backgroundImage: `linear-gradient(${G}18 1px,transparent 1px),linear-gradient(90deg,${G}18 1px,transparent 1px)`,
+                backgroundSize: "32px 32px",
+              }} />
+              {/* Radial glow */}
+              <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.65, 0.4] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] rounded-full blur-[80px]" style={{ background: G }} />
+              {/* Corner brackets */}
+              {[
+                "top-3 left-3 border-l-2 border-t-2",
+                "top-3 right-3 border-r-2 border-t-2",
+                "bottom-3 left-3 border-l-2 border-b-2",
+                "bottom-3 right-3 border-r-2 border-b-2",
+              ].map((p, i) => <span key={i} className={`absolute w-5 h-5 ${p}`} style={{ borderColor: G }} />)}
+              {/* QR-style decorative corner */}
+              <div className="absolute top-7 right-7 grid grid-cols-3 gap-0.5 opacity-40">
+                {Array.from({ length: 9 }).map((_, k) => (
+                  <span key={k} className={`w-1.5 h-1.5 ${k % 3 === 0 || k === 4 ? "bg-[#00FF88]" : "bg-white/20"}`} />
+                ))}
+              </div>
+              <div className="relative z-10 h-full flex items-center justify-center px-8">
                 <div className="text-center">
-                  <Ticket className="w-12 h-12 mx-auto mb-5 opacity-90" style={{ color: G }} />
-                  <div className="text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[0.95]" style={{ color: G, textShadow: `0 0 60px ${G}80` }}>Rave'Era<br/>Tickets<br/>Service</div>
-                  <div className="mt-4 text-[10px] font-mono uppercase tracking-[0.3em] text-white/40">Arbitration Engine</div>
+                  <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}>
+                    <Ticket className="w-14 h-14 mx-auto mb-6" style={{ color: G, filter: `drop-shadow(0 0 24px ${G})` }} />
+                  </motion.div>
+                  <div className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-[0.92]" style={{ color: G, textShadow: `0 0 60px ${G}90` }}>
+                    Rave<span className="text-white">'</span>Era<br/>Tickets<br/>Service
+                  </div>
+                  <div className="mt-6 inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-white/55 px-3 py-1.5 border" style={{ borderColor: `${G}30` }}>
+                    <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.6, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full" style={{ background: G }} />
+                    Arbitration Engine
+                  </div>
                 </div>
               </div>
-              <div className="absolute inset-0 border border-[#00FF88]/10" />
             </motion.div>
           </motion.div>
         </div>
@@ -874,19 +924,22 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {tr.services.items.map((s, i) => (
                 <motion.div key={i} variants={fadeUp}
-                  className="group relative border border-white/[0.05] p-6 hover:border-white/[0.1] transition-all duration-400 overflow-hidden cursor-default">
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 20% 20%, ${G}05, transparent 60%)` }} />
-                  <div className="absolute top-0 left-0 h-px w-0 group-hover:w-full transition-all duration-600" style={{ background: G }} />
+                  className="group relative border border-white/[0.05] p-6 hover:border-[#00FF88]/30 transition-all duration-400 overflow-hidden cursor-default bg-black/20 hover:bg-[#00FF88]/[0.02]">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 30% 0%, ${G}10, transparent 60%)` }} />
+                  <div className="absolute top-0 left-0 h-px w-0 group-hover:w-full transition-all duration-700" style={{ background: G }} />
+                  <span className="absolute top-4 right-5 text-[9px] font-mono font-bold tracking-widest text-white/15 group-hover:text-[#00FF88]/60 transition-colors duration-300">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
                   <div className="relative z-10">
-                    <div className="mb-4 p-2.5 inline-flex border border-white/[0.07] group-hover:border-[#00FF88]/25 transition-colors duration-300" style={{ color: G }}>
+                    <div className="mb-4 p-2.5 inline-flex border border-white/[0.08] group-hover:border-[#00FF88]/40 group-hover:bg-[#00FF88]/[0.05] transition-all duration-300" style={{ color: G }}>
                       {SVC_ICONS[i]}
                     </div>
                     <h3 className="text-[11px] font-black uppercase tracking-[0.07em] mb-2.5 group-hover:text-[#00FF88] transition-colors duration-300">{s.title}</h3>
-                    <p className="text-[11px] text-white/30 leading-relaxed mb-4">{s.desc}</p>
+                    <p className="text-[11px] text-white/35 leading-relaxed mb-4">{s.desc}</p>
                     <ul className="space-y-1">
                       {s.tags.map((tag, j) => (
-                        <li key={j} className="flex items-center gap-1.5 text-[10px] text-white/20">
-                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: `${G}50` }} />
+                        <li key={j} className="flex items-center gap-1.5 text-[10px] text-white/25">
+                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: `${G}60` }} />
                           {tag}
                         </li>
                       ))}
@@ -911,19 +964,35 @@ export default function App() {
             <p className="text-[10px] font-mono text-white/25 uppercase tracking-[0.2em]">{tr.trusted.items.length}+ {lang === "en" ? "Brands & Partners" : "Брендів і Партнерів"}</p>
           </div>
         </div>
-        <div className="relative z-10 group">
+        <div className="relative z-10 space-y-5">
           <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#020202] to-transparent z-20 pointer-events-none" />
           <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#020202] to-transparent z-20 pointer-events-none" />
+          {/* Row 1 */}
           <div className="flex overflow-hidden">
             <motion.div
               className="flex shrink-0 gap-12 md:gap-16 pr-12 md:pr-16 items-center"
               animate={{ x: ["0%", "-50%"] }}
-              transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
             >
               {[...tr.trusted.items, ...tr.trusted.items].map((name, i) => (
                 <span key={i} className="text-xl md:text-3xl font-black tracking-tighter uppercase text-white/30 hover:text-white whitespace-nowrap transition-colors duration-300 cursor-default flex items-center gap-12 md:gap-16">
                   {name}
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: G, boxShadow: `0 0 14px ${G}` }} />
+                </span>
+              ))}
+            </motion.div>
+          </div>
+          {/* Row 2 (reverse, slower, dimmer) */}
+          <div className="flex overflow-hidden">
+            <motion.div
+              className="flex shrink-0 gap-10 md:gap-14 pr-10 md:pr-14 items-center"
+              animate={{ x: ["-50%", "0%"] }}
+              transition={{ duration: 65, repeat: Infinity, ease: "linear" }}
+            >
+              {[...tr.trusted.items.slice().reverse(), ...tr.trusted.items.slice().reverse()].map((name, i) => (
+                <span key={i} className="text-base md:text-xl font-bold tracking-[0.18em] uppercase text-white/15 hover:text-[#00FF88] whitespace-nowrap transition-colors duration-300 cursor-default flex items-center gap-10 md:gap-14">
+                  {name}
+                  <span className="w-1 h-1 rounded-full bg-white/15" />
                 </span>
               ))}
             </motion.div>
@@ -1035,9 +1104,7 @@ export default function App() {
       <footer className="py-12 px-6 md:px-12 border-t border-white/[0.05] bg-[#020202]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
           <div>
-            <div className="text-sm md:text-base font-black uppercase tracking-tight leading-none text-white mb-4 whitespace-nowrap">
-              Rave'era Group · Concerts &amp; Marketing Agency
-            </div>
+            <BrandLine className="block text-sm md:text-base font-black uppercase tracking-tight leading-none text-white mb-4 whitespace-nowrap" />
             <p className="text-xs text-white/30 leading-relaxed">{tr.footer.tagline}</p>
             <p className="text-xs text-white/20 mt-1">{tr.footer.sub}</p>
           </div>
@@ -1052,21 +1119,35 @@ export default function App() {
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/20 mb-4">{lang === "en" ? "Contacts" : "Контакти"}</p>
             <div className="space-y-2 text-xs text-white/35">
-              <div>{tr.contact.emailAddr}</div>
-              <div>{tr.contact.phoneNum}</div>
+              <a href={`mailto:${tr.contact.emailAddr}`} className="block hover:text-[#00FF88] transition-colors">{tr.contact.emailAddr}</a>
+              <a href="tel:+380934307551" className="block hover:text-[#00FF88] transition-colors">{tr.contact.phoneNum}</a>
               <div>{tr.contact.locAddr}</div>
             </div>
-            <button onClick={toggleLang} className="flex items-center gap-1.5 mt-6 text-[10px] font-mono tracking-widest uppercase text-white/20 hover:text-[#00FF88] transition-colors">
-              <Globe className="w-3 h-3" />{lang === "en" ? "Українська" : "English"}
-            </button>
+            <div className="flex items-center gap-2.5 mt-6">
+              <a href="https://t.me/bogdan_chekan" target="_blank" rel="noreferrer" aria-label="Telegram"
+                className="w-9 h-9 flex items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all">
+                <MessageCircle className="w-4 h-4" />
+              </a>
+              <a href={`mailto:${tr.contact.emailAddr}`} aria-label="Email"
+                className="w-9 h-9 flex items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all">
+                <Mail className="w-4 h-4" />
+              </a>
+              <a href="tel:+380934307551" aria-label="Phone"
+                className="w-9 h-9 flex items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all">
+                <Phone className="w-4 h-4" />
+              </a>
+              <button onClick={toggleLang} aria-label="Switch language"
+                className="ml-2 h-9 px-3 flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 hover:border-[#00FF88]/50 text-white/40 hover:text-[#00FF88] transition-all">
+                <Globe className="w-3 h-3" />{lang === "en" ? "UA" : "EN"}
+              </button>
+            </div>
           </div>
         </div>
         <div className="border-t border-white/[0.05] pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
-          <p className="text-[10px] text-white/15 font-mono">{tr.footer.copy}</p>
-          <div className="flex gap-4 text-[10px] text-white/15 font-mono">
-            <button className="hover:text-white/40 transition-colors">Privacy Policy</button>
-            <button className="hover:text-white/40 transition-colors">Terms of Use</button>
-          </div>
+          <p className="text-[10px] text-white/20 font-mono">{tr.footer.copy}</p>
+          <p className="text-[10px] text-white/15 font-mono uppercase tracking-widest">
+            {lang === "en" ? "Crafted with " : "Зроблено з "}<span style={{ color: G }}>●</span>{lang === "en" ? " in Kyiv" : " у Києві"}
+          </p>
         </div>
       </footer>
 
