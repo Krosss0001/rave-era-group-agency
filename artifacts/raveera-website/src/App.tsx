@@ -96,7 +96,7 @@ const T = {
           fit: "cover" as const,
           desc: "The main meeting point for Ukraine's crypto and Web3 community — uniting market leaders, startups, investors, and media in one space.",
           bullets: [
-            "End-to-end event promotion with B2B & B2C sales:",
+            "End-to-end event promotion with B2B & B2C sales",
             "Strategic partnerships and sponsor relations",
             "Marketing campaign and sales management",
             "Venue security and intelligent access logistics",
@@ -112,7 +112,7 @@ const T = {
           fit: "cover" as const,
           desc: "United the strongest players in Ukraine's eCommerce market as a platform for sharing practical experience and real cases.",
           bullets: [
-            "End-to-end event promotion with B2B & B2C sales:",
+            "End-to-end event promotion with B2B & B2C sales",
             "Strategic partnerships and sponsor relations",
             "Marketing campaign and sales management",
             "Venue security and intelligent access logistics",
@@ -127,7 +127,7 @@ const T = {
           fit: "cover" as const,
           desc: "A flagship crypto conference combined with a ceremonial award show honoring the best companies and industry leaders.",
           bullets: [
-            "End-to-end event promotion with B2B & B2C sales:",
+            "End-to-end event promotion with B2B & B2C sales",
             "Strategic partnerships and sponsor relations",
             "Marketing campaign and sales management",
             "Venue security and intelligent access logistics",
@@ -336,7 +336,7 @@ const T = {
           fit: "cover" as const,
           desc: "Головна точка зустрічі крипто- та Web3-спільноти України — об'єднала лідерів ринку, стартапи, інвесторів і медіа в одному просторі.",
           bullets: [
-            "Комплексна робота з промовшином заходу та продажі b2b, b2c:",
+            "Комплексна робота з промовшином заходу та продажі b2b, b2c",
             "Стратегічне партнерство та робота зі спонсорами",
             "Маркетингова кампанія та управління продажами",
             "Безпека локації та інтелектуальна логістика пропуску",
@@ -352,7 +352,7 @@ const T = {
           fit: "cover" as const,
           desc: "Об'єднала найсильніших гравців ринку eCommerce України і стала майданчиком для обміну практичним досвідом і реальними кейсами.",
           bullets: [
-            "Комплексна робота з промовшином заходу та продажі b2b, b2c:",
+            "Комплексна робота з промовшином заходу та продажі b2b, b2c",
             "Стратегічне партнерство та робота зі спонсорами",
             "Маркетингова кампанія та управління продажами",
             "Безпека локації та інтелектуальна логістика пропуску",
@@ -367,7 +367,7 @@ const T = {
           fit: "cover" as const,
           desc: "Флагманська крипто-конференція у поєднанні з церемонією нагородження кращих компаній та лідерів індустрії.",
           bullets: [
-            "Комплексна робота з промовшином заходу та продажі b2b, b2c:",
+            "Комплексна робота з промовшином заходу та продажі b2b, b2c",
             "Стратегічне партнерство та робота зі спонсорами",
             "Маркетингова кампанія та управління продажами",
             "Безпека локації та інтелектуальна логістика пропуску",
@@ -592,12 +592,13 @@ export default function App() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/[0.06]" : ""}`}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
-          <button onClick={() => scrollTo("hero")} className="text-left flex flex-col leading-none hover:opacity-80 transition-opacity">
-            <span className="font-black tracking-tighter uppercase text-lg">
+          <button onClick={() => scrollTo("hero")} className="flex items-baseline gap-2.5 md:gap-3 hover:opacity-80 transition-opacity">
+            <span className="font-black tracking-tighter uppercase text-lg leading-none">
               Rave'era<span style={{ color: G }}>.</span>
             </span>
-            <span className="hidden sm:block text-[8px] md:text-[9px] font-mono uppercase tracking-[0.2em] text-white/40 mt-1">
-              Group · Concerts & Marketing Agency
+            <span className="hidden md:inline-block w-px h-3 bg-white/15 self-center" />
+            <span className="hidden md:inline text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 leading-none whitespace-nowrap">
+              Group · Concerts &amp; Marketing Agency
             </span>
           </button>
 
@@ -750,7 +751,7 @@ export default function App() {
                   <div className={`${i % 2 === 1 ? "lg:order-2" : ""}`}>
                     <div className="relative overflow-hidden aspect-video bg-black group">
                       <img src={c.img} alt={c.title}
-                        className={`w-full h-full transition-all duration-700 group-hover:scale-105 ${c.fit === "contain" ? "object-contain" : "object-cover"}`} />
+                        className={`w-full h-full transition-all duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 ${c.fit === "contain" ? "object-contain" : "object-cover"}`} />
                       {c.fit !== "contain" && (
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                       )}
@@ -1038,8 +1039,11 @@ export default function App() {
       <footer className="py-12 px-6 md:px-12 border-t border-white/[0.05] bg-[#020202]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
           <div>
-            <div className="text-xl font-black uppercase tracking-tighter mb-1">Rave'era<span style={{ color: G }}>.</span></div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/35 mb-3">Group · Concerts & Marketing Agency</p>
+            <div className="flex items-baseline gap-3 flex-wrap mb-3">
+              <div className="text-xl font-black uppercase tracking-tighter leading-none">Rave'era<span style={{ color: G }}>.</span></div>
+              <span className="w-px h-3 bg-white/15 self-center" />
+              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/45 leading-none whitespace-nowrap">Group · Concerts &amp; Marketing Agency</p>
+            </div>
             <p className="text-xs text-white/30 leading-relaxed">{tr.footer.tagline}</p>
             <p className="text-xs text-white/20 mt-1">{tr.footer.sub}</p>
           </div>
