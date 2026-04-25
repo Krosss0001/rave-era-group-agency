@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "IN18CRTpuqLbQResXu2O2"
+uri = "file://DESIGN_SYSTEM.md"
+type = "text"
+title = "Rave'era Design System — Complete Guide"
