@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import {
   ArrowLeft, ArrowRight, Calendar, Clock, MapPin, Ticket, ChevronDown,
-  Users, Mic2, Shield, CreditCard, Globe, CheckCircle2, Zap, ExternalLink,
+  Users, Mic2, CreditCard, Globe, CheckCircle2, Zap, ExternalLink,
 } from "lucide-react";
 
 const G = "#00FF88";
@@ -164,8 +164,6 @@ export default function SBCEventPage() {
       rights: "Всі права захищено. SBC Summit Ukraine 2026",
     },
     paymentNote: "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті. Онлайн-оплата буде активована після завершення верифікації мерчанта.",
-    secure: "Захищена онлайн-оплата",
-    secureDesc: "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
   } : {
     back: "Back",
@@ -216,13 +214,11 @@ export default function SBCEventPage() {
       rights: "All rights reserved. SBC Summit Ukraine 2026",
     },
     paymentNote: "Payment is processed through the secure AlliancePay payment page. Card data is not entered, processed or stored on this site. Online payment will be activated after merchant verification is complete.",
-    secure: "Secure online payment",
-    secureDesc: "Payment is processed through the secure AlliancePay payment page. Card data is not entered, processed or stored on this site.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
   };
 
-  const mapUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2539.6!2d30.542!3d50.446!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40d4ce67f7e05d03%3A0x7b4f0e3d5b5b5b5b!2zS1ZDIGzhu5Z0aW5h!5e0!3m2!1suk!2sua!4v1710000000000!5m2!1suk!2sua";
-  const mapExternal = "https://www.google.com/maps/search/?api=1&query=КВЦ+Парковий,+Паркова+дорога,+16А,+Київ,+Україна";
+  const mapUrl = "https://maps.google.com/maps?q=50.4490399,30.5407415&hl=uk&t=m&z=17&output=embed";
+  const mapExternal = "https://www.google.com/maps/place/%22%D0%9F%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%D0%B8%D0%B9%22+%D0%9A%D0%BE%D0%BD%D0%B3%D1%80%D0%B5%D1%81%D0%BD%D0%BE-%D0%B2%D0%B8%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%BE%D0%B2%D0%B8%D0%B9+%D1%86%D0%B5%D0%BD%D1%82%D1%80/@50.4490399,30.5407415,17z";
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white font-sans overflow-x-hidden selection:bg-[#00FF88] selection:text-black">
@@ -377,15 +373,6 @@ export default function SBCEventPage() {
                 <p className="text-sm text-white/40 leading-relaxed mb-4">
                   {t.paymentNote}
                 </p>
-                <div className="border-t border-white/[0.06] pt-4 mb-4">
-                  <div className="flex items-center gap-2 text-[10px] font-mono text-white/50 uppercase tracking-widest mb-3">
-                    <Shield className="w-3 h-3" style={{ color: G }} />
-                    {t.secure}
-                  </div>
-                  <p className="text-xs text-white/30 leading-relaxed">
-                    {t.secureDesc}
-                  </p>
-                </div>
                 {/* Payment logos */}
                 <div className="flex flex-wrap items-center gap-3 mb-3">
                   <img src="/images/payment-visa.png" alt="Visa" className="h-6 w-auto object-contain opacity-80" />
