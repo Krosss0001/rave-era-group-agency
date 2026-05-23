@@ -165,6 +165,7 @@ export default function SBCEventPage() {
     },
     paymentNote: "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті. Онлайн-оплата буде активована після завершення верифікації мерчанта.",
     secure: "Захищена онлайн-оплата",
+    secureDesc: "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
   } : {
     back: "Back",
@@ -216,6 +217,7 @@ export default function SBCEventPage() {
     },
     paymentNote: "Payment is processed through the secure AlliancePay payment page. Card data is not entered, processed or stored on this site. Online payment will be activated after merchant verification is complete.",
     secure: "Secure online payment",
+    secureDesc: "Payment is processed through the secure AlliancePay payment page. Card data is not entered, processed or stored on this site.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
   };
 
@@ -368,16 +370,35 @@ export default function SBCEventPage() {
             </div>
             <div className="space-y-4">
               <motion.div variants={fadeUpChild} className="border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
-                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/30 mb-3">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/30 mb-4">
                   <Ticket className="w-3.5 h-3.5" style={{ color: G }} />
                   RAVEERA Tickets Service
                 </div>
-                <p className="text-sm text-white/40 leading-relaxed">
+                <p className="text-sm text-white/40 leading-relaxed mb-4">
                   {t.paymentNote}
                 </p>
-              </motion.div>
-              <motion.div variants={fadeUpChild} className="flex items-center gap-2 text-[10px] font-mono text-white/20 uppercase tracking-widest">
-                <Shield className="w-3 h-3" /> {t.secure}
+                <div className="border-t border-white/[0.06] pt-4 mb-4">
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-white/50 uppercase tracking-widest mb-3">
+                    <Shield className="w-3 h-3" style={{ color: G }} />
+                    {t.secure}
+                  </div>
+                  <p className="text-xs text-white/30 leading-relaxed">
+                    {t.secureDesc}
+                  </p>
+                </div>
+                {/* Payment logos */}
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <img src="/images/payment-visa.png" alt="Visa" className="h-6 w-auto object-contain opacity-80" />
+                  <img src="/images/payment-mastercard.png" alt="Mastercard" className="h-6 w-auto object-contain opacity-80" />
+                  <img src="/images/payment-applepay.png" alt="Apple Pay" className="h-5 w-auto object-contain opacity-80" />
+                  <img src="/images/payment-googlepay.png" alt="Google Pay" className="h-5 w-auto object-contain opacity-80" />
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <img src="/images/payment-alliancepay.png" alt="AlliancePay" className="h-5 w-auto object-contain" />
+                </div>
+                <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest">
+                  {t.secureBadges}
+                </p>
               </motion.div>
             </div>
           </motion.div>
