@@ -3,8 +3,8 @@ import { ArrowRight, ChevronDown, MonitorPlay, Zap, Megaphone, Handshake, BarCha
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
-};
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" as const } }
+} as const;
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -14,7 +14,7 @@ const staggerContainer = {
       staggerChildren: 0.2
     }
   }
-};
+} as const;
 
 export default function Home() {
   const scrollTo = (id: string) => {

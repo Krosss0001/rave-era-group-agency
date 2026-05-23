@@ -8,11 +8,26 @@ import {
   MapPin, Mail, MessageCircle, Phone, Zap, Building2,
   Monitor, Users, LayoutGrid, CalendarDays, Mic2,
   Coffee, DollarSign, Newspaper, Ticket, Sparkles,
+  ExternalLink,
 } from "lucide-react";
+import { Switch, Route, useLocation } from "wouter";
+import SBCEventPage from "./pages/SBCEventPage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Lang = "en" | "uk";
+
+type CaseItem = {
+  title: string;
+  category: string;
+  date: string;
+  meta: string;
+  img: string;
+  fit: "cover" | "contain";
+  desc: string;
+  bullets: string[];
+  eventUrl?: string;
+};
 
 // ─── Translations ─────────────────────────────────────────────────────────────
 
@@ -53,6 +68,7 @@ const T = {
             "Strategic partnerships and partner relations",
             "Marketing campaign and sales management",
           ],
+          eventUrl: "/event/sbc-summit-ukraine-2026",
         },
         {
           title: "Zeekr 9X — Official Ukraine Launch",
@@ -306,6 +322,7 @@ const T = {
             "Стратегічне партнерство та робота з партнерами",
             "Маркетингова кампанія та управління продажами",
           ],
+          eventUrl: "/event/sbc-summit-ukraine-2026",
         },
         {
           title: "Zeekr 9X — офіційна презентація в Україні",
@@ -528,16 +545,16 @@ const T = {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 44 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
-};
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
+} as const;
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.6 } },
-};
+} as const;
 const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1 } },
-};
+} as const;
 
 // ─── Service icons ────────────────────────────────────────────────────────────
 
@@ -592,7 +609,7 @@ function Counter({ target, suffix }: { target: number; suffix: string }) {
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
-export default function App() {
+function HomePage() {
   const [lang, setLang] = useState<Lang>("en");
   const [menuOpen, setMenuOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
@@ -793,7 +810,7 @@ export default function App() {
             </div>
 
             <div className="space-y-20">
-              {tr.cases.items.map((c, i) => (
+              {(tr.cases.items as unknown as CaseItem[]).map((c, i) => (
                 <motion.div key={i} variants={fadeUp} className={`grid grid-cols-1 lg:grid-cols-2 gap-10 items-center ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}>
                   {/* Image side */}
                   <div className={`${i % 2 === 1 ? "lg:order-2" : ""}`}>
@@ -821,7 +838,7 @@ export default function App() {
                     <div className="text-[10px] font-mono text-white/30 mb-3 tracking-widest uppercase">{c.meta}</div>
                     <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-4" style={{ color: i === 0 ? G : "white" }}>{c.title}</h3>
                     <p className="text-white/55 text-sm leading-relaxed mb-6">{c.desc}</p>
-                    <ul className="space-y-2">
+                    <ul className="space-y-2 mb-6">
                       {c.bullets.map((b, j) => (
                         <li key={j} className="flex items-start gap-2.5 text-sm text-white/45">
                           <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: G }} />
@@ -829,6 +846,14 @@ export default function App() {
                         </li>
                       ))}
                     </ul>
+                    {c.eventUrl && (
+                      <a href={c.eventUrl}
+                        className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest border border-[#00FF88]/30 px-5 py-2.5 hover:bg-[#00FF88]/10 transition-colors group"
+                        style={{ color: G }}>
+                        {lang === "en" ? "Learn More" : "Детальніше"}
+                        <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </a>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -1186,5 +1211,14 @@ export default function App() {
       </footer>
 
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Switch>
+      <Route path="/" component={HomePage} />
+      <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
+    </Switch>
   );
 }
