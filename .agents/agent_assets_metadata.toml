@@ -18,3 +18,51 @@ id = "2D6gpMxGx9d4q2p0x0msh"
 uri = "file://PROJECT_DOCUMENTATION.md"
 type = "text"
 title = "Полная документация проекта Rave'era Group Website"
+
+[[outputs]]
+id = "Wr9g4VnPRlWJULYZNjt2d"
+uri = "file://screenshots_all.tar.gz"
+type = "unspecified"
+title = "Все скриншоты сайта (7 страниц)"
+
+[[outputs]]
+id = "v9Zo7vz-T7CgQTXAGoElw"
+uri = "file://screenshots/home.jpg"
+type = "image"
+title = "Главная страница"
+
+[[outputs]]
+id = "5Lf8jrB9vOOywU-8TGT5Y"
+uri = "file://screenshots/event.jpg"
+type = "image"
+title = "Страница SBC Summit Ukraine 2026"
+
+[[outputs]]
+id = "XRpSXiZI7rt9rfxnOB5CL"
+uri = "file://screenshots/documents.jpg"
+type = "image"
+title = "Страница Документы"
+
+[[outputs]]
+id = "6DMx8gL2CT80wWdlZRY7K"
+uri = "file://screenshots/contacts.jpg"
+type = "image"
+title = "Страница Контакти"
+
+[[outputs]]
+id = "0Rl8ksK3V2jf7V1Tks5rj"
+uri = "file://screenshots/public-offer.jpg"
+type = "image"
+title = "Страница Публічна оферта"
+
+[[outputs]]
+id = "Zru04xQk3aImoYZgr1WJR"
+uri = "file://screenshots/privacy.jpg"
+type = "image"
+title = "Страница Політика конфіденційності"
+
+[[outputs]]
+id = "1uDr1tK4ICMzAgKb4RPu9"
+uri = "file://screenshots/returns.jpg"
+type = "image"
+title = "Страница Повернення коштів"
