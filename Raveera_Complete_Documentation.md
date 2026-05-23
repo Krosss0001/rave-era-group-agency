@@ -333,7 +333,7 @@ const SVC_ICONS = [
 **Hero EN**: "We Build Events" / "That Sell", sub "Conferences · Festivals · Corporate Events"
 **Hero UK**: "Ми Будуємо Події," / "Які Продають", sub "Конференції · Фестивалі · Корпоративні заходи"
 
-**Cases**: Zeekr 9X Launch, Smart Commerce Forum, Music Box Fest, NCrypto Conf 2025, E-Commerce Conf 2025, NCrypto Awards 2025.
+**Cases**: SBC Summit Ukraine 2026, Zeekr 9X Launch, Smart Commerce Forum, Music Box Fest, NCrypto Conf 2025, E-Commerce Conf 2025, NCrypto Awards 2025.
 
 **Services**: Concept & Strategy, Venue Selection, Full Technical Production, Team & Staff, Expo Zone & Design, Event Program, Artists & Hosts, Catering & Service, Sponsors & Partners, PR & Media, Ticketing & Analytics, Activities & Wow Effects.
 

@@ -42,6 +42,19 @@ const T = {
       viewAll: "View All Cases",
       items: [
         {
+          title: "SBC Summit Ukraine 2026",
+          category: "Conference · Sports Marketing",
+          date: "May 27, 2026",
+          meta: "All-Ukrainian Conference on Sports Marketing",
+          img: "/images/case-sbc-summit.jpg",
+          fit: "cover" as const,
+          desc: "All-Ukrainian conference on sports marketing — comprehensive event promotion and sales.",
+          bullets: [
+            "Strategic partnerships and partner relations",
+            "Marketing campaign and sales management",
+          ],
+        },
+        {
           title: "Zeekr 9X — Official Ukraine Launch",
           category: "Auto · Brand Launch",
           date: "May 12, 2026",
@@ -281,6 +294,19 @@ const T = {
       desc: "Реальні події. Реальні результати. Ось що ми побудували.",
       viewAll: "Усі Кейси",
       items: [
+        {
+          title: "SBC Summit Ukraine 2026",
+          category: "Конференція · Спортивний маркетинг",
+          date: "27 травня 2026",
+          meta: "Всеукраїнська конференція зі спортивного маркетингу",
+          img: "/images/case-sbc-summit.jpg",
+          fit: "cover" as const,
+          desc: "Всеукраїнська конференція зі спортивного маркетингу — комплексна робота з промовшином заходу та продажі.",
+          bullets: [
+            "Стратегічне партнерство та робота з партнерами",
+            "Маркетингова кампанія та управління продажами",
+          ],
+        },
         {
           title: "Zeekr 9X — офіційна презентація в Україні",
           category: "Авто · Запуск бренду",
