@@ -12,6 +12,11 @@ import {
 } from "lucide-react";
 import { Switch, Route, useLocation } from "wouter";
 import SBCEventPage from "./pages/SBCEventPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import ContactsPage from "./pages/ContactsPage";
+import PublicOfferPage from "./pages/PublicOfferPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import ReturnsPage from "./pages/ReturnsPage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1219,6 +1224,11 @@ export default function App() {
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
+      <Route path="/documents" component={DocumentsPage} />
+      <Route path="/contacts" component={ContactsPage} />
+      <Route path="/public-offer" component={PublicOfferPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/returns" component={ReturnsPage} />
     </Switch>
   );
 }

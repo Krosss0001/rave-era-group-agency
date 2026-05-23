@@ -165,6 +165,24 @@ export default function SBCEventPage() {
     },
     paymentNote: "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті. Онлайн-оплата буде активована після завершення верифікації мерчанта.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
+    footerBrand: "Всеукраїнська конференція зі спортивного маркетингу. КВЦ Парковий, Київ.",
+    footerOrgLabel: "ОРГАНІЗАТОР",
+    footerOrgName: "ФОП Чекан Богдан Орестович",
+    footerOrgFull: "RAVE'ERA GROUP",
+    footerIpn: "ІПН / РНОКПП: 3411613291",
+    footerKved: "КВЕД: 90.01 Театральна та концертна діяльність",
+    footerAddress: "Україна, 03022, м. Київ, вул. Здановської Юлії, буд. 49, корп. 10, кв. 306",
+    footerIban: "IBAN: буде додано після підтвердження банківських реквізитів",
+    footerContactsLabel: "КОНТАКТИ",
+    footerEmail: "clionintrue@gmail.com",
+    footerPhone: "+38 (093) 430-75-51",
+    footerTelegram: "bogdan_chekan",
+    footerSupport: "Пн-Пт 10:00-19:00",
+    footerDocsLabel: "ДОКУМЕНТИ",
+    footerDocContacts: "Контакти",
+    footerDocOffer: "Публічна оферта",
+    footerDocPrivacy: "Конфіденційність",
+    footerDocReturns: "Повернення",
   } : {
     back: "Back",
     badge: "RAVE'ERA GROUP · EVENT LANDING",
@@ -215,6 +233,24 @@ export default function SBCEventPage() {
     },
     paymentNote: "Payment is processed through the secure AlliancePay payment page. Card data is not entered, processed or stored on this site. Online payment will be activated after merchant verification is complete.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
+    footerBrand: "All-Ukrainian Conference on Sports Marketing. Parkovy ECC, Kyiv.",
+    footerOrgLabel: "ORGANIZER",
+    footerOrgName: "FOP Chekan Bohdan Orestovych",
+    footerOrgFull: "RAVE'ERA GROUP",
+    footerIpn: "IPN: 3411613291",
+    footerKved: "KVED: 90.01 Theater and concert activity",
+    footerAddress: "Ukraine, 03022, Kyiv, Zdanovska Yuliia St., 49, bld. 10, apt. 306",
+    footerIban: "IBAN: to be added after bank details verification",
+    footerContactsLabel: "CONTACTS",
+    footerEmail: "clionintrue@gmail.com",
+    footerPhone: "+38 (093) 430-75-51",
+    footerTelegram: "bogdan_chekan",
+    footerSupport: "Mon-Fri 10:00-19:00",
+    footerDocsLabel: "DOCUMENTS",
+    footerDocContacts: "Contacts",
+    footerDocOffer: "Public Offer",
+    footerDocPrivacy: "Privacy",
+    footerDocReturns: "Refunds",
   };
 
   const mapUrl = "https://maps.google.com/maps?q=50.4490399,30.5407415&hl=uk&t=m&z=17&output=embed";
@@ -674,22 +710,60 @@ export default function SBCEventPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-white/[0.06] py-8 sm:py-12 px-4 sm:px-6 md:px-12">
+      <footer className="border-t border-white/[0.06] py-10 sm:py-14 px-4 sm:px-6 md:px-12">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 mb-10 sm:mb-12">
+            {/* Brand */}
             <div>
-              <div className="text-base sm:text-lg font-black uppercase tracking-tighter mb-3">
+              <div className="text-base sm:text-lg font-black uppercase tracking-tighter mb-1">
                 RAVE'ERA <span style={{ color: G }}>GROUP</span>
               </div>
-              <p className="text-xs text-white/30 leading-relaxed">{t.footer.org}</p>
+              <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest mb-3">SBC SUMMIT UKRAINE 2026</p>
+              <p className="text-xs text-white/30 leading-relaxed">{t.footerBrand}</p>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-white/25 font-mono">{t.footer.ipn}</p>
-              <p className="text-xs text-white/25 font-mono">{t.footer.kved}</p>
+
+            {/* Organizer */}
+            <div>
+              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-white/30 mb-4">
+                <span className="w-1 h-1 rounded-full" style={{ background: G }} />
+                {t.footerOrgLabel}
+              </div>
+              <div className="space-y-2 text-xs text-white/35 leading-relaxed">
+                <p className="font-bold text-white/50">{t.footerOrgName}</p>
+                <p>{t.footerOrgFull}</p>
+                <p className="font-mono text-white/30">{t.footerIpn}</p>
+                <p className="font-mono text-white/30">{t.footerKved}</p>
+                <p className="font-mono text-white/30 leading-relaxed">{t.footerAddress}</p>
+                <p className="font-mono text-white/25">{t.footerIban}</p>
+              </div>
             </div>
-            <div className="sm:text-right md:text-right">
-              <p className="text-xs text-white/25 font-mono">SBC Summit Ukraine 2026</p>
-              <p className="text-xs text-white/25 font-mono mt-1">{t.footer.rights}</p>
+
+            {/* Contacts */}
+            <div>
+              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-white/30 mb-4">
+                <span className="w-1 h-1 rounded-full" style={{ background: G }} />
+                {t.footerContactsLabel}
+              </div>
+              <div className="space-y-2 text-xs text-white/35 leading-relaxed">
+                <p><span className="text-white/25 font-mono">Email:</span> <a href={`mailto:${t.footerEmail}`} className="hover:text-[#00FF88] transition-colors">{t.footerEmail}</a></p>
+                <p><span className="text-white/25 font-mono">{lang === "uk" ? "Телефон:" : "Phone:"}</span> <a href={`tel:${t.footerPhone.replace(/\D/g, "")}`} className="hover:text-[#00FF88] transition-colors">{t.footerPhone}</a></p>
+                <p><span className="text-white/25 font-mono">Telegram:</span> <a href={`https://t.me/${t.footerTelegram}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#00FF88] transition-colors">{t.footerTelegram}</a></p>
+                <p><span className="text-white/25 font-mono">{lang === "uk" ? "Підтримка:" : "Support:"}</span> {t.footerSupport}</p>
+              </div>
+            </div>
+
+            {/* Documents */}
+            <div>
+              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-white/30 mb-4">
+                <span className="w-1 h-1 rounded-full" style={{ background: G }} />
+                {t.footerDocsLabel}
+              </div>
+              <div className="space-y-2">
+                <Link href="/contacts" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocContacts}</Link>
+                <Link href="/public-offer" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocOffer}</Link>
+                <Link href="/privacy" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocPrivacy}</Link>
+                <Link href="/returns" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocReturns}</Link>
+              </div>
             </div>
           </div>
           <div className="border-t border-white/[0.05] pt-5 sm:pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
