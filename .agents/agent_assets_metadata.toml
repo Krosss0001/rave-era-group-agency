@@ -6,3 +6,9 @@ id = "IN18CRTpuqLbQResXu2O2"
 uri = "file://DESIGN_SYSTEM.md"
 type = "text"
 title = "Rave'era Design System — Complete Guide"
+
+[[outputs]]
+id = "fA02mg5VTxsKp5-YrfaqX"
+uri = "file://Raveera_Complete_Documentation.md"
+type = "text"
+title = "Raveera Complete Documentation — for GPT/Codex replication"
