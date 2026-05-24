@@ -20,6 +20,7 @@ import ReturnsPage from "./pages/ReturnsPage";
 import TicketFormPage from "./pages/TicketFormPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import PaymentFailPage from "./pages/PaymentFailPage";
+import NotFound from "./pages/not-found";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1139,7 +1140,7 @@ function HomePage() {
                   <div>
                     <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/25 mb-1">{item.label}</p>
                     {item.href ? (
-                      <a href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer"
+                      <a href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
                         className="text-sm font-bold hover:text-[#00FF88] transition-colors duration-200 block">{item.main}</a>
                     ) : (
                       <span className="text-sm font-bold block">{item.main}</span>
@@ -1151,7 +1152,7 @@ function HomePage() {
             </motion.div>
 
             <motion.div variants={fadeUp} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="https://t.me/bogdan_chekan" target="_blank" rel="noreferrer"
+              <a href="https://t.me/bogdan_chekan" target="_blank" rel="noopener noreferrer"
                 className="group relative overflow-hidden inline-flex items-center gap-2.5 px-10 py-4 font-bold text-sm uppercase tracking-widest text-black" style={{ background: G }}>
                 <span className="relative z-10 flex items-center gap-2">
                   <MessageCircle className="w-4 h-4" />
@@ -1195,7 +1196,7 @@ function HomePage() {
               <div>{tr.contact.locAddr}</div>
             </div>
             <div className="flex items-center gap-2.5 mt-6">
-              <a href="https://t.me/bogdan_chekan" target="_blank" rel="noreferrer" aria-label="Telegram"
+              <a href="https://t.me/bogdan_chekan" target="_blank" rel="noopener noreferrer" aria-label="Telegram"
                 className="w-9 h-9 flex items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all">
                 <MessageCircle className="w-4 h-4" />
               </a>
@@ -1239,6 +1240,7 @@ export default function App() {
       <Route path="/public-offer" component={PublicOfferPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/returns" component={ReturnsPage} />
+      <Route component={NotFound} />
     </Switch>
   );
 }

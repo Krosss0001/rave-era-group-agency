@@ -307,21 +307,21 @@ export default function Home() {
           <motion.div variants={fadeInUp} className="flex flex-col md:flex-row gap-8 md:gap-16 mt-8">
             <div>
               <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-2">Email Us</p>
-              <a href="mailto:contact@evans.com" className="text-2xl hover:text-primary transition-colors">contact@evans.com</a>
+              <a href="mailto:clionintrue@gmail.com" className="text-2xl hover:text-primary transition-colors">clionintrue@gmail.com</a>
             </div>
             <div className="hidden md:block w-px h-12 bg-border" />
             <div>
               <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-2">Visit Us</p>
-              <a href="https://www.evans.com" className="text-2xl hover:text-primary transition-colors">www.evans.com</a>
+              <a href="https://www.rave-era.com.ua/" target="_blank" rel="noopener noreferrer" className="text-2xl hover:text-primary transition-colors">www.rave-era.com.ua</a>
             </div>
           </motion.div>
 
           <motion.div variants={fadeInUp} className="mt-16 text-left border border-border p-8 bg-black/50 backdrop-blur-sm max-w-md w-full">
             <p className="text-xs font-mono text-primary uppercase tracking-widest mb-4">Headquarters</p>
             <p className="text-lg leading-relaxed">
-              900 West 20th Street,<br/>
-              Suite 1001,<br/>
-              Baltimore, MD 21202
+              Ukraine, 03022, Kyiv,<br/>
+              Yuliia Zdanovska St., 49,<br/>
+              building 10, apt. 306
             </p>
           </motion.div>
         </motion.div>

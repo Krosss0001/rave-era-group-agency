@@ -1,308 +1,289 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import {
-  ArrowLeft, ArrowRight, Ticket, User, Mail, Phone,
-  AlertCircle, CheckCircle2,
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Mail,
+  Phone,
+  ShieldCheck,
+  Ticket,
+  User,
 } from "lucide-react";
 
 const G = "#00FF88";
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
-} as const;
-
-const fadeUpChild = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
-} as const;
-
 type Lang = "en" | "uk";
 type TicketType = "sport" | "business" | "online";
 
-const TIERS: Record<TicketType, { nameUk: string; nameEn: string; price: string }> = {
-  sport: { nameUk: "SPORT", nameEn: "SPORT", price: "2 500" },
-  business: { nameUk: "BUSINESS", nameEn: "BUSINESS", price: "6 500" },
-  online: { nameUk: "ONLINE", nameEn: "ONLINE", price: "1 000" },
+const tiers: Record<TicketType, { name: string; price: string; scope: string }> = {
+  sport: {
+    name: "SPORT",
+    price: "2 500 UAH",
+    scope: "In-person event access, partner expo, Sport&Business Club community, networking, participant package, photo/video report.",
+  },
+  business: {
+    name: "BUSINESS",
+    price: "6 500 UAH",
+    scope: "SPORT access plus business lounge, speaker zone, priority entry, front-row seating, speaker materials, event recording and parking.",
+  },
+  online: {
+    name: "ONLINE",
+    price: "1 000 UAH",
+    scope: "Remote access to the online broadcast and event recording.",
+  },
 };
+
+const text = {
+  uk: {
+    back: "Назад",
+    badge: "Заявка на квиток",
+    title: "Оформлення заявки",
+    subtitle: "Онлайн-оплата буде доступна після активації AlliancePay. Карткові дані на цьому сайті не вводяться і не зберігаються.",
+    ticketLabel: "Тип квитка",
+    firstName: "Ім'я",
+    lastName: "Прізвище",
+    email: "Email",
+    phone: "Телефон",
+    required: "Обов'язкове поле",
+    invalidEmail: "Некоректний email",
+    consentRequired: "Потрібна згода з умовами",
+    submit: "Надіслати заявку",
+    submitted: "Заявку підготовлено",
+    submitNote: "Натисніть кнопку нижче, щоб відкрити email із деталями заявки. Ми підтвердимо доступність оплати після активації AlliancePay.",
+    paymentStatus: "Статус оплати",
+    paymentCopy: "Платіжна сторінка AlliancePay ще не активована. Квиток видається тільки після майбутнього підтвердженого статусу SUCCESS від банку.",
+    issueCopy: "Після статусу SUCCESS підтвердження покупки надсилається на email протягом 15 хвилин, PDF-квиток - не пізніше ніж за 24 години до події.",
+    legalCopy: "Надсилаючи заявку, я підтверджую, що мені є 18 років, і погоджуюся з Публічною офертою, Політикою конфіденційності та Політикою повернення.",
+    contact: "Надіслати email-заявку",
+  },
+  en: {
+    back: "Back",
+    badge: "Ticket request",
+    title: "Ticket request",
+    subtitle: "Online payment will be available after AlliancePay activation. Card data is not entered or stored on this site.",
+    ticketLabel: "Ticket type",
+    firstName: "First name",
+    lastName: "Last name",
+    email: "Email",
+    phone: "Phone",
+    required: "Required field",
+    invalidEmail: "Invalid email",
+    consentRequired: "Consent is required",
+    submit: "Send request",
+    submitted: "Request prepared",
+    submitNote: "Use the button below to open an email with the request details. We will confirm payment availability after AlliancePay activation.",
+    paymentStatus: "Payment status",
+    paymentCopy: "The AlliancePay hosted payment page is not active yet. A ticket is issued only after a future confirmed SUCCESS status from the bank.",
+    issueCopy: "After SUCCESS, purchase confirmation is sent by email within 15 minutes and the PDF ticket no later than 24 hours before the event.",
+    legalCopy: "By sending this request, I confirm that I am 18+ and agree to the Public Offer, Privacy Policy and Refund Policy.",
+    contact: "Send email request",
+  },
+};
+
+function getInitialTicketType(): TicketType {
+  const type = new URLSearchParams(window.location.search).get("type");
+  return type === "business" || type === "online" || type === "sport" ? type : "sport";
+}
 
 export default function TicketFormPage() {
   const [lang, setLang] = useState<Lang>("uk");
   const [location] = useLocation();
-  const [ticketType, setTicketType] = useState<TicketType>("sport");
+  const [ticketType, setTicketType] = useState<TicketType>(getInitialTicketType);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
-  // Parse ?type= from URL
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    const t = q.get("type") as TicketType;
-    if (t && TIERS[t]) setTicketType(t);
+    setTicketType(getInitialTicketType());
   }, [location]);
 
-  const t = {
-    back: lang === "uk" ? "Назад" : "Back",
-    badge: lang === "uk" ? "РЕЄСТРАЦІЯ НА ЗАХІД" : "EVENT REGISTRATION",
-    title: lang === "uk" ? "ОФОРМЛЕННЯ КВИТКА" : "TICKET CHECKOUT",
-    subtitle: lang === "uk"
-      ? "Заповніть дані для реєстрації на SBC Summit Ukraine 2026"
-      : "Fill in your details to register for SBC Summit Ukraine 2026",
-    ticketLabel: lang === "uk" ? "Тип квитка" : "Ticket type",
-    firstNameLabel: lang === "uk" ? "Ім'я" : "First name",
-    lastNameLabel: lang === "uk" ? "Прізвище" : "Last name",
-    emailLabel: lang === "uk" ? "Email" : "Email",
-    phoneLabel: lang === "uk" ? "Телефон" : "Phone",
-    phonePlaceholder: lang === "uk" ? "+380 XX XXX XX XX" : "+380 XX XXX XX XX",
-    required: lang === "uk" ? "Обов'язкове поле" : "Required field",
-    invalidEmail: lang === "uk" ? "Некоректний email" : "Invalid email",
-    submit: lang === "uk" ? "ПЕРЕЙТИ ДО ОПЛАТИ" : "PROCEED TO PAYMENT",
-    processing: lang === "uk" ? "ОБРОБКА..." : "PROCESSING...",
-    consent: lang === "uk"
-      ? "Натискаючи кнопку, я погоджуюсь з умовами публічної оферти та політикою конфіденційності."
-      : "By clicking the button, I agree to the public offer terms and privacy policy.",
-    errorGeneral: lang === "uk"
-      ? "Сталася помилка під час створення замовлення. Спробуйте ще раз або зв'яжіться з нами."
-      : "An error occurred while creating the order. Please try again or contact us.",
-  };
+  const t = text[lang];
+  const tier = tiers[ticketType];
 
-  function validate(): boolean {
-    const e: Record<string, string> = {};
-    if (!firstName.trim()) e.firstName = t.required;
-    if (!lastName.trim()) e.lastName = t.required;
-    if (!email.trim()) e.email = t.required;
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = t.invalidEmail;
-    setErrors(e);
-    return Object.keys(e).length === 0;
+  function selectTicketType(next: TicketType) {
+    setTicketType(next);
+    setSubmitted(false);
+    window.history.replaceState(null, "", `/event/sbc-summit-ukraine-2026/ticket-form?type=${next}`);
   }
 
-  async function onSubmit(ev: FormEvent) {
-    ev.preventDefault();
-    setSubmitError("");
+  function validate() {
+    const nextErrors: Record<string, string> = {};
+    if (!firstName.trim()) nextErrors.firstName = t.required;
+    if (!lastName.trim()) nextErrors.lastName = t.required;
+    if (!email.trim()) nextErrors.email = t.required;
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = t.invalidEmail;
+    if (!phone.trim()) nextErrors.phone = t.required;
+    if (!consent) nextErrors.consent = t.consentRequired;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
+  function onSubmit(event: FormEvent) {
+    event.preventDefault();
     if (!validate()) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/payment/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticketType, firstName, lastName, email, phone }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.redirectUrl) {
-        setSubmitError(t.errorGeneral);
-        setLoading(false);
-        return;
-      }
-      window.location.href = data.redirectUrl;
-    } catch {
-      setSubmitError(t.errorGeneral);
-      setLoading(false);
-    }
+    setSubmitted(true);
   }
+
+  const mailBody = encodeURIComponent(
+    [
+      "SBC Summit Ukraine 2026 ticket request",
+      `Ticket: ${tier.name} (${tier.price})`,
+      `First name: ${firstName}`,
+      `Last name: ${lastName}`,
+      `Email: ${email}`,
+      `Phone: ${phone}`,
+      "",
+      "I understand that online payment will be available after AlliancePay activation and that the ticket is issued only after bank status SUCCESS.",
+    ].join("\n"),
+  );
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
-      {/* Nav */}
       <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-14 flex items-center justify-between">
-          <Link href="/event/sbc-summit-ukraine-2026" className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] transition-colors">
+          <Link href="/event/sbc-summit-ukraine-2026" className="flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="w-3.5 h-3.5" />
             {t.back}
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-white/20">RAVE'ERA GROUP</span>
-            <button
-              onClick={() => setLang(lang === "uk" ? "en" : "uk")}
-              className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest border border-white/10 hover:border-[#00FF88]/30 px-2 py-1 text-white/40 hover:text-[#00FF88] transition-colors"
-            >
-              <span className={lang === "uk" ? "text-[#00FF88]" : ""}>UA</span>
-              <span className="text-white/20">/</span>
-              <span className={lang === "en" ? "text-[#00FF88]" : ""}>EN</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setLang(lang === "uk" ? "en" : "uk")}
+            className="min-h-10 px-3 flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest border border-white/10 hover:border-[#00FF88]/30 text-white/40 hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]"
+          >
+            <span className={lang === "uk" ? "text-[#00FF88]" : ""}>UA</span>
+            <span className="text-white/20">/</span>
+            <span className={lang === "en" ? "text-[#00FF88]" : ""}>EN</span>
+          </button>
         </div>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 md:px-12 py-12 sm:py-16 md:py-20">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-        >
-          <motion.div variants={fadeUpChild} className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.22em] border border-[#00FF88]/20 px-3 py-1.5 mb-6" style={{ color: G, background: `${G}08` }}>
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 md:px-12 py-12 sm:py-16 md:py-20">
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+          <div className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.22em] border border-[#00FF88]/20 px-3 py-1.5 mb-6" style={{ color: G, background: `${G}08` }}>
             <Ticket className="w-3 h-3" />
             {t.badge}
-          </motion.div>
+          </div>
 
-          <motion.h1 variants={fadeUpChild} className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[0.9] mb-3">
-            {t.title}
-          </motion.h1>
-          <motion.p variants={fadeUpChild} className="text-sm text-white/40 leading-relaxed mb-8 sm:mb-10">
-            {t.subtitle}
-          </motion.p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[0.9] mb-3">{t.title}</h1>
+          <p className="text-sm text-white/45 leading-relaxed mb-8">{t.subtitle}</p>
 
-          <motion.form variants={fadeUpChild} onSubmit={onSubmit} className="space-y-5 sm:space-y-6">
-            {/* Ticket type */}
+          <div className="mb-8 border border-[#00FF88]/20 bg-[#00FF88]/[0.03] p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" style={{ color: G }} />
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-white/55 mb-2">{t.paymentStatus}</p>
+                <p className="text-sm text-white/50 leading-relaxed">{t.paymentCopy}</p>
+                <p className="text-xs text-white/35 leading-relaxed mt-2">{t.issueCopy}</p>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={onSubmit} className="space-y-6" noValidate>
             <div>
-              <label className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/30 mb-3">
+              <label className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/35 mb-3">
                 <Ticket className="w-3 h-3" style={{ color: G }} />
                 {t.ticketLabel}
               </label>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {(Object.keys(TIERS) as TicketType[]).map((key) => {
-                  const tier = TIERS[key];
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {(Object.keys(tiers) as TicketType[]).map((key) => {
+                  const option = tiers[key];
                   const active = ticketType === key;
                   return (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setTicketType(key)}
-                      className={`border p-3 sm:p-4 text-left transition-colors ${
-                        active
-                          ? "border-[#00FF88]/30 bg-[#00FF88]/[0.03]"
-                          : "border-white/[0.06] bg-white/[0.02] hover:border-white/10"
+                      onClick={() => selectTicketType(key)}
+                      className={`min-h-24 border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88] ${
+                        active ? "border-[#00FF88]/40 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02] hover:border-white/20"
                       }`}
                     >
-                      <div className="text-xs font-mono uppercase tracking-widest text-white/25 mb-1">
-                        {lang === "uk" ? tier.nameUk : tier.nameEn}
-                      </div>
-                      <div className="text-lg sm:text-xl font-black tracking-tighter" style={{ color: active ? G : "white" }}>
-                        {tier.price}
-                      </div>
-                      <div className="text-[10px] font-mono text-white/25">грн</div>
+                      <span className="block text-xs font-mono uppercase tracking-widest text-white/35 mb-1">{option.name}</span>
+                      <span className="block text-lg font-black tracking-tight" style={{ color: active ? G : "white" }}>{option.price}</span>
                     </button>
                   );
                 })}
               </div>
+              <p className="mt-3 text-xs text-white/35 leading-relaxed">{tier.scope}</p>
             </div>
 
-            {/* First name */}
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-widest text-white/30 mb-2">
-                {t.firstNameLabel}
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-[#00FF88]/40 text-sm text-white py-3 pl-10 pr-4 outline-none transition-colors placeholder:text-white/15"
-                  placeholder=""
-                />
-              </div>
-              {errors.firstName && (
-                <p className="flex items-center gap-1 text-[10px] text-red-400 mt-1.5">
-                  <AlertCircle className="w-3 h-3" /> {errors.firstName}
-                </p>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label={t.firstName} error={errors.firstName} icon={<User className="w-4 h-4" />}>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" className="form-input" />
+              </Field>
+              <Field label={t.lastName} error={errors.lastName} icon={<User className="w-4 h-4" />}>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" className="form-input" />
+              </Field>
+              <Field label={t.email} error={errors.email} icon={<Mail className="w-4 h-4" />}>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" inputMode="email" className="form-input" />
+              </Field>
+              <Field label={t.phone} error={errors.phone} icon={<Phone className="w-4 h-4" />}>
+                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" placeholder="+380 XX XXX XX XX" className="form-input" />
+              </Field>
             </div>
 
-            {/* Last name */}
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-widest text-white/30 mb-2">
-                {t.lastNameLabel}
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-[#00FF88]/40 text-sm text-white py-3 pl-10 pr-4 outline-none transition-colors placeholder:text-white/15"
-                  placeholder=""
-                />
-              </div>
-              {errors.lastName && (
-                <p className="flex items-center gap-1 text-[10px] text-red-400 mt-1.5">
-                  <AlertCircle className="w-3 h-3" /> {errors.lastName}
-                </p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-widest text-white/30 mb-2">
-                {t.emailLabel}
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-[#00FF88]/40 text-sm text-white py-3 pl-10 pr-4 outline-none transition-colors placeholder:text-white/15"
-                  placeholder=""
-                />
-              </div>
-              {errors.email && (
-                <p className="flex items-center gap-1 text-[10px] text-red-400 mt-1.5">
-                  <AlertCircle className="w-3 h-3" /> {errors.email}
-                </p>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-widest text-white/30 mb-2">
-                {t.phoneLabel}
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-[#00FF88]/40 text-sm text-white py-3 pl-10 pr-4 outline-none transition-colors placeholder:text-white/15"
-                  placeholder={t.phonePlaceholder}
-                />
-              </div>
-            </div>
-
-            {submitError && (
-              <div className="border border-red-500/20 bg-red-500/[0.03] p-3 text-xs text-red-400">
-                {submitError}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full group relative overflow-hidden py-4 sm:py-5 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-opacity disabled:opacity-50"
-              style={{ background: G }}
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? t.processing : (
-                  <>
-                    {t.submit} <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                  </>
-                )}
+            <label className="flex items-start gap-3 text-xs text-white/40 leading-relaxed border border-white/[0.08] bg-white/[0.02] p-4">
+              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#00FF88]" />
+              <span>
+                {t.legalCopy}{" "}
+                <Link href="/public-offer" className="text-[#00FF88] hover:text-white">Public Offer</Link>,{" "}
+                <Link href="/privacy" className="text-[#00FF88] hover:text-white">Privacy</Link>,{" "}
+                <Link href="/returns" className="text-[#00FF88] hover:text-white">Refunds</Link>.
+                {errors.consent && <span className="mt-2 block text-red-400">{errors.consent}</span>}
               </span>
+            </label>
+
+            <button type="submit" className="w-full min-h-12 py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]" style={{ background: G }}>
+              {t.submit}
             </button>
 
-            <p className="text-[10px] text-white/20 leading-relaxed text-center">
-              {t.consent}
-            </p>
-          </motion.form>
+            {submitted && (
+              <div className="border border-[#00FF88]/25 bg-[#00FF88]/[0.04] p-4 text-sm text-white/55">
+                <div className="flex items-center gap-2 font-bold text-white/75 mb-2">
+                  <CheckCircle2 className="w-4 h-4" style={{ color: G }} />
+                  {t.submitted}
+                </div>
+                <p className="text-xs leading-relaxed mb-4">{t.submitNote}</p>
+                <a href={`mailto:clionintrue@gmail.com?subject=SBC%20Summit%20Ukraine%202026%20ticket%20request&body=${mailBody}`} className="inline-flex min-h-10 items-center justify-center px-4 text-xs font-mono uppercase tracking-widest border border-[#00FF88]/30 text-[#00FF88] hover:text-white hover:border-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+                  {t.contact}
+                </a>
+              </div>
+            )}
+          </form>
         </motion.div>
-      </div>
+      </main>
+    </div>
+  );
+}
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-8 px-4 sm:px-6 md:px-12">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="text-[10px] text-white/15 font-mono">
-            RAVE'ERA GROUP · <span style={{ color: G }}>SBC Summit Ukraine 2026</span>
-          </p>
-          <p className="text-[10px] text-white/15 font-mono">
-            {lang === "uk" ? "Всі права захищено" : "All rights reserved"}
-          </p>
-        </div>
-      </footer>
+function Field({
+  label,
+  error,
+  icon,
+  children,
+}: {
+  label: string;
+  error?: string;
+  icon: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-[10px] font-mono uppercase tracking-widest text-white/35 mb-2">{label}</label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20">{icon}</span>
+        {children}
+      </div>
+      {error && (
+        <p className="flex items-center gap-1 text-[10px] text-red-400 mt-1.5">
+          <AlertCircle className="w-3 h-3" /> {error}
+        </p>
+      )}
     </div>
   );
 }
