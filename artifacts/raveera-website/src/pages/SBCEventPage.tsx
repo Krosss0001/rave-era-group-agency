@@ -410,14 +410,22 @@ export default function SBCEventPage() {
                   {t.paymentNote}
                 </p>
                 {/* Payment logos */}
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <img src="/images/payment-visa.png" alt="Visa" className="h-6 w-auto object-contain opacity-80" />
-                  <img src="/images/payment-mastercard.png" alt="Mastercard" className="h-6 w-auto object-contain opacity-80" />
-                  <img src="/images/payment-applepay.png" alt="Apple Pay" className="h-5 w-auto object-contain opacity-80" />
-                  <img src="/images/payment-googlepay.png" alt="Google Pay" className="h-5 w-auto object-contain opacity-80" />
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <img src="/images/payment-alliancepay.png" alt="AlliancePay" className="h-5 w-auto object-contain" />
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                    <img src="/images/payment-visa.png" alt="Visa" className="h-4 w-auto object-contain" />
+                  </div>
+                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                    <img src="/images/payment-mastercard.png" alt="Mastercard" className="h-5 w-auto object-contain" />
+                  </div>
+                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                    <img src="/images/payment-applepay.png" alt="Apple Pay" className="h-4 w-auto object-contain" />
+                  </div>
+                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                    <img src="/images/payment-googlepay.png" alt="Google Pay" className="h-4 w-auto object-contain" />
+                  </div>
+                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                    <img src="/images/payment-alliancepay.png" alt="AlliancePay" className="h-5 w-auto object-contain" />
+                  </div>
                 </div>
                 <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest">
                   {t.secureBadges}
