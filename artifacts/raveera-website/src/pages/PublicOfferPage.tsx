@@ -25,15 +25,19 @@ export default function PublicOfferPage() {
     org: "ФОП Чекан Богдан Орестович",
     orgFull: "RAVE'ERA GROUP",
     ipn: "ІПН / РНОКПП: 3411613291",
+    address: "Юридична адреса: [ВКАЖІТЬ АДРЕСУ РЕЄСТРАЦІЇ ФОП]",
+    iban: "Р/р IBAN: [ВКАЖІТЬ IBAN ФОП]",
+    bank: "Банк: АТ «Альянс Банк» (Alliance Bank)",
     sections: [
-      { title: "1. Загальні положення", text: "Ця публічна оферта є офіційною пропозицією ФОП Чекан Богдан Орестович (надалі — Організатор) будь-якій фізичній або юридичній особі (надалі — Учасник) укласти договір надання послуг з організації та проведення події SBC Summit Ukraine 2026." },
-      { title: "2. Предмет договору", text: "Організатор зобов'язується надати Учаснику послуги з доступу до конференції у вибраному форматі (SPORT, BUSINESS або ONLINE), а Учасник зобов'язується оплатити ці послуги в розмірі та порядку, визначених на сайті події." },
-      { title: "3. Порядок оплати", text: "Оплата здійснюється через захищену платіжну сторінку AlliancePay. Квиток відкривається тільки після підтвердженого серверного статусу SUCCESS. Онлайн-оплата буде активована після завершення верифікації мерчанта." },
-      { title: "4. Права та обов'язки сторін", text: "Учасник зобов'язаний надати достовірні контактні дані при реєстрації та дотримуватися правил поведінки на заході. Організатор зобов'язується забезпечити умови участі відповідно до обраного формату квитка." },
-      { title: "5. Повернення коштів", text: "Умови повернення коштів визначаються окремим розділом Політики повернення. У разі скасування події Організатором з об'єктивних причин, Учаснику буде запропоновано перенесення на наступний захід або повернення коштів." },
-      { title: "6. Зміна та скасування події", text: "Організатор залишає за собою право змінити програму, спікерів або час проведення події. Учасник буде повідомлений про суттєві зміни не пізніше ніж за 7 днів до заходу." },
-      { title: "7. Конфіденційність", text: "Усі персональні дані Учасника обробляються відповідно до Політики конфіденційності та законодавства України." },
-      { title: "8. Вирішення спорів", text: "Усі спори вирішуються шляхом переговорів. У разі недосягнення згоди — відповідно до законодавства України в суді за місцезнаходженням Організатора." },
+      { title: "1. Загальні положення", text: "Ця публічна оферта є офіційною пропозицією ФОП Чекан Богдан Орестович, ІПН 3411613291 (надалі — Організатор), укласти договір надання послуг з організації та проведення конференції SBC Summit Ukraine 2026 з будь-якою фізичною особою віком від 18 років (надалі — Учасник). Прийняття оферти здійснюється шляхом оплати квитка через платіжну систему AlliancePay (АТ «Альянс Банк»)." },
+      { title: "2. Предмет договору та склад послуг", text: "Організатор надає Учаснику доступ до події SBC Summit Ukraine 2026 відповідно до обраного типу квитка. SPORT — доступ до всіх сесій та нетворкінгу (2 500 ₴). BUSINESS — доступ до всіх сесій, нетворкінгу та закритої вечірки (6 500 ₴). ONLINE — онлайн-трансляція всіх сесій (1 000 ₴). До вартості входить: вхід на обрані активності, роздаткові матеріали, кава-паузи. До вартості не входять: транспорт, проживання, харчування поза програмою заходу." },
+      { title: "3. Порядок оплати та видача квитка", text: "Оплата здійснюється онлайн через захищену платіжну сторінку AlliancePay. Після успішної оплати (статус SUCCESS від банку) Учасник отримує електронне підтвердження покупки на вказаний email протягом 15 хвилин. Квиток у форматі PDF надсилається на email не пізніше ніж за 24 години до заходу. Квиток також доступний для повторного завантаження за запитом на email clionintrue@gmail.com з зазначенням номера замовлення." },
+      { title: "4. Права та обов'язки сторін", text: "Учасник зобов'язаний надати достовірні контактні дані, бути старше 18 років, дотримуватися правил поведінки та інструкцій безпеки на заході. Організатор зобов'язується забезпечити доступ до обраних активностей, надати квиток у зазначений термін, повідомляти про суттєві зміни не пізніше ніж за 7 днів." },
+      { title: "5. Заміна спікерів та програми", text: "Організатор залишає за собою право змінити склад спікерів або програму заходу без попереднього узгодження з Учасником. Про заміну спікера Учасник буде повідомлений не пізніше ніж за 3 дні до заходу. Заміна спікера не є підставою для повернення коштів, якщо загальний формат події збережено." },
+      { title: "6. Форс-мажорні обставини", text: "У разі виникнення форс-мажорних обставин (повітряна тривога, блекаут, стихійне лихо, воєнні дії, карантинні обмеження, рішення органів влади), Організатор має право: перенести захід на резервну дату без зміни формату; перевести очний формат на онлайн з частковим поверненням різниці; скасувати захід з поверненням 100% вартості протягом 30 днів. Учасник буде повідомлений про зміни SMS та email протягом 3 годин." },
+      { title: "7. Повернення коштів", text: "Умови повернення коштів визначаються окремим розділом Політики повернення. У разі скасування події Організатором з об'єктивних причин, Учаснику буде запропоновано перенесення на наступний захід або повернення коштів на ту саму платіжну картку протягом 14 банківських днів." },
+      { title: "8. Конфіденційність та персональні дані", text: "Усі персональні дані Учасника обробляються відповідно до Політики конфіденційності, Закону України «Про захист персональних даних» та GDPR. Платіжні дані карток не зберігаються на серверах Організатора — опрацювання здійснюється AlliancePay." },
+      { title: "9. Вирішення спорів", text: "Усі спори вирішуються шляхом переговорів. У разі недосягнення згоди — відповідно до законодавства України в суді за місцезнаходженням Організатора. Сторони застосовують передсудове врегулювання: претензія розглядається протягом 10 робочих днів." },
     ],
     updated: "Останнє оновлення: травень 2026",
   } : {
@@ -42,15 +46,19 @@ export default function PublicOfferPage() {
     org: "FOP Chekan Bohdan Orestovych",
     orgFull: "RAVE'ERA GROUP",
     ipn: "IPN: 3411613291",
+    address: "Legal Address: [ENTER FOP REGISTRATION ADDRESS]",
+    iban: "IBAN: [ENTER FOP IBAN]",
+    bank: "Bank: JSC \"Alliance Bank\"",
     sections: [
-      { title: "1. General Provisions", text: "This public offer is an official proposal by FOP Chekan Bohdan Orestovych (hereinafter — the Organizer) to any individual or legal entity (hereinafter — the Participant) to enter into a contract for organizing and conducting the SBC Summit Ukraine 2026 event." },
-      { title: "2. Subject of the Agreement", text: "The Organizer undertakes to provide the Participant with access to the conference in the selected format (SPORT, BUSINESS, or ONLINE), and the Participant undertakes to pay for these services in the amount and manner specified on the event website." },
-      { title: "3. Payment Procedure", text: "Payment is made through the secure AlliancePay payment page. The ticket is only issued after a confirmed server status of SUCCESS. Online payment will be activated after merchant verification is complete." },
-      { title: "4. Rights and Obligations", text: "The Participant is obliged to provide accurate contact details during registration and adhere to the event code of conduct. The Organizer undertakes to ensure participation conditions according to the selected ticket format." },
-      { title: "5. Refund Policy", text: "Refund conditions are defined in a separate Refund Policy section. If the Organizer cancels the event for objective reasons, the Participant will be offered a transfer to the next event or a refund." },
-      { title: "6. Changes and Cancellation", text: "The Organizer reserves the right to change the program, speakers, or event timing. The Participant will be notified of material changes at least 7 days before the event." },
-      { title: "7. Confidentiality", text: "All personal data of the Participant is processed in accordance with the Privacy Policy and the legislation of Ukraine." },
-      { title: "8. Dispute Resolution", text: "All disputes are resolved through negotiations. If no agreement is reached — in accordance with the legislation of Ukraine in the court at the Organizer's location." },
+      { title: "1. General Provisions", text: "This public offer is an official proposal by FOP Chekan Bohdan Orestovych, IPN 3411613291 (hereinafter — the Organizer) to enter into a contract for organizing and conducting the SBC Summit Ukraine 2026 conference with any individual aged 18+ (hereinafter — the Participant). Acceptance is made by paying for the ticket via the AlliancePay payment system (JSC Alliance Bank)." },
+      { title: "2. Subject of the Agreement and Services", text: "The Organizer provides the Participant with access to the SBC Summit Ukraine 2026 event according to the selected ticket type. SPORT — access to all sessions and networking (2,500 UAH). BUSINESS — access to all sessions, networking, and closed after-party (6,500 UAH). ONLINE — online broadcast of all sessions (1,000 UAH). Price includes: entry to selected activities, handout materials, coffee breaks. Not included: transport, accommodation, meals outside the event program." },
+      { title: "3. Payment Procedure and Ticket Delivery", text: "Payment is made online through the secure AlliancePay payment page. After successful payment (bank status SUCCESS), the Participant receives an electronic purchase confirmation at the specified email within 15 minutes. A PDF ticket is sent to the email no later than 24 hours before the event. The ticket can also be re-downloaded upon request to clionintrue@gmail.com with the order number." },
+      { title: "4. Rights and Obligations", text: "The Participant must provide accurate contact details, be over 18 years old, follow the code of conduct and safety instructions. The Organizer undertakes to ensure access to selected activities, deliver the ticket within the stated timeframe, and notify of material changes at least 7 days in advance." },
+      { title: "5. Speaker and Program Changes", text: "The Organizer reserves the right to change the speaker lineup or event program without prior agreement. The Participant will be notified of any speaker replacement no later than 3 days before the event. Speaker replacement is not grounds for a refund if the overall event format is preserved." },
+      { title: "6. Force Majeure", text: "In the event of force majeure (air raid alerts, blackout, natural disasters, military actions, quarantine restrictions, government decisions), the Organizer may: reschedule the event to a reserve date without changing the format; switch the in-person format to online with a partial refund of the difference; cancel the event with a 100% refund within 30 days. The Participant will be notified via SMS and email within 3 hours." },
+      { title: "7. Refund Policy", text: "Refund conditions are defined in a separate Refund Policy section. If the Organizer cancels the event for objective reasons, the Participant will be offered a transfer to the next event or a refund to the same payment card within 14 banking days." },
+      { title: "8. Confidentiality and Personal Data", text: "All personal data is processed in accordance with the Privacy Policy, the Law of Ukraine On Personal Data Protection, and GDPR. Card payment data is not stored on the Organizer's servers — processing is handled by AlliancePay." },
+      { title: "9. Dispute Resolution", text: "All disputes are resolved through negotiations. If no agreement is reached — in accordance with Ukrainian law in the court at the Organizer's location. Parties apply pre-trial settlement: claims are reviewed within 10 business days." },
     ],
     updated: "Last updated: May 2026",
   };
@@ -82,6 +90,9 @@ export default function PublicOfferPage() {
             <div className="text-xs text-white/30 font-mono leading-relaxed mb-8 sm:mb-12 space-y-1">
               <p>{t.orgFull} — {t.org}</p>
               <p>{t.ipn}</p>
+              <p>{(t as any).address}</p>
+              <p>{(t as any).iban}</p>
+              <p>{(t as any).bank}</p>
               <p className="text-white/20">{t.updated}</p>
             </div>
           </motion.div>
