@@ -260,8 +260,9 @@ const T = {
       idx: "04", sub: "People", title: "Our Team",
       desc: "Professionals who create unforgettable events.",
       members: [
-        { name: "Bohdan Chekan", role: "CEO & Co-Founder", desc: "Marketing, brand, client acquisition", img: "/images/team-bogdan.jpg" },
-        { name: "Yaroslav", role: "CMO, IT Lead & Co-Founder", desc: "Strategy, IT systems, client coordination, technical production, marketing", img: "/images/team-yaroslav.jpg" },
+        { name: "Bohdan Chekan", role: "CEO & Co-Founder", desc: "Marketing, brand, client acquisition", img: "/images/team-bogdan.jpg", badge: "Co-Founder" },
+        { name: "Yaroslav", role: "CMO, IT Lead & Co-Founder", desc: "Strategy, IT systems, client coordination, technical production, marketing", img: "/images/team-yaroslav.jpg", badge: "Co-Founder" },
+        { name: "Alex Lemeshinsky", role: "CTO", desc: "Web development, system architecture, technical infrastructure", img: "/images/team-alex.png", badge: "" },
       ],
     },
     contact: {
@@ -514,8 +515,9 @@ const T = {
       idx: "04", sub: "Люди", title: "Наша Команда",
       desc: "Професіонали, що створюють незабутні події.",
       members: [
-        { name: "Богдан Чекан", role: "CEO та Співзасновник", desc: "Маркетинг, бренд, залучення клієнтів", img: "/images/team-bogdan.jpg" },
-        { name: "Ярослав", role: "CMO, IT Lead та Співзасновник", desc: "Стратегія, IT-системи, координація клієнтів, технічний продакшн, маркетинг", img: "/images/team-yaroslav.jpg" },
+        { name: "Богдан Чекан", role: "CEO та Співзасновник", desc: "Маркетинг, бренд, залучення клієнтів", img: "/images/team-bogdan.jpg", badge: "Співзасновник" },
+        { name: "Ярослав", role: "CMO, IT Lead та Співзасновник", desc: "Стратегія, IT-системи, координація клієнтів, технічний продакшн, маркетинг", img: "/images/team-yaroslav.jpg", badge: "Співзасновник" },
+        { name: "Alex Lemeshinsky", role: "CTO", desc: "Веб розробка, системна архітектура, технічна інфраструктура", img: "/images/team-alex.png", badge: "" },
       ],
     },
     contact: {
@@ -1077,7 +1079,7 @@ function HomePage() {
               <motion.p variants={fadeIn} className="text-white/25 text-sm font-mono">{tr.team.desc}</motion.p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-8 max-w-3xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
               {tr.team.members.map((m, i) => (
                 <motion.div key={i} variants={fadeUp} className="group relative overflow-hidden border border-white/[0.07] hover:border-white/[0.18] transition-all duration-500 bg-[#080808]">
                   <div className="relative aspect-[4/5] overflow-hidden bg-zinc-950">
@@ -1086,9 +1088,11 @@ function HomePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-600" style={{ background: `linear-gradient(to top, ${G}18, transparent 55%)` }} />
                     <motion.div className="absolute bottom-0 left-0 right-0 h-[3px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-600" style={{ background: G }} />
-                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="text-[8px] font-mono uppercase tracking-widest px-2.5 py-1.5 bg-black/80 backdrop-blur-sm" style={{ color: G, border: `1px solid ${G}30` }}>Co-Founder</div>
-                    </div>
+                    {m.badge && (
+                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="text-[8px] font-mono uppercase tracking-widest px-2.5 py-1.5 bg-black/80 backdrop-blur-sm" style={{ color: G, border: `1px solid ${G}30` }}>{m.badge}</div>
+                      </div>
+                    )}
                   </div>
                   <div className="p-5 md:p-6">
                     <h3 className="text-base md:text-lg font-black uppercase tracking-tight mb-1">{m.name}</h3>

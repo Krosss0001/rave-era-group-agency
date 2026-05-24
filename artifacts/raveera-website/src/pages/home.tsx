@@ -264,11 +264,12 @@ export default function Home() {
             <motion.p variants={fadeInUp} className="text-muted-foreground mt-4 max-w-xl mx-auto">The masterminds behind the curtain.</motion.p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             {[
               { img: "/images/team-1.png", name: "Gregory Peterson", role: "Head of Production" },
               { img: "/images/team-2.png", name: "Melissa Andrews", role: "Creative Director" },
-              { img: "/images/team-3.png", name: "Michael Barnes", role: "Event Coordinator" }
+              { img: "/images/team-3.png", name: "Michael Barnes", role: "Event Coordinator" },
+              { img: "/images/team-alex.png", name: "Alex Lemeshinsky", role: "CTO", subRole: "Веб розробка" }
             ].map((member, i) => (
               <motion.div key={i} variants={fadeInUp} className="flex flex-col items-center text-center group">
                 <div className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden mb-6 border-4 border-black group-hover:border-primary transition-colors duration-500">
@@ -276,6 +277,9 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold font-display uppercase tracking-tight">{member.name}</h3>
                 <p className="text-primary font-mono text-xs uppercase tracking-widest mt-2">{member.role}</p>
+                {'subRole' in member && member.subRole && (
+                  <p className="text-muted-foreground font-mono text-[10px] uppercase tracking-wider mt-1">{member.subRole}</p>
+                )}
               </motion.div>
             ))}
           </div>
