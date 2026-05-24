@@ -409,24 +409,6 @@ export default function SBCEventPage() {
                 <p className="text-sm text-white/40 leading-relaxed mb-4">
                   {t.paymentNote}
                 </p>
-                {/* Payment logos */}
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                    <img src="/images/payment-visa.png" alt="Visa" className="h-4 w-auto object-contain" />
-                  </div>
-                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                    <img src="/images/payment-mastercard.png" alt="Mastercard" className="h-5 w-auto object-contain" />
-                  </div>
-                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                    <img src="/images/payment-applepay.png" alt="Apple Pay" className="h-4 w-auto object-contain" />
-                  </div>
-                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                    <img src="/images/payment-googlepay.png" alt="Google Pay" className="h-4 w-auto object-contain" />
-                  </div>
-                  <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                    <img src="/images/payment-alliancepay.png" alt="AlliancePay" className="h-5 w-auto object-contain" />
-                  </div>
-                </div>
                 <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest">
                   {t.secureBadges}
                 </p>
@@ -576,7 +558,25 @@ export default function SBCEventPage() {
             </div>
 
             <motion.div variants={fadeUpChild} className="mt-8 sm:mt-10 border border-white/[0.04] bg-white/[0.01] p-4 sm:p-6 text-center">
-              <p className="text-xs text-white/30 leading-relaxed max-w-2xl mx-auto mb-3">{t.paymentNote}</p>
+              <p className="text-xs text-white/30 leading-relaxed max-w-2xl mx-auto mb-4">{t.paymentNote}</p>
+              {/* Payment logos */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+                <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                  <img src="/images/payment-visa.png" alt="Visa" className="h-4 w-auto object-contain" />
+                </div>
+                <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                  <img src="/images/payment-mastercard.png" alt="Mastercard" className="h-5 w-auto object-contain" />
+                </div>
+                <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                  <img src="/images/payment-applepay.png" alt="Apple Pay" className="h-4 w-auto object-contain" />
+                </div>
+                <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                  <img src="/images/payment-googlepay.png" alt="Google Pay" className="h-4 w-auto object-contain" />
+                </div>
+                <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
+                  <img src="/images/payment-alliancepay.png" alt="AlliancePay" className="h-5 w-auto object-contain" />
+                </div>
+              </div>
               <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] font-mono text-white/20 uppercase tracking-widest">
                 <CreditCard className="w-3 h-3" />
                 {t.secureBadges}
