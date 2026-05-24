@@ -17,6 +17,9 @@ import ContactsPage from "./pages/ContactsPage";
 import PublicOfferPage from "./pages/PublicOfferPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ReturnsPage from "./pages/ReturnsPage";
+import TicketFormPage from "./pages/TicketFormPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PaymentFailPage from "./pages/PaymentFailPage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1224,6 +1227,9 @@ export default function App() {
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
+      <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
+      <Route path="/event/sbc-summit-ukraine-2026/payment/success" component={PaymentSuccessPage} />
+      <Route path="/event/sbc-summit-ukraine-2026/payment/fail" component={PaymentFailPage} />
       <Route path="/documents" component={DocumentsPage} />
       <Route path="/contacts" component={ContactsPage} />
       <Route path="/public-offer" component={PublicOfferPage} />

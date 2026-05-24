@@ -330,7 +330,7 @@ export default function SBCEventPage() {
 
               {/* CTAs */}
               <motion.div variants={fadeUpChild} className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10 sm:mb-14">
-                <a href="#tickets" className="group relative overflow-hidden px-6 sm:px-8 py-3.5 sm:py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black" style={{ background: G }}>
+                <a href="/event/sbc-summit-ukraine-2026/ticket-form?type=business" className="group relative overflow-hidden px-6 sm:px-8 py-3.5 sm:py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black" style={{ background: G }}>
                   <span className="relative z-10 flex items-center gap-2">
                     {t.buyTicket} <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </span>
@@ -553,7 +553,7 @@ export default function SBCEventPage() {
                     ))}
                   </ul>
                   <a
-                    href="#tickets"
+                    href={`/event/sbc-summit-ukraine-2026/ticket-form?type=${tier.key}`}
                     className={`w-full text-center py-3 sm:py-3.5 font-bold text-xs sm:text-sm uppercase tracking-widest transition-colors ${
                       tier.popular
                         ? "text-black hover:bg-white"
@@ -699,7 +699,7 @@ export default function SBCEventPage() {
               {t.ctaTitle}
             </motion.h2>
             <motion.div variants={fadeUpChild}>
-              <a href="#tickets" className="group relative overflow-hidden inline-flex items-center gap-2 px-8 sm:px-10 py-4 sm:py-5 font-bold text-xs sm:text-sm uppercase tracking-widest text-black" style={{ background: G }}>
+              <a href="/event/sbc-summit-ukraine-2026/ticket-form?type=business" className="group relative overflow-hidden inline-flex items-center gap-2 px-8 sm:px-10 py-4 sm:py-5 font-bold text-xs sm:text-sm uppercase tracking-widest text-black" style={{ background: G }}>
                 <span className="relative z-10">{t.buyTicket}</span>
                 <ArrowRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
                 <motion.div className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
