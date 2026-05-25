@@ -766,7 +766,7 @@ export default function SBCEventPage() {
               </div>
               <div className="space-y-2 text-xs text-white/35 leading-relaxed">
                 <p><span className="text-white/25 font-mono">Email:</span> <a href={`mailto:${t.footerEmail}`} className="hover:text-[#00FF88] transition-colors">{t.footerEmail}</a></p>
-                <p><span className="text-white/25 font-mono">{lang === "uk" ? "Телефон:" : "Phone:"}</span> <a href={`tel:${t.footerPhone.replace(/\D/g, "")}`} className="hover:text-[#00FF88] transition-colors">{t.footerPhone}</a></p>
+                <p><span className="text-white/25 font-mono">{lang === "uk" ? "Телефон:" : "Phone:"}</span> <a href={`tel:+${t.footerPhone.replace(/\D/g, "")}`} className="hover:text-[#00FF88] transition-colors">{t.footerPhone}</a></p>
                 <p><span className="text-white/25 font-mono">Telegram:</span> <a href={`https://t.me/${t.footerTelegram}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#00FF88] transition-colors">{t.footerTelegram}</a></p>
                 <p><span className="text-white/25 font-mono">{lang === "uk" ? "Підтримка:" : "Support:"}</span> {t.footerSupport}</p>
               </div>

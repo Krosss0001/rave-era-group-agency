@@ -53,9 +53,12 @@ const text = {
     submitted: "Заявку підготовлено",
     submitNote: "Натисніть кнопку нижче, щоб відкрити email із деталями заявки. Ми підтвердимо доступність оплати після активації AlliancePay.",
     paymentStatus: "Статус оплати",
-    paymentCopy: "Платіжна сторінка AlliancePay ще не активована. Квиток видається тільки після майбутнього підтвердженого статусу SUCCESS від банку.",
+    paymentCopy: "Платіжна сторінка AlliancePay ще не активована. Квиток видається тільки після майбутнього серверного підтвердження статусу SUCCESS від банку.",
     issueCopy: "Після статусу SUCCESS підтвердження покупки надсилається на email протягом 15 хвилин, PDF-квиток - не пізніше ніж за 24 години до події.",
     legalCopy: "Надсилаючи заявку, я підтверджую, що мені є 18 років, і погоджуюся з Публічною офертою, Політикою конфіденційності та Політикою повернення.",
+    offer: "Публічна оферта",
+    privacy: "Політика конфіденційності",
+    returns: "Політика повернення",
     contact: "Надіслати email-заявку",
   },
   en: {
@@ -75,9 +78,12 @@ const text = {
     submitted: "Request prepared",
     submitNote: "Use the button below to open an email with the request details. We will confirm payment availability after AlliancePay activation.",
     paymentStatus: "Payment status",
-    paymentCopy: "The AlliancePay hosted payment page is not active yet. A ticket is issued only after a future confirmed SUCCESS status from the bank.",
+    paymentCopy: "The AlliancePay hosted payment page is not active yet. A ticket is issued only after future server-side SUCCESS confirmation from the bank.",
     issueCopy: "After SUCCESS, purchase confirmation is sent by email within 15 minutes and the PDF ticket no later than 24 hours before the event.",
     legalCopy: "By sending this request, I confirm that I am 18+ and agree to the Public Offer, Privacy Policy and Refund Policy.",
+    offer: "Public Offer",
+    privacy: "Privacy Policy",
+    returns: "Refund Policy",
     contact: "Send email request",
   },
 };
@@ -231,9 +237,9 @@ export default function TicketFormPage() {
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#00FF88]" />
               <span>
                 {t.legalCopy}{" "}
-                <Link href="/public-offer" className="text-[#00FF88] hover:text-white">Public Offer</Link>,{" "}
-                <Link href="/privacy" className="text-[#00FF88] hover:text-white">Privacy</Link>,{" "}
-                <Link href="/returns" className="text-[#00FF88] hover:text-white">Refunds</Link>.
+                <Link href="/public-offer" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>,{" "}
+                <Link href="/privacy" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.privacy}</Link>,{" "}
+                <Link href="/returns" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>.
                 {errors.consent && <span className="mt-2 block text-red-400">{errors.consent}</span>}
               </span>
             </label>

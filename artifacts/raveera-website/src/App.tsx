@@ -10,7 +10,7 @@ import {
   Coffee, DollarSign, Newspaper, Ticket, Sparkles,
   ExternalLink,
 } from "lucide-react";
-import { Switch, Route, useLocation } from "wouter";
+import { Link, Switch, Route, useLocation } from "wouter";
 import SBCEventPage from "./pages/SBCEventPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import ContactsPage from "./pages/ContactsPage";
@@ -281,7 +281,7 @@ const T = {
       tgHandle: "@bogdan_chekan",
       tgDesc: "Quick contact with our manager",
       emailLabel: "Email",
-      emailAddr: "citointrues@gmail.com",
+      emailAddr: "clionintrue@gmail.com",
       emailDesc: "For official inquiries",
       phoneLabel: "Phone",
       phoneNum: "+38 (093) 430-75-51",
@@ -302,6 +302,11 @@ const T = {
         "Currency: UAH",
         "Payment purpose: Payment for goods/services",
       ],
+    },
+    cookie: {
+      text: "We use essential cookies and lightweight analytics signals to keep the site stable and improve the ticket request flow.",
+      accept: "Accept",
+      privacy: "Privacy Policy",
     },
   },
 
@@ -545,7 +550,7 @@ const T = {
       tgHandle: "@bogdan_chekan",
       tgDesc: "Швидкий зв'язок з менеджером",
       emailLabel: "Email",
-      emailAddr: "citointrues@gmail.com",
+      emailAddr: "clionintrue@gmail.com",
       emailDesc: "Для офіційних запитів",
       phoneLabel: "Телефон",
       phoneNum: "+38 (093) 430-75-51",
@@ -566,6 +571,11 @@ const T = {
         "Валюта: UAH",
         "Призначення платежу: Оплата за товар/послугу",
       ],
+    },
+    cookie: {
+      text: "Ми використовуємо необхідні cookie та легкі аналітичні сигнали для стабільної роботи сайту й покращення заявки на квиток.",
+      accept: "Прийняти",
+      privacy: "Політика конфіденційності",
     },
   },
 } as const;
@@ -921,10 +931,10 @@ function HomePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }} className="mt-10">
-                  <img src="/images/about-1.png" alt="event" className="w-full aspect-square object-cover" />
+                  <img src="/images/about-1.png" alt="RAVE'ERA event production backstage" className="w-full aspect-square object-cover" />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.22 }}>
-                  <img src="/images/about-2.png" alt="event" className="w-full aspect-[4/5] object-cover" />
+                  <img src="/images/about-2.png" alt="RAVE'ERA stage lighting and audience experience" className="w-full aspect-[4/5] object-cover" />
                 </motion.div>
               </div>
             </div>
@@ -1255,18 +1265,59 @@ function HomePage() {
 
 export default function App() {
   return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
-      <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
-      <Route path="/event/sbc-summit-ukraine-2026/payment/success" component={PaymentSuccessPage} />
-      <Route path="/event/sbc-summit-ukraine-2026/payment/fail" component={PaymentFailPage} />
-      <Route path="/documents" component={DocumentsPage} />
-      <Route path="/contacts" component={ContactsPage} />
-      <Route path="/public-offer" component={PublicOfferPage} />
-      <Route path="/privacy" component={PrivacyPage} />
-      <Route path="/returns" component={ReturnsPage} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
+        <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
+        <Route path="/event/sbc-summit-ukraine-2026/payment/success" component={PaymentSuccessPage} />
+        <Route path="/event/sbc-summit-ukraine-2026/payment/fail" component={PaymentFailPage} />
+        <Route path="/documents" component={DocumentsPage} />
+        <Route path="/contacts" component={ContactsPage} />
+        <Route path="/public-offer" component={PublicOfferPage} />
+        <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/returns" component={ReturnsPage} />
+        <Route component={NotFound} />
+      </Switch>
+      <CookieBanner />
+    </>
+  );
+}
+
+function CookieBanner() {
+  const [lang] = useState<Lang>("uk");
+  const [visible, setVisible] = useState(false);
+  const copy = T[lang].cookie;
+
+  useEffect(() => {
+    setVisible(localStorage.getItem("raveera-cookie-consent") !== "accepted");
+  }, []);
+
+  function accept() {
+    localStorage.setItem("raveera-cookie-consent", "accepted");
+    setVisible(false);
+  }
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-[80] px-4 pb-4 sm:px-6 sm:pb-6 pointer-events-none">
+      <div className="pointer-events-auto mx-auto flex max-w-4xl flex-col gap-4 border border-white/[0.1] bg-[#050508]/95 p-4 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs leading-relaxed text-white/50">
+          {copy.text}{" "}
+          <Link href="/privacy" className="font-semibold text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+            {copy.privacy}
+          </Link>
+        </p>
+        <button
+          type="button"
+          onClick={accept}
+          className="min-h-10 shrink-0 px-5 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]"
+          style={{ background: G }}
+        >
+          {copy.accept}
+        </button>
+      </div>
+    </div>
   );
 }
