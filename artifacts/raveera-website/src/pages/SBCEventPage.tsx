@@ -172,7 +172,11 @@ export default function SBCEventPage() {
     footerIpn: "ІПН / РНОКПП: 3411613291",
     footerKved: "КВЕД: 90.01 Театральна та концертна діяльність",
     footerAddress: "Україна, 03022, м. Київ, вул. Здановської Юлії, буд. 49, корп. 10, кв. 306",
-    footerIban: "IBAN: буде додано після підтвердження банківських реквізитів",
+    footerBank: "Банк: АТ БАНК АЛЬЯНС",
+    footerRecipient: "Отримувач: ФОП Чекан Б.О.",
+    footerIban: "IBAN: UA303001190000026006744298001",
+    footerCurrency: "Валюта: UAH",
+    footerPurpose: "Призначення платежу: Оплата за товар/послугу",
     footerContactsLabel: "КОНТАКТИ",
     footerEmail: "clionintrue@gmail.com",
     footerPhone: "+38 (093) 430-75-51",
@@ -240,7 +244,11 @@ export default function SBCEventPage() {
     footerIpn: "IPN: 3411613291",
     footerKved: "KVED: 90.01 Theater and concert activity",
     footerAddress: "Ukraine, 03022, Kyiv, Zdanovska Yuliia St., 49, bld. 10, apt. 306",
-    footerIban: "IBAN: to be added after bank details verification",
+    footerBank: "Bank: JSC Alliance Bank",
+    footerRecipient: "Recipient: FOP Chekan B.O.",
+    footerIban: "IBAN: UA303001190000026006744298001",
+    footerCurrency: "Currency: UAH",
+    footerPurpose: "Payment purpose: Payment for goods/services",
     footerContactsLabel: "CONTACTS",
     footerEmail: "clionintrue@gmail.com",
     footerPhone: "+38 (093) 430-75-51",
@@ -742,7 +750,11 @@ export default function SBCEventPage() {
                 <p className="font-mono text-white/30">{t.footerIpn}</p>
                 <p className="font-mono text-white/30">{t.footerKved}</p>
                 <p className="font-mono text-white/30 leading-relaxed">{t.footerAddress}</p>
+                <p className="font-mono text-white/25">{t.footerBank}</p>
+                <p className="font-mono text-white/25">{t.footerRecipient}</p>
                 <p className="font-mono text-white/25">{t.footerIban}</p>
+                <p className="font-mono text-white/25">{t.footerCurrency}</p>
+                <p className="font-mono text-white/25">{t.footerPurpose}</p>
               </div>
             </div>
 

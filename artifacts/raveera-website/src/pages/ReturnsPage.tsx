@@ -6,6 +6,25 @@ import { ArrowLeft, Globe, RefreshCcw } from "lucide-react";
 const G = "#00FF88";
 type Lang = "en" | "uk";
 
+const paymentDetails = {
+  uk: [
+    "Банк: АТ БАНК АЛЬЯНС",
+    "Отримувач: ФОП Чекан Б.О.",
+    "IBAN: UA303001190000026006744298001",
+    "Валюта: UAH",
+    "РНОКПП: 3411613291",
+    "Призначення платежу: Оплата за товар/послугу",
+  ],
+  en: [
+    "Bank: JSC Alliance Bank",
+    "Recipient: FOP Chekan B.O.",
+    "IBAN: UA303001190000026006744298001",
+    "Currency: UAH",
+    "RNOKPP: 3411613291",
+    "Payment purpose: Payment for goods/services",
+  ],
+};
+
 const sections = {
   uk: [
     ["1. Загальні умови", "Ця Політика визначає порядок повернення коштів за квитки на SBC Summit Ukraine 2026, що продаються ФОП Чекан Богдан Орестович (RAVE'ERA GROUP), ІПН / РНОКПП 3411613291."],
@@ -58,7 +77,10 @@ export default function ReturnsPage() {
               {t.badge}
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-4">{t.title}</h1>
-            <p className="text-xs text-white/25 font-mono mb-10">{t.updated}</p>
+            <div className="text-xs text-white/35 font-mono leading-relaxed mb-10 space-y-1">
+              {paymentDetails[lang].map((item) => <p key={item}>{item}</p>)}
+              <p className="text-white/20">{t.updated}</p>
+            </div>
           </motion.div>
           <div className="space-y-7">
             {sections[lang].map(([title, body], index) => (

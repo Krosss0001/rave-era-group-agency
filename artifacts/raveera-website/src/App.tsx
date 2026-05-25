@@ -293,6 +293,15 @@ const T = {
       sub: "Over 10 years of experience in organizing large-scale events.",
       copy: "© 2026 Rave'era Group Agency. All rights reserved.",
       menu: ["Cases", "About Us", "Services", "Team", "Contacts"],
+      legalTitle: "Organizer / Payment Details",
+      legalDetails: [
+        "FOP Chekan B.O.",
+        "RNOKPP: 3411613291",
+        "Bank: JSC Alliance Bank",
+        "IBAN: UA303001190000026006744298001",
+        "Currency: UAH",
+        "Payment purpose: Payment for goods/services",
+      ],
     },
   },
 
@@ -548,6 +557,15 @@ const T = {
       sub: "Понад 10 років досвіду в організації масштабних подій.",
       copy: "© 2026 Rave'era Group Agency. Всі права захищені.",
       menu: ["Кейси", "Про нас", "Послуги", "Команда", "Контакти"],
+      legalTitle: "Організатор / реквізити",
+      legalDetails: [
+        "ФОП Чекан Б.О.",
+        "РНОКПП: 3411613291",
+        "Банк: АТ БАНК АЛЬЯНС",
+        "IBAN: UA303001190000026006744298001",
+        "Валюта: UAH",
+        "Призначення платежу: Оплата за товар/послугу",
+      ],
     },
   },
 } as const;
@@ -1174,7 +1192,7 @@ function HomePage() {
 
       {/* ── Footer ── */}
       <footer className="py-12 px-6 md:px-12 border-t border-white/[0.05] bg-[#020202]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           <div>
             <BrandLine className="block text-sm md:text-base font-black uppercase tracking-tight leading-none text-white mb-4 whitespace-nowrap" />
             <p className="text-xs text-white/30 leading-relaxed">{tr.footer.tagline}</p>
@@ -1212,6 +1230,14 @@ function HomePage() {
                 className="ml-2 h-9 px-3 flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 hover:border-[#00FF88]/50 text-white/40 hover:text-[#00FF88] transition-all">
                 <Globe className="w-3 h-3" />{lang === "en" ? "UA" : "EN"}
               </button>
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/20 mb-4">{tr.footer.legalTitle}</p>
+            <div className="space-y-2 text-xs text-white/35 leading-relaxed">
+              {tr.footer.legalDetails.map((item) => (
+                <p key={item} className="break-words">{item}</p>
+              ))}
             </div>
           </div>
         </div>

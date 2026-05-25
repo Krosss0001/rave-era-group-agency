@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowLeft, Globe, Mail, Phone, MessageCircle, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, Globe, Mail, Phone, MessageCircle, Clock, MapPin, Building2 } from "lucide-react";
 
 const G = "#00FF88";
 
@@ -30,6 +30,15 @@ export default function ContactsPage() {
     supportTime: "Пн-Пт 10:00-19:00",
     address: "Адреса",
     addressVal: "Україна, 03022, м. Київ, вул. Здановської Юлії, буд. 49, корп. 10, кв. 306",
+    merchant: "Реквізити ФОП",
+    merchantDetails: [
+      "Банк: АТ БАНК АЛЬЯНС",
+      "Отримувач: ФОП Чекан Б.О.",
+      "IBAN: UA303001190000026006744298001",
+      "Валюта: UAH",
+      "РНОКПП: 3411613291",
+      "Призначення платежу: Оплата за товар/послугу",
+    ],
   } : {
     back: "Back",
     title: "Contacts",
@@ -41,6 +50,15 @@ export default function ContactsPage() {
     supportTime: "Mon-Fri 10:00-19:00",
     address: "Address",
     addressVal: "Ukraine, 03022, Kyiv, Zdanovska Yuliia St., 49, bld. 10, apt. 306",
+    merchant: "FOP Payment Details",
+    merchantDetails: [
+      "Bank: JSC Alliance Bank",
+      "Recipient: FOP Chekan B.O.",
+      "IBAN: UA303001190000026006744298001",
+      "Currency: UAH",
+      "RNOKPP: 3411613291",
+      "Payment purpose: Payment for goods/services",
+    ],
   };
 
   const contacts = [
@@ -114,6 +132,21 @@ export default function ContactsPage() {
               {t.address}
             </div>
             <p className="text-sm text-white/50 leading-relaxed">{t.addressVal}</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="mt-4 border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6"
+          >
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/30 mb-3">
+              <Building2 className="w-3.5 h-3.5" style={{ color: G }} />
+              {t.merchant}
+            </div>
+            <div className="space-y-1 text-sm text-white/50 leading-relaxed">
+              {t.merchantDetails.map((item) => <p key={item} className="break-words">{item}</p>)}
+            </div>
           </motion.div>
         </div>
       </section>
