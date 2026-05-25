@@ -49,7 +49,7 @@ const sections = {
     ["6. Форс-мажор, безпека та технічні обставини", "У разі повітряної тривоги, блекауту, воєнних ризиків, рішень органів влади, обмежень майданчика, технічних збоїв, карантинних або інших форс-мажорних обставин Організатор може призупинити, перенести, змінити формат на онлайн/гібридний або скасувати подію. Учасники отримують повідомлення email/SMS/Telegram за наявними контактами."],
     ["7. Повернення коштів", "Повернення регулюється Політикою повернення. Якщо повернення погоджено, кошти повертаються на ту саму платіжну картку, з якої була проведена оплата. Організатор не запитує повні дані картки, CVV або PIN."],
     ["8. Персональні дані", "Персональні дані обробляються згідно з Політикою конфіденційності та Законом України «Про захист персональних даних». Платіжні карткові дані обробляє банк/платіжний провайдер, а не цей сайт."],
-    ["9. Претензії та спори", "Претензії надсилаються на clionintrue@gmail.com із номером замовлення, ПІБ, контактами та описом питання. Строк розгляду - до 10 робочих днів. Якщо спір не врегульовано шляхом переговорів, він вирішується за законодавством України."],
+    ["9. Претензії та спори", "Претензії надсилаються на ceo@rave-era.com.ua із номером замовлення, ПІБ, контактами та описом питання. Строк розгляду - до 10 робочих днів. Якщо спір не врегульовано шляхом переговорів, він вирішується за законодавством України."],
   ],
   en: [
     ["1. General Provisions", "This Public Offer is an offer by FOP Chekan Bohdan Orestovych to provide services for participation in SBC Summit Ukraine 2026. The event takes place on May 27, 2026, 09:30-23:00, at Parkovy ECC, Kyiv, Parkova Road, 16A. The offer is accepted after ticket payment through AlliancePay and bank status SUCCESS."],
@@ -60,7 +60,7 @@ const sections = {
     ["6. Force Majeure, Safety and Technical Events", "In case of air raid alerts, blackout, war risks, government restrictions, venue restrictions, technical failures, quarantine or other force majeure, the Organizer may pause, postpone, switch to online/hybrid format or cancel the event. Participants are notified by email/SMS/Telegram using available contacts."],
     ["7. Refunds", "Refunds are governed by the Refund Policy. If a refund is approved, money is returned to the same payment card used for payment. The Organizer never asks for full card number, CVV or PIN."],
     ["8. Personal Data", "Personal data is processed under the Privacy Policy and the Law of Ukraine On Personal Data Protection. Payment card data is processed by the bank/payment provider, not by this site."],
-    ["9. Claims and Disputes", "Claims are sent to clionintrue@gmail.com with order number, full name, contacts and issue description. Review period is up to 10 business days. If the dispute is not settled by negotiation, it is resolved under Ukrainian law."],
+    ["9. Claims and Disputes", "Claims are sent to ceo@rave-era.com.ua with order number, full name, contacts and issue description. Review period is up to 10 business days. If the dispute is not settled by negotiation, it is resolved under Ukrainian law."],
   ],
 };
 

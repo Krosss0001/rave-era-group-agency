@@ -18,7 +18,7 @@ const sections = {
     ["8. Передача третім особам", "Дані можуть передаватися банку/платіжному провайдеру, сервісам email/SMS/Telegram-комунікації, хостингу, аналітиці, державним органам у випадках, передбачених законом, та підрядникам, які допомагають провести подію."],
     ["9. Захист і строки зберігання", "Ми застосовуємо технічні й організаційні заходи захисту: HTTPS, обмеження доступу, мінімізацію даних і контроль доступу. Дані зберігаються лише протягом строку, необхідного для цілей обробки, податкового/бухгалтерського обліку та захисту прав."],
     ["10. Права користувача", "Користувач має право отримати доступ до своїх даних, вимагати виправлення, видалення або обмеження обробки, відкликати згоду, заперечити проти обробки та подати скаргу до уповноваженого органу або суду."],
-    ["11. Контакт", "Питання щодо персональних даних надсилайте на clionintrue@gmail.com із темою «Персональні дані»."],
+    ["11. Контакт", "Питання щодо персональних даних надсилайте на ceo@rave-era.com.ua із темою «Персональні дані»."],
   ],
   en: [
     ["1. Data Controller", "The personal data controller is FOP Chekan Bohdan Orestovych (RAVE'ERA GROUP), IPN / RNOKPP 3411613291, address: Ukraine, 03022, Kyiv, Yuliia Zdanovska St., 49, building 10, apt. 306."],
@@ -31,7 +31,7 @@ const sections = {
     ["8. Third-Party Sharing", "Data may be shared with the bank/payment provider, email/SMS/Telegram communication services, hosting, analytics, public authorities where required by law, and contractors helping deliver the event."],
     ["9. Security and Retention", "We apply technical and organizational safeguards: HTTPS, access restrictions, data minimization and access control. Data is kept only as long as needed for processing purposes, tax/accounting records and legal protection."],
     ["10. User Rights", "Users may request access, correction, deletion or restriction of processing, withdraw consent, object to processing and file a complaint with the competent authority or court."],
-    ["11. Contact", "Personal-data questions should be sent to clionintrue@gmail.com with the subject 'Personal Data'."],
+    ["11. Contact", "Personal-data questions should be sent to ceo@rave-era.com.ua with the subject 'Personal Data'."],
   ],
 };
 

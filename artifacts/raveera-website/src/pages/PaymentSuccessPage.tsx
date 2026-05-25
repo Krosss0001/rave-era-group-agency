@@ -52,7 +52,7 @@ export default function PaymentSuccessPage() {
               <Ticket className="w-3.5 h-3.5" />
               {t.event}
             </Link>
-            <a href="mailto:clionintrue@gmail.com" className="inline-flex min-h-10 items-center gap-2 px-5 py-2.5 text-xs font-mono uppercase tracking-widest text-white/45 hover:text-[#00FF88] border border-white/10 hover:border-[#00FF88]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+            <a href="mailto:ceo@rave-era.com.ua" className="inline-flex min-h-10 items-center gap-2 px-5 py-2.5 text-xs font-mono uppercase tracking-widest text-white/45 hover:text-[#00FF88] border border-white/10 hover:border-[#00FF88]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
               <Mail className="w-3.5 h-3.5" />
               {t.contact}
             </a>

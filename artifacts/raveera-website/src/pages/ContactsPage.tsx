@@ -70,7 +70,7 @@ export default function ContactsPage() {
   };
 
   const contacts = [
-    { icon: Mail, label: t.email, value: "clionintrue@gmail.com", href: "mailto:clionintrue@gmail.com" },
+    { icon: Mail, label: t.email, value: "ceo@rave-era.com.ua", href: "mailto:ceo@rave-era.com.ua" },
     { icon: Phone, label: t.phone, value: "+38 (093) 430-75-51", href: "tel:+380934307551" },
     { icon: MessageCircle, label: t.telegram, value: "@bogdan_chekan", href: "https://t.me/bogdan_chekan" },
     { icon: Clock, label: t.support, value: t.supportTime, href: null },

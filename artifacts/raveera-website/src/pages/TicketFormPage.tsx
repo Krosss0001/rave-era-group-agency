@@ -255,7 +255,7 @@ export default function TicketFormPage() {
                   {t.submitted}
                 </div>
                 <p className="text-xs leading-relaxed mb-4">{t.submitNote}</p>
-                <a href={`mailto:clionintrue@gmail.com?subject=SBC%20Summit%20Ukraine%202026%20ticket%20request&body=${mailBody}`} className="inline-flex min-h-10 items-center justify-center px-4 text-xs font-mono uppercase tracking-widest border border-[#00FF88]/30 text-[#00FF88] hover:text-white hover:border-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+                <a href={`mailto:ceo@rave-era.com.ua?subject=SBC%20Summit%20Ukraine%202026%20ticket%20request&body=${mailBody}`} className="inline-flex min-h-10 items-center justify-center px-4 text-xs font-mono uppercase tracking-widest border border-[#00FF88]/30 text-[#00FF88] hover:text-white hover:border-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                   {t.contact}
                 </a>
               </div>

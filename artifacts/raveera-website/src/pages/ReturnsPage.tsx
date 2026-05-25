@@ -28,7 +28,7 @@ const paymentDetails = {
 const sections = {
   uk: [
     ["1. Загальні умови", "Ця Політика визначає порядок повернення коштів за квитки на SBC Summit Ukraine 2026, що продаються ФОП Чекан Богдан Орестович (RAVE'ERA GROUP), ІПН / РНОКПП 3411613291."],
-    ["2. Канал звернення", "Запит на повернення надсилається на clionintrue@gmail.com із темою «Повернення коштів». Для безпеки не надсилайте повний номер картки, CVV, PIN, 3-D Secure коди або фото картки."],
+    ["2. Канал звернення", "Запит на повернення надсилається на ceo@rave-era.com.ua із темою «Повернення коштів». Для безпеки не надсилайте повний номер картки, CVV, PIN, 3-D Secure коди або фото картки."],
     ["3. Обов'язкові дані запиту", "У запиті вкажіть: ПІБ платника/учасника, email і телефон, номер замовлення або квитка, тип квитка, дату оплати, причину повернення та останні 4 цифри картки лише для ідентифікації платежу."],
     ["4. Повернення за ініціативою учасника", "Повернення можливе, якщо запит подано не пізніше ніж за 14 календарних днів до події, квиток не був використаний і не переданий іншій особі. Після початку події повернення за ініціативою учасника не здійснюється."],
     ["5. Строки та спосіб повернення", "Після погодження запиту кошти повертаються на ту саму платіжну картку, з якої була здійснена оплата. Строк обробки запиту - до 5 робочих днів; строк зарахування банком - до 14 банківських днів, якщо інше не встановлено банком."],
@@ -39,7 +39,7 @@ const sections = {
   ],
   en: [
     ["1. General Terms", "This Policy defines the refund procedure for SBC Summit Ukraine 2026 tickets sold by FOP Chekan Bohdan Orestovych (RAVE'ERA GROUP), IPN / RNOKPP 3411613291."],
-    ["2. Request Channel", "Refund requests are sent to clionintrue@gmail.com with the subject 'Refund'. For security, do not send full card number, CVV, PIN, 3-D Secure codes or card photos."],
+    ["2. Request Channel", "Refund requests are sent to ceo@rave-era.com.ua with the subject 'Refund'. For security, do not send full card number, CVV, PIN, 3-D Secure codes or card photos."],
     ["3. Required Request Fields", "Include: payer/participant full name, email and phone, order or ticket number, ticket type, payment date, refund reason and only the last 4 card digits for payment identification."],
     ["4. Participant-Initiated Refund", "A refund may be requested no later than 14 calendar days before the event if the ticket has not been used or transferred. Participant-initiated refunds are not available after the event starts."],
     ["5. Refund Timeline and Method", "After approval, funds are returned to the same payment card used for payment. Request review takes up to 5 business days; bank crediting takes up to 14 banking days unless the bank applies another period."],
