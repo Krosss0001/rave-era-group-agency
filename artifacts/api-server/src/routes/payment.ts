@@ -4,10 +4,10 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import {
-  CALLBACK_SIGNATURE_HEADER,
-  verifyCallbackSignature,
-  verifyCallbackToken,
-} from "../lib/webhook-auth";
+  buildPaymentUrls,
+  verifyAlliancePayCallback,
+} from "../lib/payment-security";
+import { CALLBACK_SIGNATURE_HEADER } from "../lib/webhook-auth";
 
 const MERCHANT_ID = process.env["ALLIANCEPAY_MERCHANT_ID"] || "";
 const ALB_API_URL =
@@ -16,24 +16,13 @@ const ALB_API_URL =
 const NOTIFICATION_URL =
   process.env["ALLIANCEPAY_NOTIFICATION_URL"] || "";
 const CALLBACK_SECRET = process.env["ALLIANCEPAY_CALLBACK_SECRET"] || "";
+const PUBLIC_APP_ORIGIN =
+  process.env["PUBLIC_APP_ORIGIN"] || "https://raveera.group";
 
 type RequestWithRawBody = Request & { rawBody?: Buffer };
 
 function generateUUID(): string {
   return crypto.randomUUID();
-}
-
-function addCallbackToken(url: string): string {
-  if (!CALLBACK_SECRET) return url;
-
-  const parsed = new URL(url);
-  parsed.searchParams.set("callbackToken", CALLBACK_SECRET);
-  return parsed.toString();
-}
-
-function getCallbackToken(req: Request): string | undefined {
-  const value = req.query["callbackToken"];
-  return typeof value === "string" ? value : undefined;
 }
 
 const createOrderBodySchema = z.object({
@@ -85,9 +74,10 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
       return;
     }
 
-    const baseUrl = req.headers.origin || "https://raveera.group";
-    const successUrl = `${baseUrl}/event/sbc-summit-ukraine-2026/payment/success`;
-    const failUrl = `${baseUrl}/event/sbc-summit-ukraine-2026/payment/fail`;
+    const { successUrl, failUrl, notificationUrl } = buildPaymentUrls({
+      publicAppOrigin: PUBLIC_APP_ORIGIN,
+      notificationUrl: NOTIFICATION_URL,
+    });
 
     // 1) Save pending order to DB
     const [inserted] = await db
@@ -113,7 +103,7 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
       coinAmount,
       paymentMethods: "CARD",
       language: "uk",
-      notificationUrl: NOTIFICATION_URL || addCallbackToken(`${baseUrl}/api/payment/callback`),
+      notificationUrl,
       successUrl,
       failUrl,
       statusPageType: "STATUS_TIMER_PAGE",
@@ -188,16 +178,11 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
 router.post("/payment/callback", async (req: Request, res: Response) => {
   try {
     const signatureHeader = req.get(CALLBACK_SIGNATURE_HEADER);
-    const authentication = signatureHeader
-      ? verifyCallbackSignature({
-          rawBody: (req as RequestWithRawBody).rawBody,
-          secret: CALLBACK_SECRET,
-          signatureHeader,
-        })
-      : verifyCallbackToken({
-          secret: CALLBACK_SECRET,
-          token: getCallbackToken(req),
-        });
+    const authentication = verifyAlliancePayCallback({
+      rawBody: (req as RequestWithRawBody).rawBody,
+      secret: CALLBACK_SECRET,
+      signatureHeader,
+    });
     if (!authentication.ok) {
       logger.warn({ reason: authentication.reason }, "Rejected unauthenticated ALB callback");
       res

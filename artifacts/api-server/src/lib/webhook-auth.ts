@@ -7,9 +7,7 @@ export type CallbackSignatureFailure =
   | "missing_raw_body"
   | "missing_signature"
   | "malformed_signature"
-  | "signature_mismatch"
-  | "missing_callback_token"
-  | "callback_token_mismatch";
+  | "signature_mismatch";
 
 export type CallbackSignatureResult =
   | { ok: true }
@@ -48,25 +46,6 @@ export function verifyCallbackSignature({
   const expected = Buffer.from(createCallbackSignature(rawBody, secret), "hex");
   if (received.length !== expected.length || !timingSafeEqual(received, expected)) {
     return { ok: false, reason: "signature_mismatch" };
-  }
-
-  return { ok: true };
-}
-
-export function verifyCallbackToken({
-  secret,
-  token,
-}: {
-  secret: string;
-  token: string | undefined;
-}): CallbackSignatureResult {
-  if (!secret) return { ok: false, reason: "missing_callback_secret" };
-  if (!token) return { ok: false, reason: "missing_callback_token" };
-
-  const received = Buffer.from(token);
-  const expected = Buffer.from(secret);
-  if (received.length !== expected.length || !timingSafeEqual(received, expected)) {
-    return { ok: false, reason: "callback_token_mismatch" };
   }
 
   return { ok: true };
