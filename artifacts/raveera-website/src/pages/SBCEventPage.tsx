@@ -170,7 +170,12 @@ export default function SBCEventPage() {
     footerOrgName: "ФОП Чекан Богдан Орестович",
     footerOrgFull: "RAVE'ERA GROUP",
     footerIpn: "ІПН / РНОКПП: 3411613291",
-    footerKved: "КВЕД: 90.01 Театральна та концертна діяльність",
+    footerKveds: [
+      "КВЕД 90.01 Театральна та концертна діяльність",
+      "КВЕД 90.03 Індивідуальна мистецька діяльність",
+      "КВЕД 90.02 Діяльність із підтримки театральних і концертних заходів",
+      "КВЕД 79.90 Надання інших послуг бронювання та повязана з цим діяльність",
+    ],
     footerAddress: "Україна, 03022, м. Київ, вул. Здановської Юлії, буд. 49, корп. 10, кв. 306",
     footerBank: "Банк: АТ БАНК АЛЬЯНС",
     footerRecipient: "Отримувач: ФОП Чекан Б.О.",
@@ -242,7 +247,12 @@ export default function SBCEventPage() {
     footerOrgName: "FOP Chekan Bohdan Orestovych",
     footerOrgFull: "RAVE'ERA GROUP",
     footerIpn: "IPN: 3411613291",
-    footerKved: "KVED: 90.01 Theater and concert activity",
+    footerKveds: [
+      "KVED 90.01 Театральна та концертна діяльність",
+      "KVED 90.03 Індивідуальна мистецька діяльність",
+      "KVED 90.02 Діяльність із підтримки театральних і концертних заходів",
+      "KVED 79.90 Надання інших послуг бронювання та повязана з цим діяльність",
+    ],
     footerAddress: "Ukraine, 03022, Kyiv, Zdanovska Yuliia St., 49, bld. 10, apt. 306",
     footerBank: "Bank: JSC Alliance Bank",
     footerRecipient: "Recipient: FOP Chekan B.O.",
@@ -748,7 +758,9 @@ export default function SBCEventPage() {
                 <p className="font-bold text-white/50">{t.footerOrgName}</p>
                 <p>{t.footerOrgFull}</p>
                 <p className="font-mono text-white/30">{t.footerIpn}</p>
-                <p className="font-mono text-white/30">{t.footerKved}</p>
+                {t.footerKveds.map((item) => (
+                  <p key={item} className="font-mono text-white/30">{item}</p>
+                ))}
                 <p className="font-mono text-white/30 leading-relaxed">{t.footerAddress}</p>
                 <p className="font-mono text-white/25">{t.footerBank}</p>
                 <p className="font-mono text-white/25">{t.footerRecipient}</p>
