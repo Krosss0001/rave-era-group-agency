@@ -120,7 +120,7 @@ export default function SBCEventPage() {
     badge: "RAVE'ERA GROUP · EVENT LANDING",
     heroTitle: "SBC Summit Ukraine 2026",
     heroSub: "Всеукраїнська конференція зі спортивного маркетингу",
-    heroDesc: "П'ятий, ювілейний SBC Summit Ukraine 2026 стане найбільшим зібранням лідерів галузі: клубів, федерацій, ліг, маркетологів, медіа, спортсменів та підприємців.",
+    heroDesc: "SportBusiness Club запрошує на наймасштабнішу подію року у сфері спортивного маркетингу в Україні.",
     buyTicket: "Купити квиток",
     viewProgram: "Дивитись програму",
     stats: {
@@ -129,18 +129,30 @@ export default function SBCEventPage() {
       duration: "09:30-23:00 програма",
       tickets: "3 формати квитків",
     },
-    aboutTitle: "Sport business conference powered by RAVE'ERA GROUP.",
-    aboutText: "SBC Summit Ukraine 2026 збирає 1500 учасників з усієї країни та 60+ топ-спікерів в одному просторі для сильних партнерств. Фокус події — практичні кейси, sponsorship, digital, media rights, фанатська економіка та нові revenue-моделі для українського спорту.",
+    aboutTitle: "Наймасштабніша подія року у сфері спортивного маркетингу в Україні.",
+    aboutIntro: [
+      "SportBusiness Club запрошує на наймасштабнішу подію року у сфері спортивного маркетингу в Україні!",
+      "Пятий, ювілейний SBC Summit Ukraine 2026 стане найбільшим зібранням лідерів галузі:",
+    ],
+    aboutScale: [
+      "1500 учасників з усієї країни",
+      "понад 60 топ-спікерів - керівники клубів, федерацій, ліг, маркетологи, медіа, спортсмени та підприємці",
+      "нова потужна локація - КВЦ Парковий, один з найбільших конгрес-центрів Києва.",
+    ],
+    speakersText: "Спікери SBC Summit Ukraine 2026 - це люди з реальним досвідом і реальними кейсами за плечима. Серед них: міністр молоді та спорту Матвій Бідний, президент НОК України Вадим Гутцайт, зіркові воротарі Олександр Шовковський, Андрій Пятов та Денис Бойко, олімпійці Даря Білодід, Анна Різатдінова, Станіслав Горуна, Ольга Саладуха та Людмила Лузан, засновник KAN Development Ігор Ніконов та засновник Sheriff Дмитро Стрижов, топ-менеджери Adidas Україна, SCM, МХП, MEGOGO, Netpeak, Lenovo, KFC та Havas - і ще понад 50 голосів індустрії.",
+    valueText: "Це найбільший майданчик спортивного маркетингу, де український спорт говорить мовою бізнесу, а бізнес заряджається спортивним духом і конкретними інструментами для зростання!",
     expectationsTitle: "Чого очікувати від конференції?",
     expectations: [
-      "Масштаб і енергія ювілею – найбільша аудиторія та найамбітніша програма за всю історію SBC Summit Ukraine",
-      "Якісний нетворкінг – 1500+ профільних фахівців: від власників клубів і федерацій до директорів з маркетингу великих брендів, медіаменеджерів та спортсменів",
+      "масштаб і енергія ювілею - найбільша аудиторія та найамбітніша програма за всю історію SBC Summit Ukraine",
+      "якісний нетворкінг - 1200+ профільних фахівців: від власників клубів і федерацій до директорів з маркетингу великих брендів, медіаменеджерів та спортсменів",
       "Партнерські зони: інтерактивні локації від провідних брендів і компаній",
       "Практичні кейси та інструменти, які можна застосувати вже наступного тижня",
-      "Натхнення та нові партнерства – саме тут народжуються спонсорські угоди, медійні проєкти, бренд-колаборації та стратегії на 2026–2027 роки",
-      "Сучасна локація – КВЦ «Парковий» забезпечить комфорт, потужний звук, велику сцену та зручну логістику для такого масштабу",
-      "Спільнота Sport&Business Club – після події ти отримаєш постійний доступ до мережі професіоналів галузі",
+      "натхнення та нові партнерства - саме тут народжуються спонсорські угоди, медійні проєкти, бренд-колаборації та стратегії на 20262027 роки",
+      "сучасна локація - КВЦ Парковий забезпечить комфорт, потужний звук, велику сцену та зручну логістику для такого масштабу",
+      "спільнота SportBusiness Club - після події ти отримаєш постійний доступ до мережі професіоналів галузі",
     ],
+    closingText: "Це захід, де говорять не про як було, а про як буде у 20262027 роках. Якщо ти формуєш майбутнє українського спорту - це твоя подія року.",
+    finalInvite: "Чекаємо тебе 27 травня у КВЦ Парковий!",
     speakersTitle: "Лідери спорту, бізнесу та медіа",
     programTitle: "День для рішень, контактів і нової оптики ринку.",
     programPoints: [
@@ -206,18 +218,30 @@ export default function SBCEventPage() {
       duration: "09:30-23:00 program",
       tickets: "3 ticket formats",
     },
-    aboutTitle: "Sport business conference powered by RAVE'ERA GROUP.",
-    aboutText: "SBC Summit Ukraine 2026 brings together 1500 participants from across the country and 60+ top speakers in one space for strong partnerships. The event focus is practical cases, sponsorship, digital, media rights, fan economy and new revenue models for Ukrainian sports.",
+    aboutTitle: "The biggest sports marketing event of the year in Ukraine.",
+    aboutIntro: [
+      "SportBusiness Club invites you to the biggest sports marketing event of the year in Ukraine.",
+      "The fifth, anniversary SBC Summit Ukraine 2026 will be the largest gathering of industry leaders:",
+    ],
+    aboutScale: [
+      "1500 participants from across the country",
+      "over 60 top speakers - club, federation and league executives, marketers, media, athletes and entrepreneurs",
+      "a powerful new venue - Parkovy ECC, one of Kyiv's largest congress centers.",
+    ],
+    speakersText: "SBC Summit Ukraine 2026 speakers are people with real experience and real cases behind them. They include Minister of Youth and Sports Matvii Bidnyi, President of the National Olympic Committee of Ukraine Vadym Huttsait, star goalkeepers Oleksandr Shovkovskyi, Andrii Piatov and Denys Boiko, Olympians Daria Bilodid, Anna Rizatdinova, Stanislav Horuna, Olha Saladukha and Liudmyla Luzan, KAN Development founder Ihor Nikonov and Sheriff founder Dmytro Stryzhov, top managers from Adidas Ukraine, SCM, MHP, MEGOGO, Netpeak, Lenovo, KFC and Havas - plus more than 50 industry voices.",
+    valueText: "This is the largest sports marketing platform where Ukrainian sport speaks the language of business, and business gets charged with sporting energy and concrete tools for growth.",
     expectationsTitle: "What to expect from the conference?",
     expectations: [
-      "Scale and energy of the anniversary — the largest audience and most ambitious program in SBC Summit Ukraine history",
-      "Quality networking — 1500+ professionals: from club and federation owners to marketing directors of major brands, media managers and athletes",
+      "anniversary scale and energy - the largest audience and most ambitious program in SBC Summit Ukraine history",
+      "quality networking - 1200+ industry professionals: from club and federation owners to marketing directors of major brands, media managers and athletes",
       "Partner zones: interactive locations from leading brands and companies",
       "Practical cases and tools you can apply next week",
-      "Inspiration and new partnerships — sponsorship deals, media projects, brand collaborations and strategies for 2026–2027 are born here",
-      "Modern venue — Parkovy ECC provides comfort, powerful sound, large stage and convenient logistics for this scale",
-      "Sport&Business Club community — after the event you get permanent access to the industry's professional network",
+      "inspiration and new partnerships - sponsorship deals, media projects, brand collaborations and strategies for 20262027 are born here",
+      "modern venue - Parkovy ECC provides comfort, powerful sound, a large stage and convenient logistics for this scale",
+      "SportBusiness Club community - after the event you get permanent access to the industry's professional network",
     ],
+    closingText: "This is the event where people discuss not how it used to be, but how it will be in 20262027. If you shape the future of Ukrainian sport, this is your event of the year.",
+    finalInvite: "See you on May 27 at Parkovy ECC.",
     speakersTitle: "Leaders of sports, business & media",
     programTitle: "A day for decisions, contacts and a new market perspective.",
     programPoints: [
@@ -401,9 +425,21 @@ export default function SBCEventPage() {
               <motion.h2 variants={fadeUpChild} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-6">
                 {t.aboutTitle}
               </motion.h2>
-              <motion.p variants={fadeUpChild} className="text-sm sm:text-base text-white/45 leading-relaxed mb-8">
-                {t.aboutText}
-              </motion.p>
+              <motion.div variants={fadeUpChild} className="mb-8 space-y-5 text-sm sm:text-base text-white/50 leading-relaxed">
+                {t.aboutIntro.map((item) => (
+                  <p key={item} className="max-w-prose">{item}</p>
+                ))}
+                <ul className="space-y-3 border-l border-[#00FF88]/25 pl-4 sm:pl-5">
+                  {t.aboutScale.map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: G }} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="max-w-prose text-white/45">{t.speakersText}</p>
+                <p className="max-w-prose font-semibold text-white/70">{t.valueText}</p>
+              </motion.div>
 
               {/* Expectations */}
               <motion.div variants={fadeUpChild}>
@@ -416,6 +452,10 @@ export default function SBCEventPage() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-8 space-y-3 border-t border-white/[0.06] pt-6">
+                  <p className="max-w-prose text-sm sm:text-base text-white/50 leading-relaxed">{t.closingText}</p>
+                  <p className="max-w-prose text-base sm:text-lg font-bold text-white/80 leading-relaxed">{t.finalInvite}</p>
+                </div>
               </motion.div>
             </div>
             <div className="space-y-4">
