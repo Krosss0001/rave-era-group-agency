@@ -1,10 +1,16 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+
+type RequestWithRawBody = Request & { rawBody?: Buffer };
+
+function captureRawBody(req: Request, _res: unknown, buf: Buffer): void {
+  (req as RequestWithRawBody).rawBody = Buffer.from(buf);
+}
 
 app.use(
   pinoHttp({
@@ -26,8 +32,8 @@ app.use(
   }),
 );
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ verify: captureRawBody }));
+app.use(express.urlencoded({ extended: true, verify: captureRawBody }));
 
 app.use("/api", router);
 

@@ -3,6 +3,11 @@ import { db, ticketOrdersTable } from "@workspace/db";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import {
+  CALLBACK_SIGNATURE_HEADER,
+  verifyCallbackSignature,
+  verifyCallbackToken,
+} from "../lib/webhook-auth";
 
 const MERCHANT_ID = process.env["ALLIANCEPAY_MERCHANT_ID"] || "";
 const ALB_API_URL =
@@ -10,9 +15,25 @@ const ALB_API_URL =
   "https://pay.alb.ua/ecom/execute_request/hpp/v1/create-order";
 const NOTIFICATION_URL =
   process.env["ALLIANCEPAY_NOTIFICATION_URL"] || "";
+const CALLBACK_SECRET = process.env["ALLIANCEPAY_CALLBACK_SECRET"] || "";
+
+type RequestWithRawBody = Request & { rawBody?: Buffer };
 
 function generateUUID(): string {
   return crypto.randomUUID();
+}
+
+function addCallbackToken(url: string): string {
+  if (!CALLBACK_SECRET) return url;
+
+  const parsed = new URL(url);
+  parsed.searchParams.set("callbackToken", CALLBACK_SECRET);
+  return parsed.toString();
+}
+
+function getCallbackToken(req: Request): string | undefined {
+  const value = req.query["callbackToken"];
+  return typeof value === "string" ? value : undefined;
 }
 
 const createOrderBodySchema = z.object({
@@ -22,6 +43,23 @@ const createOrderBodySchema = z.object({
   email: z.string().email().max(256),
   phone: z.string().min(10).max(20).optional(),
 });
+
+const optionalNonEmptyString = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().trim().min(1).optional(),
+);
+
+const callbackBodySchema = z
+  .object({
+    hppOrderId: optionalNonEmptyString,
+    merchantRequestId: optionalNonEmptyString,
+    orderStatus: z.enum(["SUCCESS", "FAIL", "PENDING", "REQUIRED_3DS"]),
+  })
+  .passthrough()
+  .refine((body) => Boolean(body.hppOrderId || body.merchantRequestId), {
+    message: "Missing order identifier",
+    path: ["merchantRequestId"],
+  });
 
 const ticketPrices: Record<string, number> = {
   sport: 250000,
@@ -75,7 +113,7 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
       coinAmount,
       paymentMethods: "CARD",
       language: "uk",
-      notificationUrl: NOTIFICATION_URL || `${baseUrl}/api/payment/callback`,
+      notificationUrl: NOTIFICATION_URL || addCallbackToken(`${baseUrl}/api/payment/callback`),
       successUrl,
       failUrl,
       statusPageType: "STATUS_TIMER_PAGE",
@@ -149,27 +187,50 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
 // ALB callback webhook
 router.post("/payment/callback", async (req: Request, res: Response) => {
   try {
-    const body = req.body as Record<string, unknown>;
-    const hppOrderId = String(body.hppOrderId || "");
-    const orderStatus = String(body.orderStatus || "");
-    const merchantRequestId = String(body.merchantRequestId || "");
-
-    logger.info({ hppOrderId, orderStatus, merchantRequestId }, "ALB callback received");
-
-    if (!hppOrderId && !merchantRequestId) {
-      res.status(400).json({ error: "Missing order identifier" });
+    const signatureHeader = req.get(CALLBACK_SIGNATURE_HEADER);
+    const authentication = signatureHeader
+      ? verifyCallbackSignature({
+          rawBody: (req as RequestWithRawBody).rawBody,
+          secret: CALLBACK_SECRET,
+          signatureHeader,
+        })
+      : verifyCallbackToken({
+          secret: CALLBACK_SECRET,
+          token: getCallbackToken(req),
+        });
+    if (!authentication.ok) {
+      logger.warn({ reason: authentication.reason }, "Rejected unauthenticated ALB callback");
+      res
+        .status(authentication.reason === "missing_callback_secret" ? 500 : 401)
+        .json({ error: "Unauthorized callback" });
       return;
     }
+
+    const parsed = callbackBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid callback body", details: parsed.error.flatten() });
+      return;
+    }
+
+    const { hppOrderId, orderStatus, merchantRequestId } = parsed.data;
+
+    logger.info({ hppOrderId, orderStatus, merchantRequestId }, "ALB callback received");
 
     // Update by hppOrderId if available, otherwise by merchantRequestId
     const updateCondition = hppOrderId
       ? eq(ticketOrdersTable.hppOrderId, hppOrderId)
-      : eq(ticketOrdersTable.merchantRequestId, merchantRequestId);
+      : eq(ticketOrdersTable.merchantRequestId, merchantRequestId!);
 
-    await db
+    const [updated] = await db
       .update(ticketOrdersTable)
       .set({ status: orderStatus as string, updatedAt: new Date() })
-      .where(updateCondition);
+      .where(updateCondition)
+      .returning({ id: ticketOrdersTable.id });
+
+    if (!updated) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
 
     res.json({ received: true });
   } catch (err) {
