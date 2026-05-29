@@ -23,6 +23,18 @@ type AlliancePaySession = {
   expiresAt: number;
 };
 
+type AlliancePayProviderStep = "authorize_virtual_device" | "hpp_create_order";
+
+class AlliancePayServiceMessageError extends Error {
+  constructor(
+    public readonly providerStep: AlliancePayProviderStep,
+    public readonly providerStatus: number,
+    public readonly providerMessage: Record<string, unknown>,
+  ) {
+    super("AlliancePay returned a service message");
+  }
+}
+
 const { Pool } = pg;
 
 const ALB_API_URL =
@@ -178,6 +190,27 @@ function getProviderString(data: Record<string, unknown>, keys: string[]): strin
     }
   }
   return "";
+}
+
+function isValidationServiceMessage(providerMessage: Record<string, unknown>): boolean {
+  return [providerMessage["msgType"], providerMessage["msgCode"], providerMessage["msgText"]]
+    .filter((value) => typeof value === "string")
+    .join(" ")
+    .toLowerCase()
+    .includes("validation");
+}
+
+function getServiceMessageCode(
+  providerStep: AlliancePayProviderStep,
+  providerMessage: Record<string, unknown>,
+): string {
+  if (!isValidationServiceMessage(providerMessage)) {
+    return "ALLIANCEPAY_SERVICE_MESSAGE";
+  }
+
+  return providerStep === "authorize_virtual_device"
+    ? "ALLIANCEPAY_AUTH_VALIDATION_ERROR"
+    : "ALLIANCEPAY_CREATE_ORDER_VALIDATION_ERROR";
 }
 
 function isTerminalNotReady(status: number, data: Record<string, unknown>): boolean {
@@ -429,8 +462,23 @@ async function authorizeAlliancePayVirtualDevice(): Promise<AlliancePaySession> 
     body: JSON.stringify({ serviceCode }),
   });
   const authData = await authRes.json().catch(() => ({} as Record<string, unknown>));
+  const authServiceMessage = getAlliancePayServiceMessage(authData);
+  if (authServiceMessage) {
+    console.error("ALB virtual device authorization returned service message", {
+      providerStep: "authorize_virtual_device",
+      providerStatus: authRes.status,
+      providerMessage: authServiceMessage,
+    });
+    throw new AlliancePayServiceMessageError(
+      "authorize_virtual_device",
+      authRes.status,
+      authServiceMessage,
+    );
+  }
+
   if (!authRes.ok) {
     console.error("ALB virtual device authorization failed", {
+      providerStep: "authorize_virtual_device",
       status: authRes.status,
       providerError: getProviderErrorSummary(authData),
     });
@@ -509,18 +557,10 @@ function getSafeProviderValue(data: Record<string, unknown>, key: string): unkno
     return value;
   }
   if (Array.isArray(value)) {
-    return value
-      .filter(
-        (item) =>
-          item === null ||
-          typeof item === "string" ||
-          typeof item === "number" ||
-          typeof item === "boolean",
-      )
-      .slice(0, 20);
+    return value;
   }
   if (value && typeof value === "object") {
-    return keysOf(value);
+    return value;
   }
   return undefined;
 }
@@ -748,14 +788,16 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     const serviceMessage = getAlliancePayServiceMessage(albData);
     if (serviceMessage) {
       console.error("ALB API returned service message", {
+        providerStep: "hpp_create_order",
         merchantRequestId,
         providerStatus: albRes.status,
         providerMessage: serviceMessage,
       });
       sendJson(res, 502, {
-        code: "ALLIANCEPAY_SERVICE_MESSAGE",
+        code: getServiceMessageCode("hpp_create_order", serviceMessage),
         error: "AlliancePay returned a service message",
         orderId,
+        providerStep: "hpp_create_order",
         providerStatus: albRes.status,
         providerMessage: serviceMessage,
       });
@@ -765,6 +807,18 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     redirectUrl = extractRedirectUrl(albData);
     hppOrderId = extractHppOrderId(albData);
   } catch (err) {
+    if (err instanceof AlliancePayServiceMessageError) {
+      sendJson(res, 502, {
+        code: getServiceMessageCode(err.providerStep, err.providerMessage),
+        error: "AlliancePay returned a service message",
+        orderId,
+        providerStep: err.providerStep,
+        providerStatus: err.providerStatus,
+        providerMessage: err.providerMessage,
+      });
+      return;
+    }
+
     console.error("ALB API network error creating payment order", {
       error: err instanceof Error ? err.message : "Unknown error",
       merchantRequestId,
