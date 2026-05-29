@@ -1,9 +1,9 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, ticketOrdersTable } from "@workspace/db";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
-import { logger } from "../lib/logger";
-import { buildPaymentUrls } from "../lib/payment-security";
+import { logger } from "../lib/logger.js";
+import { buildPaymentUrls } from "../lib/payment-security.js";
+
+type DbModule = typeof import("@workspace/db");
 
 const MERCHANT_ID = process.env["ALLIANCEPAY_MERCHANT_ID"] || "";
 const SERVICE_CODE = process.env["ALLIANCEPAY_SERVICE_CODE"] || "";
@@ -53,6 +53,10 @@ const ticketPrices: Record<string, number> = {
 
 const router: IRouter = Router();
 
+async function getDb(): Promise<DbModule> {
+  return import("@workspace/db");
+}
+
 function getProviderErrorSummary(data: Record<string, unknown>): Record<string, unknown> {
   const summary: Record<string, unknown> = {};
   for (const key of ["error", "errorCode", "code", "message", "status", "reason"]) {
@@ -85,20 +89,42 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
       notificationUrl: NOTIFICATION_URL,
     });
 
+    let dbModule: DbModule;
+    try {
+      dbModule = await getDb();
+    } catch (err) {
+      logger.error({ err, merchantRequestId }, "Payment database module failed to load");
+      res.status(503).json({ error: "Payment database is unavailable" });
+      return;
+    }
+
     // 1) Save pending order to DB
-    const [inserted] = await db
-      .insert(ticketOrdersTable)
-      .values({
-        merchantRequestId,
-        ticketType,
-        amountKopiykas: coinAmount,
-        status: "PENDING",
-        customerEmail: email,
-        customerFirstName: firstName,
-        customerLastName: lastName,
-        customerPhone: phone || null,
-      })
-      .returning();
+    let inserted: { id: number };
+    try {
+      const result = await dbModule.pool.query<{ id: number }>(
+        `insert into ticket_orders (
+          merchant_request_id,
+          ticket_type,
+          amount_kopiykas,
+          status,
+          customer_email,
+          customer_first_name,
+          customer_last_name,
+          customer_phone
+        ) values ($1, $2, $3, 'PENDING', $4, $5, $6, $7)
+        returning id`,
+        [merchantRequestId, ticketType, coinAmount, email, firstName, lastName, phone || null],
+      );
+      const order = result.rows[0];
+      if (!order) {
+        throw new Error("Insert did not return an order id");
+      }
+      inserted = order;
+    } catch (err) {
+      logger.error({ err, merchantRequestId }, "Payment order insert failed");
+      res.status(503).json({ error: "Payment database write failed" });
+      return;
+    }
 
     // 2) Build ALB payload
     const albPayload = {
@@ -173,10 +199,18 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
     }
 
     // 4) Update DB with ALB response
-    await db
-      .update(ticketOrdersTable)
-      .set({ hppOrderId, redirectUrl, status: "PENDING" })
-      .where(eq(ticketOrdersTable.id, inserted.id));
+    try {
+      await dbModule.pool.query(
+        `update ticket_orders
+         set hpp_order_id = $1, redirect_url = $2, status = 'PENDING', updated_at = now()
+         where id = $3`,
+        [hppOrderId || null, redirectUrl, inserted.id],
+      );
+    } catch (err) {
+      logger.error({ err, merchantRequestId }, "Payment order update failed");
+      res.status(503).json({ error: "Payment database update failed", orderId: inserted.id });
+      return;
+    }
 
     res.json({
       success: true,
@@ -203,16 +237,24 @@ router.post("/payment/callback", async (req: Request, res: Response) => {
 
     logger.info({ hppOrderId, orderStatus, merchantRequestId }, "ALB callback received");
 
-    // Update by hppOrderId if available, otherwise by merchantRequestId
-    const updateCondition = hppOrderId
-      ? eq(ticketOrdersTable.hppOrderId, hppOrderId)
-      : eq(ticketOrdersTable.merchantRequestId, merchantRequestId!);
+    const dbModule = await getDb();
+    const result = hppOrderId
+      ? await dbModule.pool.query<{ id: number }>(
+          `update ticket_orders
+           set status = $1, updated_at = now()
+           where hpp_order_id = $2
+           returning id`,
+          [orderStatus, hppOrderId],
+        )
+      : await dbModule.pool.query<{ id: number }>(
+          `update ticket_orders
+           set status = $1, updated_at = now()
+           where merchant_request_id = $2
+           returning id`,
+          [orderStatus, merchantRequestId],
+        );
 
-    const [updated] = await db
-      .update(ticketOrdersTable)
-      .set({ status: orderStatus as string, updatedAt: new Date() })
-      .where(updateCondition)
-      .returning({ id: ticketOrdersTable.id });
+    const updated = result.rows[0];
 
     if (!updated) {
       res.status(404).json({ error: "Order not found" });
@@ -233,11 +275,16 @@ router.get("/payment/status/:orderId", async (req: Request, res: Response) => {
       res.status(400).json({ error: "Invalid order ID" });
       return;
     }
-    const [order] = await db
-      .select()
-      .from(ticketOrdersTable)
-      .where(eq(ticketOrdersTable.id, orderId))
-      .limit(1);
+    const dbModule = await getDb();
+    const result = await dbModule.pool.query(
+      `select id, status, ticket_type, amount_kopiykas, hpp_order_id,
+        merchant_request_id, customer_email, created_at, updated_at
+       from ticket_orders
+       where id = $1
+       limit 1`,
+      [orderId],
+    );
+    const order = result.rows[0];
 
     if (!order) {
       res.status(404).json({ error: "Order not found" });
@@ -247,13 +294,13 @@ router.get("/payment/status/:orderId", async (req: Request, res: Response) => {
     res.json({
       id: order.id,
       status: order.status,
-      ticketType: order.ticketType,
-      amountKopiykas: order.amountKopiykas,
-      hppOrderId: order.hppOrderId,
-      merchantRequestId: order.merchantRequestId,
-      customerEmail: order.customerEmail,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
+      ticketType: order.ticket_type,
+      amountKopiykas: order.amount_kopiykas,
+      hppOrderId: order.hpp_order_id,
+      merchantRequestId: order.merchant_request_id,
+      customerEmail: order.customer_email,
+      createdAt: order.created_at,
+      updatedAt: order.updated_at,
     });
   } catch (err) {
     logger.error({ err }, "Unhandled error in status");
