@@ -123,13 +123,86 @@ function getMissingPaymentConfig(): string[] {
 
 function getProviderErrorSummary(data: Record<string, unknown>): Record<string, unknown> {
   const summary: Record<string, unknown> = {};
-  for (const key of ["error", "errorCode", "code", "message", "status", "reason"]) {
+  for (const key of [
+    "error",
+    "errorCode",
+    "code",
+    "message",
+    "status",
+    "reason",
+    "requestId",
+    "traceId",
+    "request_id",
+    "trace_id",
+    "correlationId",
+  ]) {
     const value = data[key];
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
       summary[key] = value;
     }
   }
   return summary;
+}
+
+function getProviderString(data: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = data[key];
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+  }
+  return "";
+}
+
+function isTerminalNotReady(status: number, data: Record<string, unknown>): boolean {
+  const text = [
+    getProviderString(data, ["error", "errorCode", "code", "message", "status", "reason"]),
+    JSON.stringify(getProviderErrorSummary(data)),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    status === 403 ||
+    text.includes("terminal") ||
+    text.includes("merchant") ||
+    text.includes("service") ||
+    text.includes("not active") ||
+    text.includes("inactive") ||
+    text.includes("not found") ||
+    text.includes("disabled")
+  );
+}
+
+function buildProviderErrorResponse(
+  status: number,
+  data: Record<string, unknown>,
+  orderId: number | undefined,
+): Record<string, unknown> {
+  const providerError = getProviderErrorSummary(data);
+  const code = isTerminalNotReady(status, data)
+    ? "ALLIANCEPAY_TERMINAL_NOT_READY"
+    : "ALLIANCEPAY_ERROR";
+
+  return {
+    code,
+    error:
+      code === "ALLIANCEPAY_TERMINAL_NOT_READY"
+        ? "AlliancePay terminal is not ready"
+        : "Payment provider error",
+    orderId,
+    provider: {
+      status,
+      code: getProviderString(data, ["errorCode", "code", "status"]),
+      message: getProviderString(data, ["message", "error", "reason"]),
+      requestId: getProviderString(data, ["requestId", "request_id", "correlationId"]),
+      traceId: getProviderString(data, ["traceId", "trace_id"]),
+      details: providerError,
+    },
+  };
 }
 
 async function getDb(): Promise<DbModule> {
@@ -281,7 +354,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     hppPayType: "PURCHASE",
     directType: "REDIRECT",
     coinAmount,
-    paymentMethods: "CARD",
+    paymentMethods: ["CARD"],
     language: "uk",
     notificationUrl: urls.notificationUrl,
     successUrl: urls.successUrl,
@@ -309,12 +382,13 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     });
     const albData = await albRes.json().catch(() => ({} as Record<string, unknown>));
     if (!albRes.ok) {
+      const errorResponse = buildProviderErrorResponse(albRes.status, albData, orderId);
       console.error("ALB API error creating payment order", {
         status: albRes.status,
         merchantRequestId,
-        providerError: getProviderErrorSummary(albData),
+        providerError: errorResponse.provider,
       });
-      sendJson(res, 502, { code: "ALLIANCEPAY_ERROR", error: "Payment provider error", orderId });
+      sendJson(res, 502, errorResponse);
       return;
     }
 
