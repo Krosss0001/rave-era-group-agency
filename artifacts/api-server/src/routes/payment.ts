@@ -6,6 +6,8 @@ import { logger } from "../lib/logger";
 import { buildPaymentUrls } from "../lib/payment-security";
 
 const MERCHANT_ID = process.env["ALLIANCEPAY_MERCHANT_ID"] || "";
+const SERVICE_CODE = process.env["ALLIANCEPAY_SERVICE_CODE"] || "";
+const MERCHANT_ALIAS_ID = process.env["ALLIANCEPAY_MERCHANT_ALIAS_ID"] || "";
 const ALB_API_URL =
   process.env["ALLIANCEPAY_API_URL"] ||
   "https://pay.alb.ua/ecom/execute_request/hpp/v1/create-order";
@@ -46,7 +48,7 @@ const callbackBodySchema = z
 const ticketPrices: Record<string, number> = {
   sport: 250000,
   business: 650000,
-  online: 100000,
+  online: 10000,
 };
 
 const router: IRouter = Router();
@@ -91,6 +93,8 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
     const albPayload = {
       merchantRequestId,
       merchantId: MERCHANT_ID,
+      ...(SERVICE_CODE ? { serviceCode: SERVICE_CODE } : {}),
+      ...(MERCHANT_ALIAS_ID ? { merchantAliasId: MERCHANT_ALIAS_ID } : {}),
       hppPayType: "PURCHASE",
       directType: "REDIRECT",
       coinAmount,

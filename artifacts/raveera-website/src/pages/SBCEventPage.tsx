@@ -72,7 +72,7 @@ const tickets = [
   },
   {
     key: "online",
-    price: "1 000",
+    price: "100",
     currency: "грн",
     name: "ONLINE",
     desc: "Дистанційний доступ до трансляції та матеріалів конференції.",
@@ -90,7 +90,7 @@ const faqs = [
   },
   {
     q: "Як проходить оплата?",
-    a: "Після заповнення форми сайт створює заявку на квиток. Онлайн-оплата буде активована після завершення верифікації мерчанта AlliancePay.",
+    a: "Після заповнення форми сайт створює заявку на квиток і відкриває захищену сторінку оплати AlliancePay.",
   },
   {
     q: "Коли буде доступний квиток?",
@@ -98,7 +98,7 @@ const faqs = [
   },
   {
     q: "Які формати квитків доступні?",
-    a: "SPORT за 2500 грн, BUSINESS за 6500 грн та ONLINE за 1000 грн.",
+    a: "SPORT за 2500 грн, BUSINESS за 6500 грн та ONLINE за 100 грн.",
   },
 ];
 
@@ -175,7 +175,7 @@ export default function SBCEventPage() {
       kved: "КВЕД: 90.01 Театральна та концертна діяльність",
       rights: "Всі права захищено. SBC Summit Ukraine 2026",
     },
-    paymentNote: "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті. Онлайн-оплата буде активована після завершення верифікації мерчанта.",
+    paymentNote: "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
     footerBrand: "Всеукраїнська конференція зі спортивного маркетингу. КВЦ Парковий, Київ.",
     footerOrgLabel: "ОРГАНІЗАТОР",
@@ -264,7 +264,7 @@ export default function SBCEventPage() {
       kved: "KVED: 90.01 Theater and concert activity",
       rights: "All rights reserved. SBC Summit Ukraine 2026",
     },
-    paymentNote: "Payment is processed through the secure AlliancePay payment page. Card data is not entered, processed or stored on this site. Online payment will be activated after merchant verification is complete.",
+    paymentNote: "Payment is processed through the secure AlliancePay payment page. Card data is not entered, processed or stored on this site.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
     footerBrand: "All-Ukrainian Conference on Sports Marketing. Parkovy ECC, Kyiv.",
     footerOrgLabel: "ORGANIZER",

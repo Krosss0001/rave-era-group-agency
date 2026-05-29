@@ -12,16 +12,16 @@ export default function PaymentSuccessPage() {
     ? {
         back: "Назад",
         title: "Статус SUCCESS",
-        subtitle: "Ця сторінка призначена для майбутнього повернення з AlliancePay після підтвердженої оплати. Наразі онлайн-оплата ще не активована.",
-        note: "Після активації AlliancePay квиток буде виданий тільки після серверного підтвердження статусу SUCCESS від банку. Якщо ви бачите цю сторінку без реальної оплати, зверніться до організатора.",
+        subtitle: "AlliancePay повернув вас після підтвердженої оплати.",
+        note: "Квиток видається тільки після серверного підтвердження статусу SUCCESS від банку. Якщо ви бачите цю сторінку без реальної оплати, зверніться до організатора.",
         event: "На сторінку події",
         contact: "Написати організатору",
       }
     : {
         back: "Back",
         title: "SUCCESS status",
-        subtitle: "This page is reserved for the future AlliancePay return after confirmed payment. Online payment is not active yet.",
-        note: "After AlliancePay activation, a ticket will be issued only after server-side SUCCESS confirmation from the bank. If you see this page without a real payment, contact the organizer.",
+        subtitle: "AlliancePay returned you after a confirmed payment.",
+        note: "A ticket is issued only after server-side SUCCESS confirmation from the bank. If you see this page without a real payment, contact the organizer.",
         event: "Back to event",
         contact: "Contact organizer",
       };

@@ -15,7 +15,7 @@ export default function PaymentFailPage() {
     ? {
         back: "Назад",
         title: "Оплату не підтверджено",
-        subtitle: "Ця сторінка призначена для майбутнього повернення з AlliancePay зі статусом FAIL. Наразі онлайн-оплата ще не активована.",
+        subtitle: "AlliancePay повернув статус, який не підтверджує оплату.",
         reasonsTitle: "Квиток не видається, якщо банк повертає:",
         reasons: ["FAIL - оплату відхилено або скасовано", "PENDING - остаточний статус ще не отримано", "REQUIRED_3DS - не завершено 3-D Secure підтвердження"],
         retry: "Повернутись до заявки",
@@ -25,7 +25,7 @@ export default function PaymentFailPage() {
     : {
         back: "Back",
         title: "Payment not confirmed",
-        subtitle: "This page is reserved for a future AlliancePay return with FAIL status. Online payment is not active yet.",
+        subtitle: "AlliancePay returned a status that does not confirm payment.",
         reasonsTitle: "A ticket is not issued when the bank returns:",
         reasons: ["FAIL - payment declined or cancelled", "PENDING - final status not received yet", "REQUIRED_3DS - 3-D Secure confirmation not completed"],
         retry: "Back to request",

@@ -30,7 +30,7 @@ const tiers: Record<TicketType, { name: string; price: string; scope: string }> 
   },
   online: {
     name: "ONLINE",
-    price: "1 000 UAH",
+    price: "100 UAH",
     scope: "Remote access to the online broadcast and event recording.",
   },
 };
@@ -40,7 +40,7 @@ const text = {
     back: "Назад",
     badge: "Заявка на квиток",
     title: "Оформлення заявки",
-    subtitle: "Онлайн-оплата буде доступна після активації AlliancePay. Карткові дані на цьому сайті не вводяться і не зберігаються.",
+    subtitle: "Оплата проходить через захищену сторінку AlliancePay. Карткові дані на цьому сайті не вводяться і не зберігаються.",
     ticketLabel: "Тип квитка",
     firstName: "Ім'я",
     lastName: "Прізвище",
@@ -49,23 +49,24 @@ const text = {
     required: "Обов'язкове поле",
     invalidEmail: "Некоректний email",
     consentRequired: "Потрібна згода з умовами",
-    submit: "Надіслати заявку",
-    submitted: "Заявку підготовлено",
-    submitNote: "Натисніть кнопку нижче, щоб відкрити email із деталями заявки. Ми підтвердимо доступність оплати після активації AlliancePay.",
+    submit: "Перейти до оплати",
+    submitting: "Створюємо платіж...",
+    submitted: "Платіж створено",
+    submitNote: "Перенаправляємо вас на захищену сторінку AlliancePay.",
+    paymentError: "Не вдалося створити платіж. Спробуйте ще раз або зверніться до організатора.",
     paymentStatus: "Статус оплати",
-    paymentCopy: "Платіжна сторінка AlliancePay ще не активована. Квиток видається тільки після майбутнього серверного підтвердження статусу SUCCESS від банку.",
+    paymentCopy: "Квиток видається тільки після серверного підтвердження статусу SUCCESS від банку.",
     issueCopy: "Після статусу SUCCESS підтвердження покупки надсилається на email протягом 15 хвилин, PDF-квиток - не пізніше ніж за 24 години до події.",
     legalCopy: "Надсилаючи заявку, я підтверджую, що мені є 18 років, і погоджуюся з Публічною офертою, Політикою конфіденційності та Політикою повернення.",
     offer: "Публічна оферта",
     privacy: "Політика конфіденційності",
     returns: "Політика повернення",
-    contact: "Надіслати email-заявку",
   },
   en: {
     back: "Back",
     badge: "Ticket request",
     title: "Ticket request",
-    subtitle: "Online payment will be available after AlliancePay activation. Card data is not entered or stored on this site.",
+    subtitle: "Payment is processed through the secure AlliancePay page. Card data is not entered or stored on this site.",
     ticketLabel: "Ticket type",
     firstName: "First name",
     lastName: "Last name",
@@ -74,18 +75,25 @@ const text = {
     required: "Required field",
     invalidEmail: "Invalid email",
     consentRequired: "Consent is required",
-    submit: "Send request",
-    submitted: "Request prepared",
-    submitNote: "Use the button below to open an email with the request details. We will confirm payment availability after AlliancePay activation.",
+    submit: "Continue to payment",
+    submitting: "Creating payment...",
+    submitted: "Payment created",
+    submitNote: "Redirecting you to the secure AlliancePay page.",
+    paymentError: "Could not create the payment. Try again or contact the organizer.",
     paymentStatus: "Payment status",
-    paymentCopy: "The AlliancePay hosted payment page is not active yet. A ticket is issued only after future server-side SUCCESS confirmation from the bank.",
+    paymentCopy: "A ticket is issued only after server-side SUCCESS confirmation from the bank.",
     issueCopy: "After SUCCESS, purchase confirmation is sent by email within 15 minutes and the PDF ticket no later than 24 hours before the event.",
     legalCopy: "By sending this request, I confirm that I am 18+ and agree to the Public Offer, Privacy Policy and Refund Policy.",
     offer: "Public Offer",
     privacy: "Privacy Policy",
     returns: "Refund Policy",
-    contact: "Send email request",
   },
+};
+
+type CreateOrderResponse = {
+  success?: boolean;
+  redirectUrl?: string;
+  error?: string;
 };
 
 function getInitialTicketType(): TicketType {
@@ -104,6 +112,8 @@ export default function TicketFormPage() {
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   useEffect(() => {
     setTicketType(getInitialTicketType());
@@ -115,6 +125,7 @@ export default function TicketFormPage() {
   function selectTicketType(next: TicketType) {
     setTicketType(next);
     setSubmitted(false);
+    setPaymentError("");
     window.history.replaceState(null, "", `/event/sbc-summit-ukraine-2026/ticket-form?type=${next}`);
   }
 
@@ -130,24 +141,42 @@ export default function TicketFormPage() {
     return Object.keys(nextErrors).length === 0;
   }
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!validate()) return;
-    setSubmitted(true);
-  }
+    setIsSubmitting(true);
+    setSubmitted(false);
+    setPaymentError("");
 
-  const mailBody = encodeURIComponent(
-    [
-      "SBC Summit Ukraine 2026 ticket request",
-      `Ticket: ${tier.name} (${tier.price})`,
-      `First name: ${firstName}`,
-      `Last name: ${lastName}`,
-      `Email: ${email}`,
-      `Phone: ${phone}`,
-      "",
-      "I understand that online payment will be available after AlliancePay activation and that the ticket is issued only after bank status SUCCESS.",
-    ].join("\n"),
-  );
+    try {
+      const response = await fetch("/api/payment/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          ticketType,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as CreateOrderResponse;
+      if (!response.ok || !data.success || !data.redirectUrl) {
+        throw new Error(data.error || "Payment provider error");
+      }
+
+      setSubmitted(true);
+      window.location.assign(data.redirectUrl);
+    } catch (err) {
+      console.error(err);
+      setPaymentError(t.paymentError);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
@@ -244,9 +273,15 @@ export default function TicketFormPage() {
               </span>
             </label>
 
-            <button type="submit" className="w-full min-h-12 py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]" style={{ background: G }}>
-              {t.submit}
+            <button type="submit" disabled={isSubmitting} className="w-full min-h-12 py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]" style={{ background: G }}>
+              {isSubmitting ? t.submitting : t.submit}
             </button>
+
+            {paymentError && (
+              <div className="border border-red-400/25 bg-red-400/[0.06] p-4 text-xs leading-relaxed text-red-200">
+                {paymentError}
+              </div>
+            )}
 
             {submitted && (
               <div className="border border-[#00FF88]/25 bg-[#00FF88]/[0.04] p-4 text-sm text-white/55">
@@ -255,9 +290,6 @@ export default function TicketFormPage() {
                   {t.submitted}
                 </div>
                 <p className="text-xs leading-relaxed mb-4">{t.submitNote}</p>
-                <a href={`mailto:ceo@rave-era.com.ua?subject=SBC%20Summit%20Ukraine%202026%20ticket%20request&body=${mailBody}`} className="inline-flex min-h-10 items-center justify-center px-4 text-xs font-mono uppercase tracking-widest border border-[#00FF88]/30 text-[#00FF88] hover:text-white hover:border-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
-                  {t.contact}
-                </a>
               </div>
             )}
           </form>
