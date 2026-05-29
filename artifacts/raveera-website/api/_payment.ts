@@ -592,15 +592,20 @@ function buildCreateOrderRequestShape(payload: Record<string, unknown>): Record<
   return {
     topLevelKeys: Object.keys(payload),
     hppPayType: payload["hppPayType"],
+    directType: payload["directType"],
     coinAmountType: typeof payload["coinAmount"],
     coinAmountValue: payload["coinAmount"],
     paymentMethods: payload["paymentMethods"],
+    statusPageType: payload["statusPageType"],
+    language: payload["language"],
     urlFieldNames,
     hasMerchantId: Boolean(payload["merchantId"]),
     hasMerchantAliasId: Boolean(payload["merchantAliasId"]),
     hasServiceCode: Boolean(payload["serviceCode"]),
-    hasDescription: Boolean(payload["purpose"] || payload["merchantComment"] || payload["description"]),
+    hasPurpose: Boolean(payload["purpose"]),
+    hasDescription: Boolean(payload["description"]),
     hasCustomerBlock: Boolean(asRecord(payload["customerData"])),
+    customerDataKeys: keysOf(payload["customerData"]),
   };
 }
 
@@ -768,6 +773,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     successUrl: urls.successUrl,
     failUrl: urls.failUrl,
     statusPageType: "STATUS_TIMER_PAGE",
+    expirationTimeMinutes: 1440,
     purpose: "SBC Summit Ukraine 2026",
     customerData: {
       senderCustomerId: merchantRequestId,
