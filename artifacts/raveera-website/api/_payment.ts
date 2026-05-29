@@ -771,10 +771,6 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     purpose: "SBC Summit Ukraine 2026",
     customerData: {
       senderCustomerId: merchantRequestId,
-      senderFirstName: firstName,
-      senderLastName: lastName,
-      senderEmail: email,
-      senderPhone: phone || undefined,
     },
   };
 
