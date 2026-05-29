@@ -14,7 +14,7 @@ const { Pool } = pg;
 
 const ALB_API_URL =
   process.env["ALLIANCEPAY_API_URL"] ||
-  "https://pay.alb.ua/ecom/execute_request/hpp/v1/create-order";
+  "https://api-ecom-prod.bankalliance.ua/ecom/execute_request/hpp/v1/create-order";
 const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
 
@@ -117,6 +117,8 @@ function getMissingPaymentConfig(): string[] {
     "ALLIANCEPAY_SERVICE_CODE",
     "ALLIANCEPAY_MERCHANT_ALIAS_ID",
     "ALLIANCEPAY_API_URL",
+    "ALLIANCEPAY_DEVICE_ID",
+    "ALLIANCEPAY_REFRESH_TOKEN",
     "PUBLIC_APP_ORIGIN",
   ].filter((key) => !process.env[key]?.trim());
 }
@@ -331,6 +333,52 @@ function buildProviderShape(data: Record<string, unknown>): Record<string, unkno
   };
 }
 
+function getSafeProviderValue(data: Record<string, unknown>, key: string): unknown {
+  const value = data[key];
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    value === null
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value
+      .filter(
+        (item) =>
+          item === null ||
+          typeof item === "string" ||
+          typeof item === "number" ||
+          typeof item === "boolean",
+      )
+      .slice(0, 20);
+  }
+  if (value && typeof value === "object") {
+    return keysOf(value);
+  }
+  return undefined;
+}
+
+function getAlliancePayServiceMessage(data: Record<string, unknown>): Record<string, unknown> | null {
+  const hasServiceMessage =
+    "msgCode" in data || "msgText" in data || "msgType" in data || "errorCauses" in data;
+  if (!hasServiceMessage) {
+    return null;
+  }
+
+  return {
+    requestId: getSafeProviderValue(data, "requestId"),
+    serviceId: getSafeProviderValue(data, "serviceId"),
+    msgCode: getSafeProviderValue(data, "msgCode"),
+    msgType: getSafeProviderValue(data, "msgType"),
+    msgText: getSafeProviderValue(data, "msgText"),
+    isLocalized: getSafeProviderValue(data, "isLocalized"),
+    msgAttrs: getSafeProviderValue(data, "msgAttrs"),
+    errorCauses: getSafeProviderValue(data, "errorCauses"),
+  };
+}
+
 async function getDb(): Promise<DbModule> {
   if (!process.env["DATABASE_URL"]) {
     throw new Error("DATABASE_URL is not configured");
@@ -504,6 +552,9 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        "x-api_version": "v1",
+        "x-device_id": process.env["ALLIANCEPAY_DEVICE_ID"] || "",
+        "x-refresh_token": process.env["ALLIANCEPAY_REFRESH_TOKEN"] || "",
       },
       body: JSON.stringify(albPayload),
     });
@@ -516,6 +567,23 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
         providerError: errorResponse.provider,
       });
       sendJson(res, 502, errorResponse);
+      return;
+    }
+
+    const serviceMessage = getAlliancePayServiceMessage(albData);
+    if (serviceMessage) {
+      console.error("ALB API returned service message", {
+        merchantRequestId,
+        providerStatus: albRes.status,
+        providerMessage: serviceMessage,
+      });
+      sendJson(res, 502, {
+        code: "ALLIANCEPAY_SERVICE_MESSAGE",
+        error: "AlliancePay returned a service message",
+        orderId,
+        providerStatus: albRes.status,
+        providerMessage: serviceMessage,
+      });
       return;
     }
 
