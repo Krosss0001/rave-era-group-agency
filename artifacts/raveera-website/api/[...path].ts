@@ -1,5 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createOrder, sendCors, sendJson, type VercelApiRequest } from "./_payment.js";
+import {
+  createOrder,
+  getPaymentConfigCheck,
+  sendCors,
+  sendJson,
+  type VercelApiRequest,
+} from "./_payment.js";
 
 type VercelCatchAllRequest = VercelApiRequest & {
   query?: {
@@ -128,7 +134,11 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
   if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/routes", "/routes")) {
     sendJson(res, 200, {
       ok: true,
-      routes: ["GET /api/health", "POST /api/payment/create-order"],
+      routes: [
+        "GET /api/health",
+        "GET /api/payment/config-check",
+        "POST /api/payment/create-order",
+      ],
       matching: {
         createOrder: {
           method: "POST",
@@ -142,6 +152,14 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
         },
       },
     });
+    return;
+  }
+
+  if (
+    req.method === "GET" &&
+    matchesPath(normalizedUrl.pathname, "/api/payment/config-check", "/payment/config-check")
+  ) {
+    sendJson(res, 200, getPaymentConfigCheck());
     return;
   }
 

@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { compactDecrypt, importJWK, type JWK } from "jose";
 import pg from "pg";
 import { z } from "zod";
 
@@ -10,6 +11,18 @@ type DbModule = {
   pool: pg.Pool;
 };
 
+type AlliancePayAuthHeaders = {
+  "x-api_version": string;
+  "x-device_id": string;
+  "x-refresh_token": string;
+};
+
+type AlliancePaySession = {
+  deviceId: string;
+  refreshToken: string;
+  expiresAt: number;
+};
+
 const { Pool } = pg;
 
 const ALB_API_URL =
@@ -17,6 +30,7 @@ const ALB_API_URL =
   "https://api-ecom-prod.bankalliance.ua/ecom/execute_request/hpp/v1/create-order";
 const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
+let cachedAlliancePaySession: AlliancePaySession | null = null;
 
 const ticketPrices: Record<string, number> = {
   sport: 250000,
@@ -111,16 +125,23 @@ function buildPaymentUrls(): {
 }
 
 function getMissingPaymentConfig(): string[] {
-  return [
+  const missing = [
     "DATABASE_URL",
     "ALLIANCEPAY_MERCHANT_ID",
     "ALLIANCEPAY_SERVICE_CODE",
     "ALLIANCEPAY_MERCHANT_ALIAS_ID",
     "ALLIANCEPAY_API_URL",
-    "ALLIANCEPAY_DEVICE_ID",
-    "ALLIANCEPAY_REFRESH_TOKEN",
     "PUBLIC_APP_ORIGIN",
   ].filter((key) => !process.env[key]?.trim());
+
+  if (
+    !process.env["ALLIANCEPAY_PRIVATE_JWK"]?.trim() &&
+    (!process.env["ALLIANCEPAY_DEVICE_ID"]?.trim() || !process.env["ALLIANCEPAY_REFRESH_TOKEN"]?.trim())
+  ) {
+    missing.push("ALLIANCEPAY_PRIVATE_JWK");
+  }
+
+  return [...new Set(missing)];
 }
 
 function getProviderErrorSummary(data: Record<string, unknown>): Record<string, unknown> {
@@ -333,6 +354,150 @@ function buildProviderShape(data: Record<string, unknown>): Record<string, unkno
   };
 }
 
+function parsePrivateJwk(): JWK | null {
+  const raw = process.env["ALLIANCEPAY_PRIVATE_JWK"];
+  if (!raw?.trim()) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as JWK;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function privateJwkLooksValid(): boolean {
+  const jwk = parsePrivateJwk();
+  return Boolean(
+    jwk &&
+      jwk.kty === "EC" &&
+      jwk.crv === "P-384" &&
+      typeof jwk.x === "string" &&
+      typeof jwk.y === "string" &&
+      typeof jwk.d === "string",
+  );
+}
+
+function getApiOrigin(): string {
+  return new URL(ALB_API_URL).origin;
+}
+
+function parseAlliancePaySession(data: Record<string, unknown>): AlliancePaySession | null {
+  const deviceId = getProviderString(data, ["deviceId", "device_id"]);
+  const refreshToken = getProviderString(data, ["refreshToken", "refresh_token"]);
+  if (!deviceId || !refreshToken) {
+    return null;
+  }
+
+  return {
+    deviceId,
+    refreshToken,
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000,
+  };
+}
+
+async function decryptAlliancePayJwe(jwe: string): Promise<Record<string, unknown>> {
+  const privateJwk = parsePrivateJwk();
+  if (!privateJwk || !privateJwkLooksValid()) {
+    throw new Error("ALLIANCEPAY_PRIVATE_JWK is invalid");
+  }
+
+  const key = await importJWK(privateJwk, "ECDH-ES+A256KW");
+  const decrypted = await compactDecrypt(jwe, key);
+  return JSON.parse(new TextDecoder().decode(decrypted.plaintext)) as Record<string, unknown>;
+}
+
+async function authorizeAlliancePayVirtualDevice(): Promise<AlliancePaySession> {
+  if (cachedAlliancePaySession && cachedAlliancePaySession.expiresAt > Date.now() + 5 * 60 * 1000) {
+    return cachedAlliancePaySession;
+  }
+
+  const serviceCode = process.env["ALLIANCEPAY_SERVICE_CODE"];
+  if (!serviceCode?.trim()) {
+    throw new Error("ALLIANCEPAY_SERVICE_CODE is missing");
+  }
+
+  const authRes = await fetch(`${getApiOrigin()}/api-gateway/authorize_virtual_device`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "x-api_version": "1",
+    },
+    body: JSON.stringify({ serviceCode }),
+  });
+  const authData = await authRes.json().catch(() => ({} as Record<string, unknown>));
+  if (!authRes.ok) {
+    console.error("ALB virtual device authorization failed", {
+      status: authRes.status,
+      providerError: getProviderErrorSummary(authData),
+    });
+    throw new Error("AlliancePay virtual device authorization failed");
+  }
+
+  const responseJwe = getProviderString(authData, ["jwe"]);
+  if (!responseJwe) {
+    console.error("ALB virtual device authorization missing JWE", {
+      topLevelKeys: keysOf(authData),
+    });
+    throw new Error("AlliancePay virtual device authorization missing JWE");
+  }
+
+  const decrypted = await decryptAlliancePayJwe(responseJwe);
+  const session = parseAlliancePaySession(decrypted);
+  if (!session) {
+    console.error("ALB virtual device authorization decrypted response missing session fields", {
+      topLevelKeys: keysOf(decrypted),
+    });
+    throw new Error("AlliancePay virtual device authorization missing session fields");
+  }
+
+  cachedAlliancePaySession = session;
+  return session;
+}
+
+async function getAlliancePayAuthHeaders(): Promise<AlliancePayAuthHeaders> {
+  const configuredDeviceId = process.env["ALLIANCEPAY_DEVICE_ID"];
+  const configuredRefreshToken = process.env["ALLIANCEPAY_REFRESH_TOKEN"];
+  if (configuredDeviceId?.trim() && configuredRefreshToken?.trim()) {
+    return {
+      "x-api_version": "v1",
+      "x-device_id": configuredDeviceId,
+      "x-refresh_token": configuredRefreshToken,
+    };
+  }
+
+  const session = await authorizeAlliancePayVirtualDevice();
+  return {
+    "x-api_version": "v1",
+    "x-device_id": session.deviceId,
+    "x-refresh_token": session.refreshToken,
+  };
+}
+
+export function getPaymentConfigCheck(): Record<string, unknown> {
+  let apiHost = "";
+  try {
+    apiHost = new URL(ALB_API_URL).host;
+  } catch {
+    apiHost = "";
+  }
+
+  return {
+    ok: true,
+    hasDatabaseUrl: Boolean(process.env["DATABASE_URL"]?.trim()),
+    hasPrivateJwk: Boolean(process.env["ALLIANCEPAY_PRIVATE_JWK"]?.trim()),
+    privateJwkLooksValid: privateJwkLooksValid(),
+    hasMerchantId: Boolean(process.env["ALLIANCEPAY_MERCHANT_ID"]?.trim()),
+    hasServiceCode: Boolean(process.env["ALLIANCEPAY_SERVICE_CODE"]?.trim()),
+    hasMerchantAliasId: Boolean(process.env["ALLIANCEPAY_MERCHANT_ALIAS_ID"]?.trim()),
+    hasApiUrl: Boolean(process.env["ALLIANCEPAY_API_URL"]?.trim()),
+    apiHost,
+  };
+}
+
 function getSafeProviderValue(data: Record<string, unknown>, key: string): unknown {
   const value = data[key];
   if (
@@ -448,6 +613,17 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     });
     return;
   }
+  if (
+    (!process.env["ALLIANCEPAY_DEVICE_ID"]?.trim() || !process.env["ALLIANCEPAY_REFRESH_TOKEN"]?.trim()) &&
+    !privateJwkLooksValid()
+  ) {
+    sendJson(res, 503, {
+      code: "MISSING_CONFIG",
+      error: "Payment service is not configured",
+      missingConfig: ["ALLIANCEPAY_PRIVATE_JWK"],
+    });
+    return;
+  }
 
   let dbModule: DbModule;
   try {
@@ -547,14 +723,13 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   let hppOrderId = "";
   let albData: Record<string, unknown> = {};
   try {
+    const authHeaders = await getAlliancePayAuthHeaders();
     const albRes = await fetch(ALB_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "x-api_version": "v1",
-        "x-device_id": process.env["ALLIANCEPAY_DEVICE_ID"] || "",
-        "x-refresh_token": process.env["ALLIANCEPAY_REFRESH_TOKEN"] || "",
+        ...authHeaders,
       },
       body: JSON.stringify(albPayload),
     });
