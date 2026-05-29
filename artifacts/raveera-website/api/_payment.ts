@@ -205,6 +205,132 @@ function buildProviderErrorResponse(
   };
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function keysOf(value: unknown): string[] {
+  return Object.keys(asRecord(value) || {});
+}
+
+function getNestedValue(data: Record<string, unknown>, path: string[]): unknown {
+  let current: unknown = data;
+  for (const key of path) {
+    const record = asRecord(current);
+    if (!record) {
+      return undefined;
+    }
+    current = record[key];
+  }
+  return current;
+}
+
+function isSafeHttpUrl(value: unknown): value is string {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+const redirectCandidatePaths = [
+  ["redirectUrl"],
+  ["redirect_url"],
+  ["paymentUrl"],
+  ["payment_url"],
+  ["hppUrl"],
+  ["hpp_url"],
+  ["url"],
+  ["data", "redirectUrl"],
+  ["data", "redirect_url"],
+  ["data", "paymentUrl"],
+  ["data", "payment_url"],
+  ["data", "hppUrl"],
+  ["data", "hpp_url"],
+  ["data", "url"],
+  ["result", "redirectUrl"],
+  ["result", "url"],
+  ["payload", "redirectUrl"],
+  ["payload", "url"],
+  ["links", "payment"],
+  ["links", "redirect"],
+];
+
+const hppOrderIdCandidatePaths = [
+  ["hppOrderId"],
+  ["hpp_order_id"],
+  ["orderId"],
+  ["order_id"],
+  ["data", "hppOrderId"],
+  ["data", "hpp_order_id"],
+  ["data", "orderId"],
+  ["data", "order_id"],
+  ["result", "hppOrderId"],
+  ["result", "orderId"],
+  ["payload", "hppOrderId"],
+  ["payload", "orderId"],
+];
+
+function extractRedirectUrl(data: Record<string, unknown>): string {
+  for (const path of redirectCandidatePaths) {
+    const value = getNestedValue(data, path);
+    if (isSafeHttpUrl(value)) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function extractHppOrderId(data: Record<string, unknown>): string {
+  for (const path of hppOrderIdCandidatePaths) {
+    const value = getNestedValue(data, path);
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+    if (typeof value === "number") {
+      return String(value);
+    }
+  }
+  return "";
+}
+
+function buildProviderShape(data: Record<string, unknown>): Record<string, unknown> {
+  const redirectCandidateValues: Record<string, string> = {};
+  for (const path of redirectCandidatePaths) {
+    const value = getNestedValue(data, path);
+    if (isSafeHttpUrl(value)) {
+      redirectCandidateValues[path.join(".")] = value;
+    }
+  }
+
+  const hppOrderIdCandidates: Record<string, string> = {};
+  for (const path of hppOrderIdCandidatePaths) {
+    const value = getNestedValue(data, path);
+    if (typeof value === "string" && value.trim()) {
+      hppOrderIdCandidates[path.join(".")] = value;
+    } else if (typeof value === "number") {
+      hppOrderIdCandidates[path.join(".")] = String(value);
+    }
+  }
+
+  return {
+    topLevelKeys: keysOf(data),
+    dataKeys: keysOf(data.data),
+    resultKeys: keysOf(data.result),
+    payloadKeys: keysOf(data.payload),
+    linksKeys: keysOf(data.links),
+    hppOrderIdCandidates,
+    redirectCandidateValues,
+  };
+}
+
 async function getDb(): Promise<DbModule> {
   if (!process.env["DATABASE_URL"]) {
     throw new Error("DATABASE_URL is not configured");
@@ -371,6 +497,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
 
   let redirectUrl = "";
   let hppOrderId = "";
+  let albData: Record<string, unknown> = {};
   try {
     const albRes = await fetch(ALB_API_URL, {
       method: "POST",
@@ -380,7 +507,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
       },
       body: JSON.stringify(albPayload),
     });
-    const albData = await albRes.json().catch(() => ({} as Record<string, unknown>));
+    albData = await albRes.json().catch(() => ({} as Record<string, unknown>));
     if (!albRes.ok) {
       const errorResponse = buildProviderErrorResponse(albRes.status, albData, orderId);
       console.error("ALB API error creating payment order", {
@@ -392,8 +519,8 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
       return;
     }
 
-    redirectUrl = String(albData.redirectUrl || "");
-    hppOrderId = String(albData.hppOrderId || "");
+    redirectUrl = extractRedirectUrl(albData);
+    hppOrderId = extractHppOrderId(albData);
   } catch (err) {
     console.error("ALB API network error creating payment order", {
       error: err instanceof Error ? err.message : "Unknown error",
@@ -408,11 +535,18 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   }
 
   if (!redirectUrl) {
-    console.error("ALB API response missing redirect URL", { merchantRequestId });
+    const providerShape = buildProviderShape(albData);
+    console.error("ALB API response missing redirect URL", {
+      merchantRequestId,
+      providerStatus: 200,
+      providerShape,
+    });
     sendJson(res, 502, {
-      code: "ALLIANCEPAY_ERROR",
+      code: "ALLIANCEPAY_NO_REDIRECT_URL",
       error: "No redirect URL from payment provider",
       orderId,
+      providerStatus: 200,
+      providerShape,
     });
     return;
   }
