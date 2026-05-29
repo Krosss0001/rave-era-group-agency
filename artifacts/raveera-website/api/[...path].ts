@@ -71,6 +71,16 @@ function normalizeApiUrl(req: VercelCatchAllRequest): URL {
   return new URL(`${normalizedPath}${parsed.search}`, "http://vercel.local");
 }
 
+function normalizeLoosePath(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "/";
+  }
+
+  const withoutQuery = trimmed.split("?")[0] || "/";
+  return withoutQuery.startsWith("/") ? withoutQuery : `/${withoutQuery}`;
+}
+
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
   res.statusCode = statusCode;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -83,15 +93,48 @@ function sendCors(res: ServerResponse): void {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept");
 }
 
-function logRequest(method: string | undefined, originalPath: string, normalizedPath: string): void {
+function logRequest({
+  method,
+  rawUrl,
+  pathname,
+  normalizedPath,
+}: {
+  method: string | undefined;
+  rawUrl: string;
+  pathname: string;
+  normalizedPath: string;
+}): void {
   console.info("Vercel API request", {
     method,
+    rawUrl,
+    pathname,
     normalizedPath,
   });
 }
 
 function matchesPath(pathname: string, ...paths: string[]): boolean {
   return paths.includes(pathname);
+}
+
+function getCandidatePaths(req: VercelCatchAllRequest, originalUrl: URL, normalizedUrl: URL): string[] {
+  const rawUrl = req.url || "/";
+  const catchAllPath = getCatchAllPath(req, originalUrl);
+  return [
+    normalizeLoosePath(rawUrl),
+    originalUrl.pathname,
+    normalizedUrl.pathname,
+    catchAllPath ? normalizeLoosePath(catchAllPath) : "",
+  ].filter(Boolean);
+}
+
+function isCreateOrderPath(pathname: string): boolean {
+  const path = normalizeLoosePath(pathname);
+  return (
+    pathname === "payment/create-order" ||
+    path === "/api/payment/create-order" ||
+    path === "/payment/create-order" ||
+    path.endsWith("/payment/create-order")
+  );
 }
 
 async function readJsonBody(req: VercelCatchAllRequest): Promise<unknown> {
@@ -367,7 +410,18 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
 
   const originalUrl = new URL(req.url || "/", "http://vercel.local");
   const normalizedUrl = normalizeApiUrl(req);
-  logRequest(req.method, originalUrl.pathname, normalizedUrl.pathname);
+  const candidatePaths = getCandidatePaths(req, originalUrl, normalizedUrl);
+  logRequest({
+    method: req.method,
+    rawUrl: req.url || "/",
+    pathname: originalUrl.pathname,
+    normalizedPath: normalizedUrl.pathname,
+  });
+
+  if (req.method === "POST" && candidatePaths.some(isCreateOrderPath)) {
+    await createOrder(req, res);
+    return;
+  }
 
   if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/health", "/api/healthz", "/health")) {
     sendJson(res, 200, { ok: true, service: "raveera-api" });
@@ -378,6 +432,18 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     sendJson(res, 200, {
       ok: true,
       routes: ["GET /api/health", "POST /api/payment/create-order"],
+      matching: {
+        createOrder: {
+          method: "POST",
+          paths: ["/api/payment/create-order", "/payment/create-order", "payment/create-order"],
+          suffix: "/payment/create-order",
+        },
+        received: {
+          method: req.method,
+          path: originalUrl.pathname,
+          normalizedPath: normalizedUrl.pathname,
+        },
+      },
     });
     return;
   }
@@ -390,5 +456,10 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     return;
   }
 
-  sendJson(res, 404, { error: "API route not found" });
+  sendJson(res, 404, {
+    error: "NOT_FOUND",
+    method: req.method,
+    path: originalUrl.pathname,
+    normalizedPath: normalizedUrl.pathname,
+  });
 }
