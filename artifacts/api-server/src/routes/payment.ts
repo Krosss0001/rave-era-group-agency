@@ -53,6 +53,17 @@ const ticketPrices: Record<string, number> = {
 
 const router: IRouter = Router();
 
+function getProviderErrorSummary(data: Record<string, unknown>): Record<string, unknown> {
+  const summary: Record<string, unknown> = {};
+  for (const key of ["error", "errorCode", "code", "message", "status", "reason"]) {
+    const value = data[key];
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      summary[key] = value;
+    }
+  }
+  return summary;
+}
+
 router.post("/payment/create-order", async (req: Request, res: Response) => {
   try {
     const parsed = createOrderBodySchema.safeParse(req.body);
@@ -127,7 +138,14 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
       });
       const albData = await albRes.json().catch(() => ({} as Record<string, unknown>));
       if (!albRes.ok) {
-        logger.warn({ status: albRes.status, albData }, "ALB API error");
+        logger.warn(
+          {
+            status: albRes.status,
+            merchantRequestId,
+            providerError: getProviderErrorSummary(albData),
+          },
+          "ALB API error creating payment order",
+        );
         res.status(502).json({
           error: "Payment provider error",
           orderId: inserted.id,
@@ -137,7 +155,7 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
       redirectUrl = String(albData.redirectUrl || "");
       hppOrderId = String(albData.hppOrderId || "");
     } catch (err) {
-      logger.error({ err }, "ALB API network error");
+      logger.error({ err, merchantRequestId }, "ALB API network error creating payment order");
       res.status(502).json({
         error: "Payment provider unreachable",
         orderId: inserted.id,
@@ -146,6 +164,7 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
     }
 
     if (!redirectUrl) {
+      logger.warn({ merchantRequestId }, "ALB API response missing redirect URL");
       res.status(502).json({
         error: "No redirect URL from payment provider",
         orderId: inserted.id,
