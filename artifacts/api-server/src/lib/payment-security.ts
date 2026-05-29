@@ -1,8 +1,3 @@
-import {
-  type CallbackSignatureResult,
-  verifyCallbackSignature,
-} from "./webhook-auth";
-
 const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
 
@@ -56,20 +51,4 @@ export function buildPaymentUrls({
       ? validateAbsoluteHttpUrl(notificationUrl, "ALLIANCEPAY_NOTIFICATION_URL")
       : `${origin}${CALLBACK_PATH}`,
   };
-}
-
-export function verifyAlliancePayCallback({
-  rawBody,
-  secret,
-  signatureHeader,
-}: {
-  rawBody?: Buffer;
-  secret: string;
-  signatureHeader: string | string[] | undefined;
-}): CallbackSignatureResult {
-  return verifyCallbackSignature({
-    rawBody,
-    secret,
-    signatureHeader,
-  });
 }

@@ -3,11 +3,7 @@ import { db, ticketOrdersTable } from "@workspace/db";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import {
-  buildPaymentUrls,
-  verifyAlliancePayCallback,
-} from "../lib/payment-security";
-import { CALLBACK_SIGNATURE_HEADER } from "../lib/webhook-auth";
+import { buildPaymentUrls } from "../lib/payment-security";
 
 const MERCHANT_ID = process.env["ALLIANCEPAY_MERCHANT_ID"] || "";
 const ALB_API_URL =
@@ -15,11 +11,8 @@ const ALB_API_URL =
   "https://pay.alb.ua/ecom/execute_request/hpp/v1/create-order";
 const NOTIFICATION_URL =
   process.env["ALLIANCEPAY_NOTIFICATION_URL"] || "";
-const CALLBACK_SECRET = process.env["ALLIANCEPAY_CALLBACK_SECRET"] || "";
 const PUBLIC_APP_ORIGIN =
   process.env["PUBLIC_APP_ORIGIN"] || "https://raveera.group";
-
-type RequestWithRawBody = Request & { rawBody?: Buffer };
 
 function generateUUID(): string {
   return crypto.randomUUID();
@@ -177,20 +170,6 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
 // ALB callback webhook
 router.post("/payment/callback", async (req: Request, res: Response) => {
   try {
-    const signatureHeader = req.get(CALLBACK_SIGNATURE_HEADER);
-    const authentication = verifyAlliancePayCallback({
-      rawBody: (req as RequestWithRawBody).rawBody,
-      secret: CALLBACK_SECRET,
-      signatureHeader,
-    });
-    if (!authentication.ok) {
-      logger.warn({ reason: authentication.reason }, "Rejected unauthenticated ALB callback");
-      res
-        .status(authentication.reason === "missing_callback_secret" ? 500 : 401)
-        .json({ error: "Unauthorized callback" });
-      return;
-    }
-
     const parsed = callbackBodySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid callback body", details: parsed.error.flatten() });
