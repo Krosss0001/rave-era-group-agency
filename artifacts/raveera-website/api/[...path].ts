@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import pg from "pg";
 import { z } from "zod";
 
 type VercelCatchAllRequest = IncomingMessage & {
@@ -8,7 +9,11 @@ type VercelCatchAllRequest = IncomingMessage & {
   };
 };
 
-type DbModule = typeof import("../../../lib/db/src/index.js");
+const { Pool } = pg;
+
+type DbModule = {
+  pool: pg.Pool;
+};
 
 const ALB_API_URL =
   process.env["ALLIANCEPAY_API_URL"] ||
@@ -175,7 +180,13 @@ function getProviderErrorSummary(data: Record<string, unknown>): Record<string, 
 }
 
 async function getDb(): Promise<DbModule> {
-  return import("../../../lib/db/src/index.js");
+  if (!process.env["DATABASE_URL"]) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  return {
+    pool: new Pool({ connectionString: process.env["DATABASE_URL"] }),
+  };
 }
 
 async function createOrder(req: VercelCatchAllRequest, res: ServerResponse): Promise<void> {

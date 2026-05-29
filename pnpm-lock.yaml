@@ -391,6 +391,10 @@ importers:
         version: 3.25.76
 
   artifacts/raveera-website:
+    dependencies:
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0
@@ -488,6 +492,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.3.5
+      '@types/pg':
+        specifier: ^8.18.0
+        version: 8.18.0
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.14
