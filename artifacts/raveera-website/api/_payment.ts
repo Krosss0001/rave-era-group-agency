@@ -142,6 +142,37 @@ async function getDb(): Promise<DbModule> {
   };
 }
 
+async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
+  await dbModule.pool.query(`
+    create table if not exists ticket_orders (
+      id serial primary key,
+      merchant_request_id text not null unique,
+      ticket_type text not null,
+      amount_kopiykas integer not null,
+      currency text not null default 'UAH',
+      status text not null default 'PENDING',
+      customer_email text not null,
+      customer_first_name text not null,
+      customer_last_name text not null,
+      customer_phone text,
+      hpp_order_id text,
+      redirect_url text,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `);
+
+  await dbModule.pool.query(`
+    create index if not exists ticket_orders_merchant_request_id_idx
+    on ticket_orders (merchant_request_id)
+  `);
+
+  await dbModule.pool.query(`
+    create index if not exists ticket_orders_hpp_order_id_idx
+    on ticket_orders (hpp_order_id)
+  `);
+}
+
 export async function createOrder(req: VercelApiRequest, res: ServerResponse): Promise<void> {
   let parsedBody: z.infer<typeof createOrderBodySchema>;
   try {
@@ -182,6 +213,19 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     return;
   }
 
+  try {
+    await ensurePaymentOrdersTable(dbModule);
+  } catch (err) {
+    console.error("Payment database migration failed", {
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, {
+      code: "DATABASE_MIGRATION_ERROR",
+      error: "Payment database migration failed",
+    });
+    return;
+  }
+
   const { ticketType, firstName, lastName, email, phone } = parsedBody;
   const coinAmount = ticketPrices[ticketType] ?? 0;
   if (!coinAmount) {
@@ -209,12 +253,13 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
         merchant_request_id,
         ticket_type,
         amount_kopiykas,
+        currency,
         status,
         customer_email,
         customer_first_name,
         customer_last_name,
         customer_phone
-      ) values ($1, $2, $3, 'PENDING', $4, $5, $6, $7)
+      ) values ($1, $2, $3, 'UAH', 'PENDING', $4, $5, $6, $7)
       returning id`,
       [merchantRequestId, ticketType, coinAmount, email, firstName, lastName, phone || null],
     );
