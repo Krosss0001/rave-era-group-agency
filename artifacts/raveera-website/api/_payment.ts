@@ -584,6 +584,26 @@ function getAlliancePayServiceMessage(data: Record<string, unknown>): Record<str
   };
 }
 
+function buildCreateOrderRequestShape(payload: Record<string, unknown>): Record<string, unknown> {
+  const urlFieldNames = ["successUrl", "failUrl", "notificationUrl", "callbackUrl", "returnUrl"].filter(
+    (key) => key in payload,
+  );
+
+  return {
+    topLevelKeys: Object.keys(payload),
+    hppPayType: payload["hppPayType"],
+    coinAmountType: typeof payload["coinAmount"],
+    coinAmountValue: payload["coinAmount"],
+    paymentMethods: payload["paymentMethods"],
+    urlFieldNames,
+    hasMerchantId: Boolean(payload["merchantId"]),
+    hasMerchantAliasId: Boolean(payload["merchantAliasId"]),
+    hasServiceCode: Boolean(payload["serviceCode"]),
+    hasDescription: Boolean(payload["purpose"] || payload["merchantComment"] || payload["description"]),
+    hasCustomerBlock: Boolean(asRecord(payload["customerData"])),
+  };
+}
+
 async function getDb(): Promise<DbModule> {
   if (!process.env["DATABASE_URL"]) {
     throw new Error("DATABASE_URL is not configured");
@@ -739,8 +759,6 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   const albPayload = {
     merchantRequestId,
     merchantId: process.env["ALLIANCEPAY_MERCHANT_ID"],
-    serviceCode: process.env["ALLIANCEPAY_SERVICE_CODE"],
-    merchantAliasId: process.env["ALLIANCEPAY_MERCHANT_ALIAS_ID"],
     hppPayType: "PURCHASE",
     directType: "REDIRECT",
     coinAmount,
@@ -752,6 +770,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     statusPageType: "STATUS_TIMER_PAGE",
     purpose: "SBC Summit Ukraine 2026",
     customerData: {
+      senderCustomerId: merchantRequestId,
       senderFirstName: firstName,
       senderLastName: lastName,
       senderEmail: email,
@@ -787,19 +806,23 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
 
     const serviceMessage = getAlliancePayServiceMessage(albData);
     if (serviceMessage) {
+      const requestShape = buildCreateOrderRequestShape(albPayload);
+      const serviceMessageCode = getServiceMessageCode("hpp_create_order", serviceMessage);
       console.error("ALB API returned service message", {
         providerStep: "hpp_create_order",
         merchantRequestId,
         providerStatus: albRes.status,
         providerMessage: serviceMessage,
+        requestShape,
       });
       sendJson(res, 502, {
-        code: getServiceMessageCode("hpp_create_order", serviceMessage),
+        code: serviceMessageCode,
         error: "AlliancePay returned a service message",
         orderId,
         providerStep: "hpp_create_order",
         providerStatus: albRes.status,
         providerMessage: serviceMessage,
+        ...(serviceMessageCode === "ALLIANCEPAY_CREATE_ORDER_VALIDATION_ERROR" ? { requestShape } : {}),
       });
       return;
     }
