@@ -86,9 +86,12 @@ function sendCors(res: ServerResponse): void {
 function logRequest(method: string | undefined, originalPath: string, normalizedPath: string): void {
   console.info("Vercel API request", {
     method,
-    originalPath,
     normalizedPath,
   });
+}
+
+function matchesPath(pathname: string, ...paths: string[]): boolean {
+  return paths.includes(pathname);
 }
 
 async function readJsonBody(req: VercelCatchAllRequest): Promise<unknown> {
@@ -366,15 +369,23 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
   const normalizedUrl = normalizeApiUrl(req);
   logRequest(req.method, originalUrl.pathname, normalizedUrl.pathname);
 
-  if (
-    req.method === "GET" &&
-    (normalizedUrl.pathname === "/api/health" || normalizedUrl.pathname === "/api/healthz")
-  ) {
+  if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/health", "/api/healthz", "/health")) {
     sendJson(res, 200, { ok: true, service: "raveera-api" });
     return;
   }
 
-  if (req.method === "POST" && normalizedUrl.pathname === "/api/payment/create-order") {
+  if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/routes", "/routes")) {
+    sendJson(res, 200, {
+      ok: true,
+      routes: ["GET /api/health", "POST /api/payment/create-order"],
+    });
+    return;
+  }
+
+  if (
+    req.method === "POST" &&
+    matchesPath(normalizedUrl.pathname, "/api/payment/create-order", "/payment/create-order")
+  ) {
     await createOrder(req, res);
     return;
   }
