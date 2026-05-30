@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   createOrder,
   getPaymentConfigCheck,
+  paymentCallback,
   sendCors,
   sendJson,
   type VercelApiRequest,
@@ -102,6 +103,16 @@ function isCreateOrderPath(pathname: string): boolean {
   );
 }
 
+function isPaymentCallbackPath(pathname: string): boolean {
+  const path = normalizeLoosePath(pathname);
+  return (
+    pathname === "payment/callback" ||
+    path === "/api/payment/callback" ||
+    path === "/payment/callback" ||
+    path.endsWith("/payment/callback")
+  );
+}
+
 export default async function handler(req: VercelCatchAllRequest, res: ServerResponse) {
   sendCors(res);
 
@@ -126,6 +137,11 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     return;
   }
 
+  if (req.method === "POST" && candidatePaths.some(isPaymentCallbackPath)) {
+    await paymentCallback(req, res);
+    return;
+  }
+
   if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/health", "/api/healthz", "/health")) {
     sendJson(res, 200, { ok: true, service: "raveera-api" });
     return;
@@ -138,12 +154,18 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
         "GET /api/health",
         "GET /api/payment/config-check",
         "POST /api/payment/create-order",
+        "POST /api/payment/callback",
       ],
       matching: {
         createOrder: {
           method: "POST",
           paths: ["/api/payment/create-order", "/payment/create-order", "payment/create-order"],
           suffix: "/payment/create-order",
+        },
+        paymentCallback: {
+          method: "POST",
+          paths: ["/api/payment/callback", "/payment/callback", "payment/callback"],
+          suffix: "/payment/callback",
         },
         received: {
           method: req.method,

@@ -58,6 +58,23 @@ const createOrderBodySchema = z.object({
   phone: z.string().min(10).max(20).optional(),
 });
 
+const optionalNonEmptyString = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().trim().min(1).optional(),
+);
+
+const callbackBodySchema = z
+  .object({
+    hppOrderId: optionalNonEmptyString,
+    merchantRequestId: optionalNonEmptyString,
+    orderStatus: z.enum(["SUCCESS", "FAIL", "PENDING", "REQUIRED_3DS"]),
+  })
+  .passthrough()
+  .refine((body) => Boolean(body.hppOrderId || body.merchantRequestId), {
+    message: "Missing order identifier",
+    path: ["merchantRequestId"],
+  });
+
 export function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
   res.statusCode = statusCode;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -899,4 +916,85 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     merchantRequestId,
     redirectUrl,
   });
+}
+
+export async function paymentCallback(req: VercelApiRequest, res: ServerResponse): Promise<void> {
+  let parsedBody: z.infer<typeof callbackBodySchema>;
+  try {
+    const parsed = callbackBodySchema.safeParse(await readJsonBody(req));
+    if (!parsed.success) {
+      sendJson(res, 400, {
+        code: "INVALID_REQUEST",
+        error: "Invalid callback body",
+        details: parsed.error.flatten(),
+      });
+      return;
+    }
+    parsedBody = parsed.data;
+  } catch {
+    sendJson(res, 400, { code: "INVALID_REQUEST", error: "Invalid JSON body" });
+    return;
+  }
+
+  let dbModule: DbModule;
+  try {
+    dbModule = await getDb();
+    await ensurePaymentOrdersTable(dbModule);
+  } catch (err) {
+    console.error("Payment callback database unavailable", {
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, { code: "DATABASE_ERROR", error: "Payment database is unavailable" });
+    return;
+  }
+
+  const { hppOrderId, merchantRequestId, orderStatus } = parsedBody;
+
+  try {
+    let updatedOrderId: number | undefined;
+
+    if (merchantRequestId) {
+      const result = await dbModule.pool.query<{ id: number }>(
+        `update ticket_orders
+         set status = $1,
+             hpp_order_id = coalesce(hpp_order_id, $2),
+             updated_at = now()
+         where merchant_request_id = $3
+         returning id`,
+        [orderStatus, hppOrderId || null, merchantRequestId],
+      );
+      updatedOrderId = result.rows[0]?.id;
+    }
+
+    if (!updatedOrderId && hppOrderId) {
+      const result = await dbModule.pool.query<{ id: number }>(
+        `update ticket_orders
+         set status = $1, updated_at = now()
+         where hpp_order_id = $2
+         returning id`,
+        [orderStatus, hppOrderId],
+      );
+      updatedOrderId = result.rows[0]?.id;
+    }
+
+    if (!updatedOrderId) {
+      console.warn("Payment callback order not found", {
+        hppOrderId,
+        merchantRequestId,
+        orderStatus,
+      });
+      sendJson(res, 404, { code: "ORDER_NOT_FOUND", error: "Order not found" });
+      return;
+    }
+
+    sendJson(res, 200, { received: true, orderId: updatedOrderId });
+  } catch (err) {
+    console.error("Payment callback update failed", {
+      error: err instanceof Error ? err.message : "Unknown error",
+      hppOrderId,
+      merchantRequestId,
+      orderStatus,
+    });
+    sendJson(res, 500, { code: "DATABASE_ERROR", error: "Payment callback update failed" });
+  }
 }
