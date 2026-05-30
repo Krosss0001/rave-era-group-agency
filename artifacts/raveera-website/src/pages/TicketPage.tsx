@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, MapPin, RefreshCw, ShieldCheck, TicketCheck } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, Download, MapPin, RefreshCw, ShieldCheck, TicketCheck } from "lucide-react";
 
 type PublicTicket = {
   ticketCode: string;
@@ -98,6 +98,10 @@ function VerifiedTicket({ ticket }: { ticket: PublicTicket }) {
       <p className="mt-8 border-t border-dashed border-white/20 pt-5 text-xs leading-relaxed text-white/60">
         Квиток дійсний лише після успішної оплати та може бути перевірений організатором.
       </p>
+      <a href={`/api/ticket/${encodeURIComponent(ticket.ticketCode)}/pdf`} download className="mt-6 inline-flex min-h-11 items-center gap-2 border border-[#00FF88]/50 bg-[#00FF88] px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+        <Download className="h-4 w-4" aria-hidden="true" />
+        Завантажити PDF
+      </a>
     </article>
   );
 }

@@ -1,8 +1,13 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createHash, randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import fontkit from "@pdf-lib/fontkit";
 import { compactDecrypt, importJWK, type JWK } from "jose";
 import nodemailer from "nodemailer";
+import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
 import pg from "pg";
+import QRCode from "qrcode";
 import { z } from "zod";
 
 export type VercelApiRequest = IncomingMessage & {
@@ -95,8 +100,10 @@ const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
 const EVENT_SLUG = "sbc-summit-ukraine-2026";
 const EVENT_TITLE = "SBC Summit Ukraine 2026";
+const require = createRequire(import.meta.url);
 let cachedAlliancePaySession: AlliancePaySession | null = null;
 let cachedDbModule: DbModule | null = null;
+let cachedCyrillicFontBytes: Uint8Array | null = null;
 
 const ticketPrices: Record<string, number> = {
   sport: 250000,
@@ -909,6 +916,14 @@ async function getTicketByOrderId(dbModule: DbModule, orderId: number): Promise<
   return result.rows[0] || null;
 }
 
+async function getTicketByCode(dbModule: DbModule, ticketCode: string): Promise<TicketRecord | null> {
+  const result = await dbModule.pool.query<TicketRecord>(
+    `select * from tickets where ticket_code = $1 limit 1`,
+    [ticketCode],
+  );
+  return result.rows[0] || null;
+}
+
 async function issueTicket(dbModule: DbModule, order: TicketOrder): Promise<TicketRecord> {
   const existingTicket = await getTicketByOrderId(dbModule, order.id);
   if (existingTicket) {
@@ -957,6 +972,86 @@ async function issueTicket(dbModule: DbModule, order: TicketOrder): Promise<Tick
   throw new Error("Ticket issuance failed");
 }
 
+function getCyrillicFontBytes(): Uint8Array {
+  if (!cachedCyrillicFontBytes) {
+    cachedCyrillicFontBytes = readFileSync(
+      require.resolve("@fontsource/noto-sans/files/noto-sans-cyrillic-400-normal.woff"),
+    );
+  }
+  return cachedCyrillicFontBytes;
+}
+
+function getTicketTypeLabel(ticketType: string): string {
+  return {
+    sport: "Sport Marketing",
+    business: "Business",
+    online: "Online",
+  }[ticketType] || ticketType;
+}
+
+export async function buildTicketPdf(ticket: TicketRecord): Promise<Buffer> {
+  const pdfDocument = await PDFDocument.create();
+  pdfDocument.registerFontkit(fontkit);
+  const latinFont = await pdfDocument.embedFont(StandardFonts.Helvetica);
+  const latinBoldFont = await pdfDocument.embedFont(StandardFonts.HelveticaBold);
+  const cyrillicFont = await pdfDocument.embedFont(getCyrillicFontBytes(), { subset: true });
+  const page = pdfDocument.addPage([842, 420]);
+  const green = rgb(0, 1, 0.53);
+  const white = rgb(0.96, 0.97, 0.98);
+  const muted = rgb(0.62, 0.65, 0.7);
+  const panel = rgb(0.07, 0.075, 0.1);
+  const customerName = `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim();
+  const qrPng = await QRCode.toBuffer(ticket.qr_payload, {
+    type: "png",
+    width: 420,
+    margin: 2,
+    errorCorrectionLevel: "M",
+  });
+  const qrImage = await pdfDocument.embedPng(qrPng);
+
+  const drawText = (
+    text: string,
+    x: number,
+    y: number,
+    options: { size?: number; color?: ReturnType<typeof rgb>; font?: PDFFont } = {},
+  ) => {
+    page.drawText(text, {
+      x,
+      y,
+      size: options.size || 12,
+      color: options.color || white,
+      font: options.font || (/[А-Яа-яІіЇїЄєҐґ]/.test(text) ? cyrillicFont : latinFont),
+    });
+  };
+
+  page.drawRectangle({ x: 0, y: 0, width: 842, height: 420, color: rgb(0.025, 0.027, 0.04) });
+  page.drawRectangle({ x: 0, y: 394, width: 842, height: 26, color: green });
+  page.drawRectangle({ x: 36, y: 38, width: 545, height: 324, color: panel });
+  page.drawRectangle({ x: 606, y: 38, width: 200, height: 324, color: white });
+  page.drawLine({ start: { x: 581, y: 38 }, end: { x: 581, y: 362 }, color: green, thickness: 1 });
+
+  drawText("RAVE'ERA GROUP", 60, 326, { size: 18, color: green, font: latinBoldFont });
+  drawText(EVENT_TITLE, 60, 281, { size: 28, font: latinBoldFont });
+  drawText("27 травня 2026", 60, 233, { size: 16 });
+  drawText("КВЦ Парковий, Київ", 60, 204, { size: 16 });
+
+  drawText("ТИП КВИТКА", 60, 148, { size: 10, color: muted });
+  drawText(getTicketTypeLabel(ticket.ticket_type), 60, 126, { size: 15, font: latinBoldFont });
+  drawText("ВЛАСНИК КВИТКА", 264, 148, { size: 10, color: muted });
+  drawText(customerName, 264, 126, { size: 15 });
+  drawText("КОД КВИТКА", 60, 88, { size: 10, color: muted });
+  drawText(ticket.ticket_code, 60, 64, { size: 16, color: green, font: latinBoldFont });
+
+  page.drawImage(qrImage, { x: 625, y: 145, width: 162, height: 162 });
+  drawText("SCAN TO VERIFY", 648, 116, { size: 11, color: rgb(0.08, 0.09, 0.12), font: latinBoldFont });
+  drawText(ticket.ticket_code, 635, 92, { size: 9, color: rgb(0.2, 0.22, 0.25), font: latinFont });
+
+  drawText("Квиток дійсний лише після успішної оплати.", 36, 16, { size: 10, color: muted });
+  drawText("www.rave-era.com.ua", 688, 16, { size: 9, color: muted, font: latinFont });
+
+  return Buffer.from(await pdfDocument.save());
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -999,6 +1094,7 @@ async function deliverTicketEmail(
       auth: { user: smtpUser, pass: smtpPass },
     });
     const customerName = `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim();
+    const ticketPdf = await buildTicketPdf(ticket);
     await transporter.sendMail({
       from: smtpFrom,
       to: ticket.customer_email,
@@ -1021,6 +1117,13 @@ async function deliverTicketEmail(
         <p><a href="${escapeHtml(ticket.qr_payload)}">Відкрити квиток</a></p>
         <p>Квиток дійсний лише після успішної оплати та може бути перевірений організатором.</p>
         <p>Підтримка: <a href="mailto:ceo@rave-era.com.ua">ceo@rave-era.com.ua</a></p>`,
+      attachments: [
+        {
+          filename: `${ticket.ticket_code}.pdf`,
+          content: ticketPdf,
+          contentType: "application/pdf",
+        },
+      ],
     });
     await dbModule.pool.query(
       `update ticket_orders
@@ -1486,8 +1589,12 @@ function maskCustomerName(firstName: string, lastName: string): string {
   return `${mask(firstName)} ${mask(lastName)}`.trim();
 }
 
+function isValidTicketCode(ticketCode: string): boolean {
+  return /^SBC-2026-[A-F0-9]{12}$/.test(ticketCode);
+}
+
 export async function getPublicTicket(ticketCode: string, res: ServerResponse): Promise<void> {
-  if (!/^SBC-2026-[A-F0-9]{12}$/.test(ticketCode)) {
+  if (!isValidTicketCode(ticketCode)) {
     sendJson(res, 400, { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" });
     return;
   }
@@ -1495,11 +1602,7 @@ export async function getPublicTicket(ticketCode: string, res: ServerResponse): 
   try {
     const dbModule = await getDb();
     await ensurePaymentOrdersTable(dbModule);
-    const result = await dbModule.pool.query<TicketRecord>(
-      `select * from tickets where ticket_code = $1 limit 1`,
-      [ticketCode],
-    );
-    const ticket = result.rows[0];
+    const ticket = await getTicketByCode(dbModule, ticketCode);
     if (!ticket) {
       sendJson(res, 404, { code: "TICKET_NOT_FOUND", error: "Ticket not found" });
       return;
@@ -1522,5 +1625,35 @@ export async function getPublicTicket(ticketCode: string, res: ServerResponse): 
       error: err instanceof Error ? err.message : "Unknown error",
     });
     sendJson(res, 503, { code: "DATABASE_ERROR", error: "Ticket lookup is temporarily unavailable" });
+  }
+}
+
+export async function getTicketPdf(ticketCode: string, res: ServerResponse): Promise<void> {
+  if (!isValidTicketCode(ticketCode)) {
+    sendJson(res, 400, { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" });
+    return;
+  }
+
+  try {
+    const dbModule = await getDb();
+    await ensurePaymentOrdersTable(dbModule);
+    const ticket = await getTicketByCode(dbModule, ticketCode);
+    if (!ticket) {
+      sendJson(res, 404, { code: "TICKET_NOT_FOUND", error: "Ticket not found" });
+      return;
+    }
+
+    const pdf = await buildTicketPdf(ticket);
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${ticket.ticket_code}.pdf"`);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.end(pdf);
+  } catch (err) {
+    console.error("Ticket PDF generation failed", {
+      ticketCode,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, { code: "PDF_GENERATION_ERROR", error: "Ticket PDF is temporarily unavailable" });
   }
 }

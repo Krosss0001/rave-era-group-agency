@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
-import { AlertCircle, ArrowLeft, Clock3, Mail, Printer, RefreshCw, Ticket } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock3, Download, Mail, Printer, RefreshCw, Ticket } from "lucide-react";
 import { TicketCard, type IssuedTicket } from "../components/TicketCard";
 
 type PaymentStatusResponse = {
@@ -83,9 +83,13 @@ export default function PaymentSuccessPage() {
             </div>
             <TicketCard ticket={data.ticket} />
             <div className="flex flex-col justify-center gap-3 sm:flex-row print:hidden">
+              <a href={`/api/ticket/${encodeURIComponent(data.ticket.ticketCode)}/pdf`} download className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#00FF88]/50 bg-[#00FF88] px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+                <Download className="h-4 w-4" aria-hidden="true" />
+                Завантажити PDF
+              </a>
               <button type="button" onClick={() => window.print()} className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#00FF88]/50 bg-[#00FF88] px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
                 <Printer className="h-4 w-4" aria-hidden="true" />
-                Завантажити / Друкувати
+                Друкувати
               </button>
               <Link href="/event/sbc-summit-ukraine-2026" className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 px-5 py-3 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                 <Ticket className="h-4 w-4" aria-hidden="true" />

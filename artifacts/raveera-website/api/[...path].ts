@@ -4,6 +4,7 @@ import {
   getPaymentStatus,
   getPaymentConfigCheck,
   getPublicTicket,
+  getTicketPdf,
   paymentCallback,
   sendCors,
   sendJson,
@@ -125,6 +126,11 @@ function getTicketCode(pathname: string): string | null {
   return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
+function getTicketPdfCode(pathname: string): string | null {
+  const match = normalizeLoosePath(pathname).match(/(?:^|\/api)\/ticket\/([^/?]+)\/pdf$/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
 export default async function handler(req: VercelCatchAllRequest, res: ServerResponse) {
   sendCors(res);
 
@@ -159,6 +165,12 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     return;
   }
 
+  const ticketPdfCode = candidatePaths.map(getTicketPdfCode).find(Boolean);
+  if (req.method === "GET" && ticketPdfCode) {
+    await getTicketPdf(ticketPdfCode, res);
+    return;
+  }
+
   const ticketCode = candidatePaths.map(getTicketCode).find(Boolean);
   if (req.method === "GET" && ticketCode) {
     await getPublicTicket(ticketCode, res);
@@ -180,6 +192,7 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
         "POST /api/payment/callback",
         "GET /api/payment/status?merchantRequestId=...",
         "GET /api/ticket/:ticketCode",
+        "GET /api/ticket/:ticketCode/pdf",
       ],
       matching: {
         createOrder: {
