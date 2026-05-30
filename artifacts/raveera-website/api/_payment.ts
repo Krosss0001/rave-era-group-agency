@@ -830,6 +830,16 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   let hppOrderId = "";
   let albData: Record<string, unknown> = {};
   try {
+    console.info("AlliancePay HPP create-order payment method diagnostics", {
+      paymentMethods: albPayload.paymentMethods,
+      hppPayType: albPayload.hppPayType,
+      directType: albPayload.directType,
+      language: albPayload.language,
+    });
+    if (albPayload.paymentMethods.includes("GOOGLE_PAY") && albPayload.paymentMethods.includes("APPLE_PAY")) {
+      console.info("Google Pay and Apple Pay requested from provider.");
+    }
+
     const authHeaders = await getAlliancePayAuthHeaders();
     const albRes = await fetch(ALB_API_URL, {
       method: "POST",
