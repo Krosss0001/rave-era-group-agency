@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "jose": "^6.2.3",
-    "pg": "^8.20.0"
+    "nodemailer": "^8.0.10",
+    "pg": "^8.20.0",
+    "qrcode.react": "^4.2.0"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -46,6 +48,7 @@
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@types/node": "catalog:",
+    "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.18.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
