@@ -17,6 +17,12 @@ type AlliancePayAuthHeaders = {
   "x-refresh_token": string;
 };
 
+type PaymentUrls = {
+  successUrl: string;
+  failUrl: string;
+  notificationUrl: string;
+};
+
 type AlliancePaySession = {
   deviceId: string;
   refreshToken: string;
@@ -37,9 +43,12 @@ class AlliancePayServiceMessageError extends Error {
 
 const { Pool } = pg;
 
+export const ALLIANCEPAY_HPP_CREATE_ORDER_URL =
+  "https://api-ecom-prod.bankalliance.ua/ecom/execute_request/hpp/v1/create-order";
+
 const ALB_API_URL =
   process.env["ALLIANCEPAY_API_URL"] ||
-  "https://api-ecom-prod.bankalliance.ua/ecom/execute_request/hpp/v1/create-order";
+  ALLIANCEPAY_HPP_CREATE_ORDER_URL;
 const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
 let cachedAlliancePaySession: AlliancePaySession | null = null;
@@ -133,11 +142,7 @@ function validateAbsoluteHttpUrl(value: string, label: string): string {
   return parsed.toString();
 }
 
-function buildPaymentUrls(): {
-  successUrl: string;
-  failUrl: string;
-  notificationUrl: string;
-} {
+function buildPaymentUrls(): PaymentUrls {
   const origin = normalizeHttpOrigin(
     process.env["PUBLIC_APP_ORIGIN"] || "https://www.rave-era.com.ua",
     "PUBLIC_APP_ORIGIN",
@@ -153,13 +158,57 @@ function buildPaymentUrls(): {
   };
 }
 
+export function buildAlliancePayAuthHeaders(
+  deviceId: string,
+  refreshToken: string,
+): AlliancePayAuthHeaders {
+  return {
+    "x-api_version": "v1",
+    "x-device_id": deviceId,
+    "x-refresh_token": refreshToken,
+  };
+}
+
+export function buildAlliancePayHppCreateOrderPayload({
+  merchantRequestId,
+  merchantId,
+  coinAmount,
+  language,
+  purpose,
+  urls,
+}: {
+  merchantRequestId: string;
+  merchantId: string | undefined;
+  coinAmount: number;
+  language: "uk" | "en";
+  purpose: string;
+  urls: PaymentUrls;
+}) {
+  return {
+    merchantRequestId,
+    merchantId,
+    hppPayType: "PURCHASE",
+    directType: "REDIRECT",
+    coinAmount,
+    paymentMethods: ["CARD", "APPLE_PAY", "GOOGLE_PAY"],
+    language,
+    notificationUrl: urls.notificationUrl,
+    successUrl: urls.successUrl,
+    failUrl: urls.failUrl,
+    statusPageType: "STATUS_TIMER_PAGE",
+    expirationTimeMinutes: 1440,
+    purpose,
+    customerData: {
+      senderCustomerId: merchantRequestId,
+    },
+  };
+}
+
 function getMissingPaymentConfig(): string[] {
   const missing = [
     "DATABASE_URL",
     "ALLIANCEPAY_MERCHANT_ID",
     "ALLIANCEPAY_SERVICE_CODE",
-    "ALLIANCEPAY_MERCHANT_ALIAS_ID",
-    "ALLIANCEPAY_API_URL",
     "PUBLIC_APP_ORIGIN",
   ].filter((key) => !process.env[key]?.trim());
 
@@ -527,19 +576,11 @@ async function getAlliancePayAuthHeaders(): Promise<AlliancePayAuthHeaders> {
   const configuredDeviceId = process.env["ALLIANCEPAY_DEVICE_ID"];
   const configuredRefreshToken = process.env["ALLIANCEPAY_REFRESH_TOKEN"];
   if (configuredDeviceId?.trim() && configuredRefreshToken?.trim()) {
-    return {
-      "x-api_version": "v1",
-      "x-device_id": configuredDeviceId,
-      "x-refresh_token": configuredRefreshToken,
-    };
+    return buildAlliancePayAuthHeaders(configuredDeviceId, configuredRefreshToken);
   }
 
   const session = await authorizeAlliancePayVirtualDevice();
-  return {
-    "x-api_version": "v1",
-    "x-device_id": session.deviceId,
-    "x-refresh_token": session.refreshToken,
-  };
+  return buildAlliancePayAuthHeaders(session.deviceId, session.refreshToken);
 }
 
 export function getPaymentConfigCheck(): Record<string, unknown> {
@@ -557,7 +598,6 @@ export function getPaymentConfigCheck(): Record<string, unknown> {
     privateJwkLooksValid: privateJwkLooksValid(),
     hasMerchantId: Boolean(process.env["ALLIANCEPAY_MERCHANT_ID"]?.trim()),
     hasServiceCode: Boolean(process.env["ALLIANCEPAY_SERVICE_CODE"]?.trim()),
-    hasMerchantAliasId: Boolean(process.env["ALLIANCEPAY_MERCHANT_ALIAS_ID"]?.trim()),
     hasApiUrl: Boolean(process.env["ALLIANCEPAY_API_URL"]?.trim()),
     apiHost,
   };
@@ -617,7 +657,6 @@ function buildCreateOrderRequestShape(payload: Record<string, unknown>): Record<
     language: payload["language"],
     urlFieldNames,
     hasMerchantId: Boolean(payload["merchantId"]),
-    hasMerchantAliasId: Boolean(payload["merchantAliasId"]),
     hasServiceCode: Boolean(payload["serviceCode"]),
     hasPurpose: Boolean(payload["purpose"]),
     hasDescription: Boolean(payload["description"]),
@@ -778,24 +817,14 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     return;
   }
 
-  const albPayload = {
+  const albPayload = buildAlliancePayHppCreateOrderPayload({
     merchantRequestId,
     merchantId: process.env["ALLIANCEPAY_MERCHANT_ID"],
-    hppPayType: "PURCHASE",
-    directType: "REDIRECT",
     coinAmount,
-    paymentMethods: ["CARD", "APPLE_PAY", "GOOGLE_PAY"],
     language: "uk",
-    notificationUrl: urls.notificationUrl,
-    successUrl: urls.successUrl,
-    failUrl: urls.failUrl,
-    statusPageType: "STATUS_TIMER_PAGE",
-    expirationTimeMinutes: 1440,
     purpose: "SBC Summit Ukraine 2026",
-    customerData: {
-      senderCustomerId: merchantRequestId,
-    },
-  };
+    urls,
+  });
 
   let redirectUrl = "";
   let hppOrderId = "";

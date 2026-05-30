@@ -2,19 +2,32 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
 import { logger } from "../lib/logger.js";
 import { buildPaymentUrls } from "../lib/payment-security.js";
+import {
+  ALLIANCEPAY_HPP_CREATE_ORDER_URL,
+  AlliancePayServiceMessageError,
+  buildAlliancePayHppCreateOrderPayload,
+  extractHppOrderId,
+  extractRedirectUrl,
+  getAlliancePayServiceMessage,
+  getProviderErrorSummary,
+  postAlliancePayJson,
+  privateJwkLooksValid,
+} from "../lib/alliancepay-hpp.js";
 
 type DbModule = typeof import("@workspace/db");
 
 const MERCHANT_ID = process.env["ALLIANCEPAY_MERCHANT_ID"] || "";
 const SERVICE_CODE = process.env["ALLIANCEPAY_SERVICE_CODE"] || "";
-const MERCHANT_ALIAS_ID = process.env["ALLIANCEPAY_MERCHANT_ALIAS_ID"] || "";
 const ALB_API_URL =
   process.env["ALLIANCEPAY_API_URL"] ||
-  "https://pay.alb.ua/ecom/execute_request/hpp/v1/create-order";
+  ALLIANCEPAY_HPP_CREATE_ORDER_URL;
 const NOTIFICATION_URL =
   process.env["ALLIANCEPAY_NOTIFICATION_URL"] || "";
 const PUBLIC_APP_ORIGIN =
   process.env["PUBLIC_APP_ORIGIN"] || "https://raveera.group";
+const PRIVATE_JWK = process.env["ALLIANCEPAY_PRIVATE_JWK"];
+const DEVICE_ID = process.env["ALLIANCEPAY_DEVICE_ID"];
+const REFRESH_TOKEN = process.env["ALLIANCEPAY_REFRESH_TOKEN"];
 
 function generateUUID(): string {
   return crypto.randomUUID();
@@ -57,15 +70,17 @@ async function getDb(): Promise<DbModule> {
   return import("@workspace/db");
 }
 
-function getProviderErrorSummary(data: Record<string, unknown>): Record<string, unknown> {
-  const summary: Record<string, unknown> = {};
-  for (const key of ["error", "errorCode", "code", "message", "status", "reason"]) {
-    const value = data[key];
-    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      summary[key] = value;
+function getMissingPaymentConfig(): string[] {
+  const missing = ["ALLIANCEPAY_MERCHANT_ID"].filter((key) => !process.env[key]?.trim());
+  if (!DEVICE_ID?.trim() || !REFRESH_TOKEN?.trim()) {
+    if (!SERVICE_CODE.trim()) {
+      missing.push("ALLIANCEPAY_SERVICE_CODE");
+    }
+    if (!privateJwkLooksValid(PRIVATE_JWK)) {
+      missing.push("ALLIANCEPAY_PRIVATE_JWK");
     }
   }
-  return summary;
+  return missing;
 }
 
 router.post("/payment/create-order", async (req: Request, res: Response) => {
@@ -73,6 +88,17 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
     const parsed = createOrderBodySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
+      return;
+    }
+
+    const missingConfig = getMissingPaymentConfig();
+    if (missingConfig.length > 0) {
+      logger.error({ missingConfig }, "Payment configuration missing");
+      res.status(503).json({
+        code: "MISSING_CONFIG",
+        error: "Payment service is not configured",
+        missingConfig,
+      });
       return;
     }
 
@@ -127,42 +153,30 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
     }
 
     // 2) Build ALB payload
-    const albPayload = {
+    const albPayload = buildAlliancePayHppCreateOrderPayload({
       merchantRequestId,
       merchantId: MERCHANT_ID,
-      ...(SERVICE_CODE ? { serviceCode: SERVICE_CODE } : {}),
-      ...(MERCHANT_ALIAS_ID ? { merchantAliasId: MERCHANT_ALIAS_ID } : {}),
-      hppPayType: "PURCHASE",
-      directType: "REDIRECT",
       coinAmount,
-      paymentMethods: ["CARD", "APPLE_PAY", "GOOGLE_PAY"],
       language: "uk",
-      notificationUrl,
-      successUrl,
-      failUrl,
-      statusPageType: "STATUS_TIMER_PAGE",
       purpose: "SBC Summit Ukraine 2026",
-      customerData: {
-        senderFirstName: firstName,
-        senderLastName: lastName,
-        senderEmail: email,
-        senderPhone: phone || undefined,
-      },
-    };
+      urls: { notificationUrl, successUrl, failUrl },
+    });
 
     // 3) Call ALB API
     let redirectUrl: string | null = null;
     let hppOrderId: string | null = null;
     try {
-      const albRes = await fetch(ALB_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+      const { response: albRes, data: albData } = await postAlliancePayJson({
+        url: ALB_API_URL,
+        body: albPayload,
+        authConfig: {
+          apiUrl: ALB_API_URL,
+          serviceCode: SERVICE_CODE,
+          privateJwk: PRIVATE_JWK,
+          deviceId: DEVICE_ID,
+          refreshToken: REFRESH_TOKEN,
         },
-        body: JSON.stringify(albPayload),
       });
-      const albData = await albRes.json().catch(() => ({} as Record<string, unknown>));
       if (!albRes.ok) {
         logger.warn(
           {
@@ -178,9 +192,50 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
         });
         return;
       }
-      redirectUrl = String(albData.redirectUrl || "");
-      hppOrderId = String(albData.hppOrderId || "");
+
+      const serviceMessage = getAlliancePayServiceMessage(albData);
+      if (serviceMessage) {
+        logger.warn(
+          {
+            status: albRes.status,
+            merchantRequestId,
+            providerMessage: serviceMessage,
+          },
+          "ALB API returned service message creating payment order",
+        );
+        res.status(502).json({
+          code: "ALLIANCEPAY_SERVICE_MESSAGE",
+          error: "AlliancePay returned a service message",
+          orderId: inserted.id,
+          providerMessage: serviceMessage,
+        });
+        return;
+      }
+
+      redirectUrl = extractRedirectUrl(albData);
+      hppOrderId = extractHppOrderId(albData);
     } catch (err) {
+      if (err instanceof AlliancePayServiceMessageError) {
+        logger.warn(
+          {
+            providerStep: err.providerStep,
+            providerStatus: err.providerStatus,
+            providerMessage: err.providerMessage,
+            merchantRequestId,
+          },
+          "ALB API returned service message",
+        );
+        res.status(502).json({
+          code: "ALLIANCEPAY_SERVICE_MESSAGE",
+          error: "AlliancePay returned a service message",
+          orderId: inserted.id,
+          providerStep: err.providerStep,
+          providerStatus: err.providerStatus,
+          providerMessage: err.providerMessage,
+        });
+        return;
+      }
+
       logger.error({ err, merchantRequestId }, "ALB API network error creating payment order");
       res.status(502).json({
         error: "Payment provider unreachable",
@@ -238,30 +293,38 @@ router.post("/payment/callback", async (req: Request, res: Response) => {
     logger.info({ hppOrderId, orderStatus, merchantRequestId }, "ALB callback received");
 
     const dbModule = await getDb();
-    const result = hppOrderId
-      ? await dbModule.pool.query<{ id: number }>(
+    let updatedOrderId: number | undefined;
+
+    if (merchantRequestId) {
+      const result = await dbModule.pool.query<{ id: number }>(
+        `update ticket_orders
+           set status = $1,
+               hpp_order_id = coalesce(hpp_order_id, $2),
+               updated_at = now()
+           where merchant_request_id = $3
+           returning id`,
+        [orderStatus, hppOrderId || null, merchantRequestId],
+      );
+      updatedOrderId = result.rows[0]?.id;
+    }
+
+    if (!updatedOrderId && hppOrderId) {
+      const result = await dbModule.pool.query<{ id: number }>(
         `update ticket_orders
            set status = $1, updated_at = now()
            where hpp_order_id = $2
            returning id`,
         [orderStatus, hppOrderId],
-      )
-      : await dbModule.pool.query<{ id: number }>(
-        `update ticket_orders
-           set status = $1, updated_at = now()
-           where merchant_request_id = $2
-           returning id`,
-        [orderStatus, merchantRequestId],
       );
+      updatedOrderId = result.rows[0]?.id;
+    }
 
-    const updated = result.rows[0];
-
-    if (!updated) {
+    if (!updatedOrderId) {
       res.status(404).json({ error: "Order not found" });
       return;
     }
 
-    res.json({ received: true });
+    res.json({ received: true, orderId: updatedOrderId });
   } catch (err) {
     logger.error({ err }, "Unhandled error in callback");
     res.status(500).json({ error: "Internal server error" });
