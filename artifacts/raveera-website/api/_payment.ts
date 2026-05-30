@@ -767,7 +767,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     hppPayType: "PURCHASE",
     directType: "REDIRECT",
     coinAmount,
-    paymentMethods: ["CARD"],
+    paymentMethods: ["CARD", "APPLE_PAY", "GOOGLE_PAY"],
     language: "uk",
     notificationUrl: urls.notificationUrl,
     successUrl: urls.successUrl,

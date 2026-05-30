@@ -135,7 +135,7 @@ router.post("/payment/create-order", async (req: Request, res: Response) => {
       hppPayType: "PURCHASE",
       directType: "REDIRECT",
       coinAmount,
-      paymentMethods: "CARD",
+      paymentMethods: ["CARD", "APPLE_PAY", "GOOGLE_PAY"],
       language: "uk",
       notificationUrl,
       successUrl,
@@ -240,19 +240,19 @@ router.post("/payment/callback", async (req: Request, res: Response) => {
     const dbModule = await getDb();
     const result = hppOrderId
       ? await dbModule.pool.query<{ id: number }>(
-          `update ticket_orders
+        `update ticket_orders
            set status = $1, updated_at = now()
            where hpp_order_id = $2
            returning id`,
-          [orderStatus, hppOrderId],
-        )
+        [orderStatus, hppOrderId],
+      )
       : await dbModule.pool.query<{ id: number }>(
-          `update ticket_orders
+        `update ticket_orders
            set status = $1, updated_at = now()
            where merchant_request_id = $2
            returning id`,
-          [orderStatus, merchantRequestId],
-        );
+        [orderStatus, merchantRequestId],
+      );
 
     const updated = result.rows[0];
 
