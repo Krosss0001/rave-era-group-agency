@@ -1,7 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   createOrder,
+  getPaymentStatus,
   getPaymentConfigCheck,
+  getPublicTicket,
+  getTicketPdf,
   paymentCallback,
   sendCors,
   sendJson,
@@ -113,6 +116,21 @@ function isPaymentCallbackPath(pathname: string): boolean {
   );
 }
 
+function isPaymentStatusPath(pathname: string): boolean {
+  const path = normalizeLoosePath(pathname);
+  return path === "/api/payment/status" || path === "/payment/status" || path.endsWith("/payment/status");
+}
+
+function getTicketCode(pathname: string): string | null {
+  const match = normalizeLoosePath(pathname).match(/(?:^|\/api)\/ticket\/([^/?]+)$/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
+function getTicketPdfCode(pathname: string): string | null {
+  const match = normalizeLoosePath(pathname).match(/(?:^|\/api)\/ticket\/([^/?]+)\/pdf$/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
 export default async function handler(req: VercelCatchAllRequest, res: ServerResponse) {
   sendCors(res);
 
@@ -142,6 +160,23 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     return;
   }
 
+  if (req.method === "GET" && candidatePaths.some(isPaymentStatusPath)) {
+    await getPaymentStatus(req, res);
+    return;
+  }
+
+  const ticketPdfCode = candidatePaths.map(getTicketPdfCode).find(Boolean);
+  if (req.method === "GET" && ticketPdfCode) {
+    await getTicketPdf(ticketPdfCode, res);
+    return;
+  }
+
+  const ticketCode = candidatePaths.map(getTicketCode).find(Boolean);
+  if (req.method === "GET" && ticketCode) {
+    await getPublicTicket(ticketCode, res);
+    return;
+  }
+
   if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/health", "/api/healthz", "/health")) {
     sendJson(res, 200, { ok: true, service: "raveera-api" });
     return;
@@ -155,6 +190,9 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
         "GET /api/payment/config-check",
         "POST /api/payment/create-order",
         "POST /api/payment/callback",
+        "GET /api/payment/status?merchantRequestId=...",
+        "GET /api/ticket/:ticketCode",
+        "GET /api/ticket/:ticketCode/pdf",
       ],
       matching: {
         createOrder: {

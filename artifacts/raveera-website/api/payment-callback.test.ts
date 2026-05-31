@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import handler from "./[...path].ts";
+import handler from "./[...path].js";
 
 class MockResponse {
   statusCode = 200;

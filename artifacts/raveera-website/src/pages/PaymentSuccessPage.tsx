@@ -1,64 +1,149 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, CheckCircle2, Mail, Ticket } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock3, Download, Mail, Printer, RefreshCw, Ticket } from "lucide-react";
+import { TicketCard, type IssuedTicket } from "../components/TicketCard";
 
-const G = "#00FF88";
-type Lang = "en" | "uk";
+type PaymentStatusResponse = {
+  ok: true;
+  order: {
+    id: number;
+    merchantRequestId: string;
+    status: string;
+    ticketType: string;
+    amount: number;
+    currency: string;
+  };
+  ticket: IssuedTicket | null;
+};
 
 export default function PaymentSuccessPage() {
-  const [lang, setLang] = useState<Lang>("uk");
-  const t = lang === "uk"
-    ? {
-        back: "Назад",
-        title: "Статус SUCCESS",
-        subtitle: "AlliancePay повернув вас після підтвердженої оплати.",
-        note: "Квиток видається тільки після серверного підтвердження статусу SUCCESS від банку. Якщо ви бачите цю сторінку без реальної оплати, зверніться до організатора.",
-        event: "На сторінку події",
-        contact: "Написати організатору",
+  const merchantRequestId = new URLSearchParams(window.location.search).get("merchantRequestId") || "";
+  const [data, setData] = useState<PaymentStatusResponse | null>(null);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadStatus = useCallback(async () => {
+    if (!merchantRequestId) {
+      setError("Не вдалося визначити номер замовлення. Зверніться до організатора.");
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const response = await fetch(`/api/payment/status?merchantRequestId=${encodeURIComponent(merchantRequestId)}`);
+      if (!response.ok) {
+        throw new Error("Статус замовлення тимчасово недоступний.");
       }
-    : {
-        back: "Back",
-        title: "SUCCESS status",
-        subtitle: "AlliancePay returned you after a confirmed payment.",
-        note: "A ticket is issued only after server-side SUCCESS confirmation from the bank. If you see this page without a real payment, contact the organizer.",
-        event: "Back to event",
-        contact: "Contact organizer",
-      };
+      setData(await response.json() as PaymentStatusResponse);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не вдалося отримати статус платежу.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [merchantRequestId]);
+
+  useEffect(() => {
+    void loadStatus();
+    const intervalId = window.setInterval(() => void loadStatus(), 4000);
+    const timeoutId = window.setTimeout(() => window.clearInterval(intervalId), 120000);
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadStatus]);
+
+  useEffect(() => {
+    if (data?.ticket) {
+      document.title = `${data.ticket.ticketCode} | SBC Summit Ukraine 2026`;
+    }
+  }, [data?.ticket]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-white flex flex-col">
-      <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-14 flex items-center justify-between">
-          <Link href="/event/sbc-summit-ukraine-2026" className="flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t.back}
+    <div className="min-h-screen bg-[#07070b] text-white">
+      <nav className="border-b border-white/[0.08] bg-black/80 backdrop-blur-md print:hidden">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 md:px-12">
+          <Link href="/event/sbc-summit-ukraine-2026" className="flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/60 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            До події
           </Link>
-          <button type="button" onClick={() => setLang(lang === "uk" ? "en" : "uk")} className="min-h-10 px-3 flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest border border-white/10 hover:border-[#00FF88]/30 text-white/40 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
-            {lang === "uk" ? "EN" : "UA"}
-          </button>
+          <span className="text-xs font-mono uppercase tracking-widest text-[#00FF88]">Rave'Era Tickets</span>
         </div>
       </nav>
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-12 py-12">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="max-w-lg w-full text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full" style={{ background: `${G}15` }}>
-            <CheckCircle2 className="w-8 h-8" style={{ color: G }} />
+
+      <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-5xl items-center justify-center px-4 py-10 sm:px-6 md:px-12">
+        {isLoading && !data ? <LoadingState /> : null}
+        {error && !data ? <ErrorState message={error} onRetry={loadStatus} /> : null}
+        {data && !data.ticket ? <PendingState status={data.order.status} onRetry={loadStatus} /> : null}
+        {data?.ticket ? (
+          <div className="w-full space-y-6">
+            <div className="space-y-2 text-center print:hidden">
+              <p className="text-xs font-mono uppercase tracking-[0.25em] text-[#00FF88]">Оплата підтверджена</p>
+              <h1 className="text-3xl font-black uppercase tracking-tight sm:text-4xl">Ваш квиток готовий</h1>
+              <p className="text-sm text-white/65">Квиток також буде надіслано на email, вказаний під час замовлення.</p>
+            </div>
+            <TicketCard ticket={data.ticket} />
+            <div className="flex flex-col justify-center gap-3 sm:flex-row print:hidden">
+              <a href={`/api/ticket/${encodeURIComponent(data.ticket.ticketCode)}/pdf`} download className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#00FF88]/50 bg-[#00FF88] px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+                <Download className="h-4 w-4" aria-hidden="true" />
+                Завантажити PDF
+              </a>
+              <button type="button" onClick={() => window.print()} className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#00FF88]/50 bg-[#00FF88] px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+                <Printer className="h-4 w-4" aria-hidden="true" />
+                Друкувати
+              </button>
+              <Link href="/event/sbc-summit-ukraine-2026" className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 px-5 py-3 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+                <Ticket className="h-4 w-4" aria-hidden="true" />
+                Назад до події
+              </Link>
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[0.9]">{t.title}</h1>
-          <p className="text-sm text-white/45 leading-relaxed">{t.subtitle}</p>
-          <div className="border border-white/[0.08] bg-white/[0.02] p-4 text-xs text-white/40 leading-relaxed">{t.note}</div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/event/sbc-summit-ukraine-2026" className="inline-flex min-h-10 items-center gap-2 px-5 py-2.5 text-xs font-mono uppercase tracking-widest text-[#00FF88] hover:text-white border border-[#00FF88]/30 hover:border-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
-              <Ticket className="w-3.5 h-3.5" />
-              {t.event}
-            </Link>
-            <a href="mailto:ceo@rave-era.com.ua" className="inline-flex min-h-10 items-center gap-2 px-5 py-2.5 text-xs font-mono uppercase tracking-widest text-white/45 hover:text-[#00FF88] border border-white/10 hover:border-[#00FF88]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
-              <Mail className="w-3.5 h-3.5" />
-              {t.contact}
-            </a>
-          </div>
-        </motion.div>
+        ) : null}
       </main>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="w-full max-w-xl animate-pulse space-y-4" aria-label="Завантаження квитка">
+      <div className="mx-auto h-4 w-40 bg-white/10" />
+      <div className="mx-auto h-10 w-72 bg-white/10" />
+      <div className="h-80 border border-white/10 bg-white/[0.03]" />
+    </div>
+  );
+}
+
+function PendingState({ status, onRetry }: { status: string; onRetry: () => void }) {
+  return (
+    <div className="max-w-lg space-y-5 text-center">
+      <Clock3 className="mx-auto h-12 w-12 text-[#00FF88]" aria-hidden="true" />
+      <h1 className="text-3xl font-black uppercase tracking-tight">Платіж обробляється</h1>
+      <p className="text-sm leading-relaxed text-white/65">
+        Ми очікуємо підтвердження від AlliancePay. Квиток з'явиться тут автоматично після перевіреного статусу SUCCESS.
+      </p>
+      <p className="text-xs font-mono uppercase tracking-widest text-white/45">Поточний статус: {status}</p>
+      <button type="button" onClick={onRetry} className="mx-auto inline-flex min-h-11 items-center gap-2 border border-white/20 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+        <RefreshCw className="h-4 w-4" aria-hidden="true" />
+        Перевірити ще раз
+      </button>
+    </div>
+  );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="max-w-lg space-y-5 text-center">
+      <AlertCircle className="mx-auto h-12 w-12 text-amber-300" aria-hidden="true" />
+      <h1 className="text-3xl font-black uppercase tracking-tight">Не вдалося завантажити квиток</h1>
+      <p className="text-sm leading-relaxed text-white/65">{message}</p>
+      <div className="flex flex-col justify-center gap-3 sm:flex-row">
+        <button type="button" onClick={onRetry} className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#00FF88]/50 px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <RefreshCw className="h-4 w-4" aria-hidden="true" /> Спробувати ще раз
+        </button>
+        <a href="mailto:ceo@rave-era.com.ua" className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <Mail className="h-4 w-4" aria-hidden="true" /> Підтримка
+        </a>
+      </div>
     </div>
   );
 }

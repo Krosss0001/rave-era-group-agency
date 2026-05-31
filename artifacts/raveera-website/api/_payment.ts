@@ -1,6 +1,13 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { createHash, randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import fontkit from "@pdf-lib/fontkit";
 import { compactDecrypt, importJWK, type JWK } from "jose";
+import nodemailer from "nodemailer";
+import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
 import pg from "pg";
+import QRCode from "qrcode";
 import { z } from "zod";
 
 export type VercelApiRequest = IncomingMessage & {
@@ -31,6 +38,41 @@ type AlliancePaySession = {
 
 type AlliancePayProviderStep = "authorize_virtual_device" | "hpp_create_order";
 
+type PaymentStatus = "SUCCESS" | "FAIL" | "PENDING" | "REQUIRED_3DS";
+
+type TicketOrder = {
+  id: number;
+  merchant_request_id: string;
+  hpp_order_id: string | null;
+  ticket_type: string;
+  amount_kopiykas: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_status: PaymentStatus;
+  order_status: PaymentStatus;
+  customer_email: string;
+  customer_first_name: string;
+  customer_last_name: string;
+  email_status: string;
+};
+
+type TicketRecord = {
+  id: number;
+  ticket_code: string;
+  order_id: number;
+  merchant_request_id: string;
+  hpp_order_id: string | null;
+  event_slug: string;
+  event_title: string;
+  ticket_type: string;
+  customer_email: string;
+  customer_first_name: string;
+  customer_last_name: string;
+  status: "ACTIVE" | "USED" | "CANCELLED";
+  qr_payload: string;
+  issued_at: Date;
+};
+
 class AlliancePayServiceMessageError extends Error {
   constructor(
     public readonly providerStep: AlliancePayProviderStep,
@@ -45,14 +87,24 @@ const { Pool } = pg;
 
 export const ALLIANCEPAY_HPP_CREATE_ORDER_URL =
   "https://api-ecom-prod.bankalliance.ua/ecom/execute_request/hpp/v1/create-order";
+export const ALLIANCEPAY_HPP_OPERATIONS_URL =
+  "https://api-ecom-prod.bankalliance.ua/ecom/execute_request/hpp/v1/operations";
 
 const ALB_API_URL =
   process.env["ALLIANCEPAY_API_URL"] ||
   ALLIANCEPAY_HPP_CREATE_ORDER_URL;
+const ALB_HPP_OPERATIONS_URL =
+  process.env["ALLIANCEPAY_HPP_OPERATIONS_URL"] ||
+  `${new URL(ALB_API_URL).origin}/ecom/execute_request/hpp/v1/operations`;
 const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
 const CANONICAL_PUBLIC_APP_ORIGIN = "https://rave-era.com.ua";
+const EVENT_SLUG = "sbc-summit-ukraine-2026";
+const EVENT_TITLE = "SBC Summit Ukraine 2026";
+const require = createRequire(import.meta.url);
 let cachedAlliancePaySession: AlliancePaySession | null = null;
+let cachedDbModule: DbModule | null = null;
+let cachedCyrillicFontBytes: Uint8Array | null = null;
 
 const ticketPrices: Record<string, number> = {
   sport: 250000,
@@ -115,11 +167,11 @@ async function readJsonBody(req: VercelApiRequest): Promise<unknown> {
   return JSON.parse(rawBody);
 }
 
-function buildPaymentUrls(): PaymentUrls {
+function buildPaymentUrls(merchantRequestId: string): PaymentUrls {
   const origin = CANONICAL_PUBLIC_APP_ORIGIN;
 
   return {
-    successUrl: `${origin}${EVENT_PAYMENT_PATH}/success`,
+    successUrl: `${origin}${EVENT_PAYMENT_PATH}/success?merchantRequestId=${encodeURIComponent(merchantRequestId)}`,
     failUrl: `${origin}${EVENT_PAYMENT_PATH}/fail`,
     notificationUrl: `${origin}${CALLBACK_PATH}`,
   };
@@ -437,11 +489,11 @@ function privateJwkLooksValid(): boolean {
   const jwk = parsePrivateJwk();
   return Boolean(
     jwk &&
-      jwk.kty === "EC" &&
-      jwk.crv === "P-384" &&
-      typeof jwk.x === "string" &&
-      typeof jwk.y === "string" &&
-      typeof jwk.d === "string",
+    jwk.kty === "EC" &&
+    jwk.crv === "P-384" &&
+    typeof jwk.x === "string" &&
+    typeof jwk.y === "string" &&
+    typeof jwk.d === "string",
   );
 }
 
@@ -632,13 +684,17 @@ function buildCreateOrderRequestShape(payload: Record<string, unknown>): Record<
 }
 
 async function getDb(): Promise<DbModule> {
+  if (cachedDbModule) {
+    return cachedDbModule;
+  }
   if (!process.env["DATABASE_URL"]) {
     throw new Error("DATABASE_URL is not configured");
   }
 
-  return {
+  cachedDbModule = {
     pool: new Pool({ connectionString: process.env["DATABASE_URL"] }),
   };
+  return cachedDbModule;
 }
 
 async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
@@ -656,6 +712,46 @@ async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
       customer_phone text,
       hpp_order_id text,
       redirect_url text,
+      payment_status text not null default 'PENDING',
+      order_status text not null default 'PENDING',
+      alliancepay_callback_payload_safe jsonb,
+      paid_at timestamptz,
+      email_status text not null default 'PENDING',
+      email_sent_at timestamptz,
+      email_error_safe text,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `);
+
+  await dbModule.pool.query(`
+    alter table ticket_orders add column if not exists payment_status text not null default 'PENDING';
+    alter table ticket_orders add column if not exists order_status text not null default 'PENDING';
+    alter table ticket_orders add column if not exists alliancepay_callback_payload_safe jsonb;
+    alter table ticket_orders add column if not exists paid_at timestamptz;
+    alter table ticket_orders add column if not exists email_status text not null default 'PENDING';
+    alter table ticket_orders add column if not exists email_sent_at timestamptz;
+    alter table ticket_orders add column if not exists email_error_safe text;
+  `);
+
+  await dbModule.pool.query(`
+    create table if not exists tickets (
+      id serial primary key,
+      ticket_code text not null unique,
+      order_id integer not null unique references ticket_orders(id),
+      merchant_request_id text not null,
+      hpp_order_id text,
+      event_slug text not null,
+      event_title text not null,
+      ticket_type text not null,
+      customer_email text not null,
+      customer_first_name text not null,
+      customer_last_name text not null,
+      status text not null default 'ACTIVE',
+      qr_payload text not null,
+      qr_token_hash text,
+      issued_at timestamptz not null default now(),
+      checked_in_at timestamptz,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
     )
@@ -670,6 +766,414 @@ async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
     create index if not exists ticket_orders_hpp_order_id_idx
     on ticket_orders (hpp_order_id)
   `);
+
+  await dbModule.pool.query(`
+    create unique index if not exists tickets_ticket_code_idx on tickets (ticket_code);
+    create index if not exists tickets_order_id_idx on tickets (order_id);
+    create index if not exists tickets_merchant_request_id_idx on tickets (merchant_request_id);
+    create index if not exists tickets_hpp_order_id_idx on tickets (hpp_order_id);
+    create index if not exists tickets_customer_email_idx on tickets (customer_email);
+    create index if not exists tickets_status_idx on tickets (status);
+  `);
+}
+
+function getPublicAppOrigin(): string {
+  return normalizeHttpOrigin(
+    process.env["PUBLIC_APP_ORIGIN"] || "https://www.rave-era.com.ua",
+    "PUBLIC_APP_ORIGIN",
+  );
+}
+
+function parsePaymentStatus(value: unknown): PaymentStatus | null {
+  return value === "SUCCESS" || value === "FAIL" || value === "PENDING" || value === "REQUIRED_3DS"
+    ? value
+    : null;
+}
+
+export function getSafeCallbackSummary(data: Record<string, unknown>): Record<string, unknown> {
+  const summary: Record<string, unknown> = {};
+  for (const key of [
+    "hppOrderId",
+    "merchantRequestId",
+    "orderStatus",
+    "hppPayType",
+    "hppDirectType",
+    "coinAmount",
+    "createDate",
+    "expiredOrderDate",
+  ]) {
+    const value = data[key];
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      summary[key] = value;
+    }
+  }
+  if (Array.isArray(data["paymentMethods"])) {
+    summary["paymentMethods"] = data["paymentMethods"].filter((value) => typeof value === "string");
+  }
+  return summary;
+}
+
+async function findTicketOrder(
+  dbModule: DbModule,
+  identifiers: { merchantRequestId?: string; hppOrderId?: string },
+): Promise<TicketOrder | null> {
+  const result = identifiers.merchantRequestId
+    ? await dbModule.pool.query<TicketOrder>(
+      `select * from ticket_orders where merchant_request_id = $1 limit 1`,
+      [identifiers.merchantRequestId],
+    )
+    : await dbModule.pool.query<TicketOrder>(
+      `select * from ticket_orders where hpp_order_id = $1 limit 1`,
+      [identifiers.hppOrderId],
+    );
+  return result.rows[0] || null;
+}
+
+async function verifyAlliancePayHppOrder(order: TicketOrder): Promise<Record<string, unknown>> {
+  if (!order.hpp_order_id) {
+    throw new Error("AlliancePay HPP order ID is missing");
+  }
+
+  const authHeaders = await getAlliancePayAuthHeaders();
+  const response = await fetch(ALB_HPP_OPERATIONS_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeaders,
+    },
+    body: JSON.stringify({ hppOrderId: order.hpp_order_id }),
+  });
+  const data = await response.json().catch(() => ({} as Record<string, unknown>));
+  const serviceMessage = getAlliancePayServiceMessage(data);
+  if (!response.ok || serviceMessage) {
+    console.error("AlliancePay HPP status verification failed", {
+      merchantRequestId: order.merchant_request_id,
+      hppOrderId: order.hpp_order_id,
+      providerStatus: response.status,
+      providerMessage: serviceMessage || getProviderErrorSummary(data),
+    });
+    throw new Error("AlliancePay HPP status verification failed");
+  }
+
+  const verifiedHppOrderId = getProviderString(data, ["hppOrderId"]);
+  const verifiedMerchantRequestId = getProviderString(data, ["merchantRequestId"]);
+  const verifiedCoinAmount = Number(data["coinAmount"]);
+  if (
+    verifiedHppOrderId !== order.hpp_order_id ||
+    verifiedMerchantRequestId !== order.merchant_request_id ||
+    verifiedCoinAmount !== order.amount_kopiykas
+  ) {
+    throw new Error("AlliancePay HPP status verification mismatch");
+  }
+
+  return data;
+}
+
+export function createTicketCode(): string {
+  return `SBC-2026-${randomBytes(6).toString("hex").toUpperCase()}`;
+}
+
+async function getTicketByOrderId(dbModule: DbModule, orderId: number): Promise<TicketRecord | null> {
+  const result = await dbModule.pool.query<TicketRecord>(
+    `select * from tickets where order_id = $1 limit 1`,
+    [orderId],
+  );
+  return result.rows[0] || null;
+}
+
+async function getTicketByCode(dbModule: DbModule, ticketCode: string): Promise<TicketRecord | null> {
+  const result = await dbModule.pool.query<TicketRecord>(
+    `select * from tickets where ticket_code = $1 limit 1`,
+    [ticketCode],
+  );
+  return result.rows[0] || null;
+}
+
+async function issueTicket(dbModule: DbModule, order: TicketOrder): Promise<TicketRecord> {
+  const existingTicket = await getTicketByOrderId(dbModule, order.id);
+  if (existingTicket) {
+    return existingTicket;
+  }
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const ticketCode = createTicketCode();
+    const qrPayload = `${getPublicAppOrigin()}/ticket/${encodeURIComponent(ticketCode)}`;
+    const qrTokenHash = createHash("sha256").update(qrPayload).digest("hex");
+    try {
+      const result = await dbModule.pool.query<TicketRecord>(
+        `insert into tickets (
+          ticket_code, order_id, merchant_request_id, hpp_order_id,
+          event_slug, event_title, ticket_type,
+          customer_email, customer_first_name, customer_last_name,
+          status, qr_payload, qr_token_hash
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'ACTIVE', $11, $12)
+        on conflict (order_id) do update set updated_at = now()
+        returning *`,
+        [
+          ticketCode,
+          order.id,
+          order.merchant_request_id,
+          order.hpp_order_id,
+          EVENT_SLUG,
+          EVENT_TITLE,
+          order.ticket_type,
+          order.customer_email,
+          order.customer_first_name,
+          order.customer_last_name,
+          qrPayload,
+          qrTokenHash,
+        ],
+      );
+      const ticket = result.rows[0];
+      if (ticket) {
+        return ticket;
+      }
+    } catch (err) {
+      if (attempt === 2) {
+        throw err;
+      }
+    }
+  }
+  throw new Error("Ticket issuance failed");
+}
+
+function getCyrillicFontBytes(): Uint8Array {
+  if (!cachedCyrillicFontBytes) {
+    cachedCyrillicFontBytes = readFileSync(
+      require.resolve("@fontsource/noto-sans/files/noto-sans-cyrillic-400-normal.woff"),
+    );
+  }
+  return cachedCyrillicFontBytes;
+}
+
+function getTicketTypeLabel(ticketType: string): string {
+  return {
+    sport: "Sport Marketing",
+    business: "Business",
+    online: "Online",
+  }[ticketType] || ticketType;
+}
+
+export async function buildTicketPdf(ticket: TicketRecord): Promise<Buffer> {
+  const pdfDocument = await PDFDocument.create();
+  pdfDocument.registerFontkit(fontkit);
+  const latinFont = await pdfDocument.embedFont(StandardFonts.Helvetica);
+  const latinBoldFont = await pdfDocument.embedFont(StandardFonts.HelveticaBold);
+  const cyrillicFont = await pdfDocument.embedFont(getCyrillicFontBytes(), { subset: true });
+  const page = pdfDocument.addPage([842, 420]);
+  const green = rgb(0, 1, 0.53);
+  const white = rgb(0.96, 0.97, 0.98);
+  const muted = rgb(0.62, 0.65, 0.7);
+  const panel = rgb(0.07, 0.075, 0.1);
+  const customerName = `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim();
+  const qrPng = await QRCode.toBuffer(ticket.qr_payload, {
+    type: "png",
+    width: 420,
+    margin: 2,
+    errorCorrectionLevel: "M",
+  });
+  const qrImage = await pdfDocument.embedPng(qrPng);
+
+  const drawText = (
+    text: string,
+    x: number,
+    y: number,
+    options: { size?: number; color?: ReturnType<typeof rgb>; font?: PDFFont } = {},
+  ) => {
+    page.drawText(text, {
+      x,
+      y,
+      size: options.size || 12,
+      color: options.color || white,
+      font: options.font || (/[А-Яа-яІіЇїЄєҐґ]/.test(text) ? cyrillicFont : latinFont),
+    });
+  };
+
+  page.drawRectangle({ x: 0, y: 0, width: 842, height: 420, color: rgb(0.025, 0.027, 0.04) });
+  page.drawRectangle({ x: 0, y: 394, width: 842, height: 26, color: green });
+  page.drawRectangle({ x: 36, y: 38, width: 545, height: 324, color: panel });
+  page.drawRectangle({ x: 606, y: 38, width: 200, height: 324, color: white });
+  page.drawLine({ start: { x: 581, y: 38 }, end: { x: 581, y: 362 }, color: green, thickness: 1 });
+
+  drawText("RAVE'ERA GROUP", 60, 326, { size: 18, color: green, font: latinBoldFont });
+  drawText(EVENT_TITLE, 60, 281, { size: 28, font: latinBoldFont });
+  drawText("27 травня 2026", 60, 233, { size: 16 });
+  drawText("КВЦ Парковий, Київ", 60, 204, { size: 16 });
+
+  drawText("ТИП КВИТКА", 60, 148, { size: 10, color: muted });
+  drawText(getTicketTypeLabel(ticket.ticket_type), 60, 126, { size: 15, font: latinBoldFont });
+  drawText("ВЛАСНИК КВИТКА", 264, 148, { size: 10, color: muted });
+  drawText(customerName, 264, 126, { size: 15 });
+  drawText("КОД КВИТКА", 60, 88, { size: 10, color: muted });
+  drawText(ticket.ticket_code, 60, 64, { size: 16, color: green, font: latinBoldFont });
+
+  page.drawImage(qrImage, { x: 625, y: 145, width: 162, height: 162 });
+  drawText("SCAN TO VERIFY", 648, 116, { size: 11, color: rgb(0.08, 0.09, 0.12), font: latinBoldFont });
+  drawText(ticket.ticket_code, 635, 92, { size: 9, color: rgb(0.2, 0.22, 0.25), font: latinFont });
+
+  drawText("Квиток дійсний лише після успішної оплати.", 36, 16, { size: 10, color: muted });
+  drawText("www.rave-era.com.ua", 688, 16, { size: 9, color: muted, font: latinFont });
+
+  return Buffer.from(await pdfDocument.save());
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function deliverTicketEmail(
+  dbModule: DbModule,
+  order: TicketOrder,
+  ticket: TicketRecord,
+): Promise<void> {
+  if (order.email_status !== "PENDING") {
+    return;
+  }
+
+  const smtpHost = process.env["SMTP_HOST"]?.trim();
+  const smtpPort = Number(process.env["SMTP_PORT"] || "587");
+  const smtpUser = process.env["SMTP_USER"]?.trim();
+  const smtpPass = process.env["SMTP_PASS"]?.trim();
+  const smtpFrom = process.env["SMTP_FROM"]?.trim();
+  if (!smtpHost || !smtpUser || !smtpPass || !smtpFrom || !Number.isInteger(smtpPort)) {
+    console.warn("Ticket email not sent: SMTP is not configured", {
+      merchantRequestId: order.merchant_request_id,
+    });
+    await dbModule.pool.query(
+      `update ticket_orders set email_status = 'NOT_CONFIGURED', updated_at = now() where id = $1`,
+      [order.id],
+    );
+    return;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass },
+    });
+    const customerName = `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim();
+    const ticketPdf = await buildTicketPdf(ticket);
+    await transporter.sendMail({
+      from: smtpFrom,
+      to: ticket.customer_email,
+      subject: "Ваш квиток на SBC Summit Ukraine 2026",
+      text: [
+        `Вітаємо, ${customerName}!`,
+        "",
+        `Ваш квиток на ${EVENT_TITLE} готовий.`,
+        `Тип квитка: ${ticket.ticket_type}`,
+        `Код квитка: ${ticket.ticket_code}`,
+        `Відкрити квиток: ${ticket.qr_payload}`,
+        "",
+        "Квиток дійсний лише після успішної оплати та може бути перевірений організатором.",
+        "Підтримка: ceo@rave-era.com.ua",
+      ].join("\n"),
+      html: `<p>Вітаємо, ${escapeHtml(customerName)}!</p>
+        <p>Ваш квиток на <strong>${EVENT_TITLE}</strong> готовий.</p>
+        <p>Тип квитка: <strong>${escapeHtml(ticket.ticket_type)}</strong><br>
+        Код квитка: <strong>${escapeHtml(ticket.ticket_code)}</strong></p>
+        <p><a href="${escapeHtml(ticket.qr_payload)}">Відкрити квиток</a></p>
+        <p>Квиток дійсний лише після успішної оплати та може бути перевірений організатором.</p>
+        <p>Підтримка: <a href="mailto:ceo@rave-era.com.ua">ceo@rave-era.com.ua</a></p>`,
+      attachments: [
+        {
+          filename: `${ticket.ticket_code}.pdf`,
+          content: ticketPdf,
+          contentType: "application/pdf",
+        },
+      ],
+    });
+    await dbModule.pool.query(
+      `update ticket_orders
+       set email_status = 'SENT', email_sent_at = now(), email_error_safe = null, updated_at = now()
+       where id = $1`,
+      [order.id],
+    );
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message.slice(0, 300) : "Unknown SMTP error";
+    console.warn("Ticket email delivery failed", {
+      merchantRequestId: order.merchant_request_id,
+      error: errorMessage,
+    });
+    await dbModule.pool.query(
+      `update ticket_orders
+       set email_status = 'FAILED', email_error_safe = $1, updated_at = now()
+       where id = $2`,
+      [errorMessage, order.id],
+    );
+  }
+}
+
+async function applyVerifiedPaymentStatus(
+  dbModule: DbModule,
+  order: TicketOrder,
+  providerData: Record<string, unknown>,
+): Promise<TicketRecord | null> {
+  const verifiedStatus = parsePaymentStatus(providerData["orderStatus"]);
+  if (!verifiedStatus) {
+    throw new Error("AlliancePay HPP status response is invalid");
+  }
+
+  await dbModule.pool.query(
+    `update ticket_orders
+     set status = $1,
+         payment_status = $1,
+         order_status = $1,
+         paid_at = case when $1 = 'SUCCESS' then coalesce(paid_at, now()) else paid_at end,
+         updated_at = now()
+     where id = $2`,
+    [verifiedStatus, order.id],
+  );
+  order.status = verifiedStatus;
+  order.payment_status = verifiedStatus;
+  order.order_status = verifiedStatus;
+
+  if (verifiedStatus !== "SUCCESS") {
+    return null;
+  }
+
+  const ticket = await issueTicket(dbModule, order);
+  await deliverTicketEmail(dbModule, order, ticket);
+  return ticket;
+}
+
+async function refreshOrderFromAlliancePay(
+  dbModule: DbModule,
+  order: TicketOrder,
+): Promise<TicketRecord | null> {
+  const providerData = await verifyAlliancePayHppOrder(order);
+  return applyVerifiedPaymentStatus(dbModule, order, providerData);
+}
+
+function toSafeOrderResponse(order: TicketOrder): Record<string, unknown> {
+  return {
+    id: order.id,
+    merchantRequestId: order.merchant_request_id,
+    status: order.payment_status,
+    ticketType: order.ticket_type,
+    amount: order.amount_kopiykas,
+    currency: order.currency,
+  };
+}
+
+function toSafeTicketResponse(ticket: TicketRecord): Record<string, unknown> {
+  return {
+    ticketCode: ticket.ticket_code,
+    eventTitle: ticket.event_title,
+    ticketType: ticket.ticket_type,
+    customerName: `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim(),
+    status: ticket.status,
+    qrPayload: ticket.qr_payload,
+    issuedAt: ticket.issued_at,
+  };
 }
 
 export async function createOrder(req: VercelApiRequest, res: ServerResponse): Promise<void> {
@@ -743,9 +1247,10 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     return;
   }
 
+  const merchantRequestId = crypto.randomUUID();
   let urls: ReturnType<typeof buildPaymentUrls>;
   try {
-    urls = buildPaymentUrls();
+    urls = buildPaymentUrls(merchantRequestId);
   } catch (err) {
     console.error("Payment URL configuration invalid", {
       error: err instanceof Error ? err.message : "Unknown error",
@@ -754,7 +1259,6 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     return;
   }
 
-  const merchantRequestId = crypto.randomUUID();
   let orderId: number | undefined;
 
   try {
@@ -796,6 +1300,16 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   let hppOrderId = "";
   let albData: Record<string, unknown> = {};
   try {
+    console.info("AlliancePay HPP create-order payment method diagnostics", {
+      paymentMethods: albPayload.paymentMethods,
+      hppPayType: albPayload.hppPayType,
+      directType: albPayload.directType,
+      language: albPayload.language,
+    });
+    if (albPayload.paymentMethods.includes("GOOGLE_PAY") && albPayload.paymentMethods.includes("APPLE_PAY")) {
+      console.info("Google Pay and Apple Pay requested from provider.");
+    }
+
     const authHeaders = await getAlliancePayAuthHeaders();
     const albRes = await fetch(ALB_API_URL, {
       method: "POST",
@@ -946,33 +1460,10 @@ export async function paymentCallback(req: VercelApiRequest, res: ServerResponse
   const { hppOrderId, merchantRequestId, orderStatus } = parsedBody;
 
   try {
-    let updatedOrderId: number | undefined;
-
-    if (merchantRequestId) {
-      const result = await dbModule.pool.query<{ id: number }>(
-        `update ticket_orders
-         set status = $1,
-             hpp_order_id = coalesce(hpp_order_id, $2),
-             updated_at = now()
-         where merchant_request_id = $3
-         returning id`,
-        [orderStatus, hppOrderId || null, merchantRequestId],
-      );
-      updatedOrderId = result.rows[0]?.id;
-    }
-
-    if (!updatedOrderId && hppOrderId) {
-      const result = await dbModule.pool.query<{ id: number }>(
-        `update ticket_orders
-         set status = $1, updated_at = now()
-         where hpp_order_id = $2
-         returning id`,
-        [orderStatus, hppOrderId],
-      );
-      updatedOrderId = result.rows[0]?.id;
-    }
-
-    if (!updatedOrderId) {
+    const order =
+      (merchantRequestId ? await findTicketOrder(dbModule, { merchantRequestId }) : null) ||
+      (hppOrderId ? await findTicketOrder(dbModule, { hppOrderId }) : null);
+    if (!order) {
       console.warn("Payment callback order not found", {
         hppOrderId,
         merchantRequestId,
@@ -982,7 +1473,29 @@ export async function paymentCallback(req: VercelApiRequest, res: ServerResponse
       return;
     }
 
-    sendJson(res, 200, { received: true, orderId: updatedOrderId });
+    if (hppOrderId && order.hpp_order_id && hppOrderId !== order.hpp_order_id) {
+      sendJson(res, 400, { code: "ORDER_MISMATCH", error: "Order identifier mismatch" });
+      return;
+    }
+
+    await dbModule.pool.query(
+      `update ticket_orders
+       set hpp_order_id = coalesce(hpp_order_id, $1),
+           alliancepay_callback_payload_safe = $2,
+           updated_at = now()
+       where id = $3`,
+      [hppOrderId || null, JSON.stringify(getSafeCallbackSummary(parsedBody)), order.id],
+    );
+    order.hpp_order_id ||= hppOrderId || null;
+
+    const ticket = await refreshOrderFromAlliancePay(dbModule, order);
+    console.info("AlliancePay callback processed after server-side verification", {
+      merchantRequestId: order.merchant_request_id,
+      callbackStatus: orderStatus,
+      verifiedStatus: order.payment_status,
+      hasTicket: Boolean(ticket),
+    });
+    sendJson(res, 200, { received: true, orderId: order.id });
   } catch (err) {
     console.error("Payment callback update failed", {
       error: err instanceof Error ? err.message : "Unknown error",
@@ -990,6 +1503,123 @@ export async function paymentCallback(req: VercelApiRequest, res: ServerResponse
       merchantRequestId,
       orderStatus,
     });
-    sendJson(res, 500, { code: "DATABASE_ERROR", error: "Payment callback update failed" });
+    sendJson(res, 502, { code: "CALLBACK_PROCESSING_ERROR", error: "Payment callback processing failed" });
+  }
+}
+
+export async function getPaymentStatus(req: VercelApiRequest, res: ServerResponse): Promise<void> {
+  const parsedUrl = new URL(req.url || "/", "http://vercel.local");
+  const merchantRequestId = parsedUrl.searchParams.get("merchantRequestId")?.trim();
+  if (!merchantRequestId) {
+    sendJson(res, 400, { code: "INVALID_REQUEST", error: "merchantRequestId is required" });
+    return;
+  }
+
+  try {
+    const dbModule = await getDb();
+    await ensurePaymentOrdersTable(dbModule);
+    const order = await findTicketOrder(dbModule, { merchantRequestId });
+    if (!order) {
+      sendJson(res, 404, { code: "ORDER_NOT_FOUND", error: "Order not found" });
+      return;
+    }
+
+    let ticket = await getTicketByOrderId(dbModule, order.id);
+    if (order.hpp_order_id && (!ticket || order.payment_status !== "SUCCESS")) {
+      try {
+        ticket = await refreshOrderFromAlliancePay(dbModule, order);
+      } catch (err) {
+        console.warn("Payment status refresh deferred", {
+          merchantRequestId,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      order: toSafeOrderResponse(order),
+      ticket: order.payment_status === "SUCCESS" && ticket ? toSafeTicketResponse(ticket) : null,
+    });
+  } catch (err) {
+    console.error("Payment status lookup failed", {
+      merchantRequestId,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, { code: "DATABASE_ERROR", error: "Payment status is temporarily unavailable" });
+  }
+}
+
+function maskCustomerName(firstName: string, lastName: string): string {
+  const mask = (value: string) => value ? `${value[0]}${"*".repeat(Math.max(1, value.length - 1))}` : "";
+  return `${mask(firstName)} ${mask(lastName)}`.trim();
+}
+
+function isValidTicketCode(ticketCode: string): boolean {
+  return /^SBC-2026-[A-F0-9]{12}$/.test(ticketCode);
+}
+
+export async function getPublicTicket(ticketCode: string, res: ServerResponse): Promise<void> {
+  if (!isValidTicketCode(ticketCode)) {
+    sendJson(res, 400, { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" });
+    return;
+  }
+
+  try {
+    const dbModule = await getDb();
+    await ensurePaymentOrdersTable(dbModule);
+    const ticket = await getTicketByCode(dbModule, ticketCode);
+    if (!ticket) {
+      sendJson(res, 404, { code: "TICKET_NOT_FOUND", error: "Ticket not found" });
+      return;
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      ticket: {
+        ticketCode: ticket.ticket_code,
+        eventTitle: ticket.event_title,
+        ticketType: ticket.ticket_type,
+        customerName: maskCustomerName(ticket.customer_first_name, ticket.customer_last_name),
+        status: ticket.status,
+        issuedAt: ticket.issued_at,
+      },
+    });
+  } catch (err) {
+    console.error("Public ticket lookup failed", {
+      ticketCode,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, { code: "DATABASE_ERROR", error: "Ticket lookup is temporarily unavailable" });
+  }
+}
+
+export async function getTicketPdf(ticketCode: string, res: ServerResponse): Promise<void> {
+  if (!isValidTicketCode(ticketCode)) {
+    sendJson(res, 400, { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" });
+    return;
+  }
+
+  try {
+    const dbModule = await getDb();
+    await ensurePaymentOrdersTable(dbModule);
+    const ticket = await getTicketByCode(dbModule, ticketCode);
+    if (!ticket) {
+      sendJson(res, 404, { code: "TICKET_NOT_FOUND", error: "Ticket not found" });
+      return;
+    }
+
+    const pdf = await buildTicketPdf(ticket);
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${ticket.ticket_code}.pdf"`);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.end(pdf);
+  } catch (err) {
+    console.error("Ticket PDF generation failed", {
+      ticketCode,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, { code: "PDF_GENERATION_ERROR", error: "Ticket PDF is temporarily unavailable" });
   }
 }
