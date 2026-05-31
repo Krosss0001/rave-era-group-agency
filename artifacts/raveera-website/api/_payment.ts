@@ -177,6 +177,18 @@ function buildPaymentUrls(merchantRequestId: string): PaymentUrls {
   };
 }
 
+function normalizeHttpOrigin(rawOrigin: string, name: string): string {
+  try {
+    const parsed = new URL(rawOrigin.trim());
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      throw new Error("Invalid protocol");
+    }
+    return parsed.origin;
+  } catch {
+    throw new Error(`${name} must be a valid HTTP(S) origin`);
+  }
+}
+
 export function buildAlliancePayAuthHeaders(
   deviceId: string,
   refreshToken: string,
