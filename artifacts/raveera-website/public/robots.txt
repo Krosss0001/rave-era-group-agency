@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.rave-era.com.ua/sitemap.xml
+Sitemap: https://rave-era.com.ua/sitemap.xml

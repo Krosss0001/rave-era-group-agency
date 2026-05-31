@@ -21,10 +21,8 @@ const SERVICE_CODE = process.env["ALLIANCEPAY_SERVICE_CODE"] || "";
 const ALB_API_URL =
   process.env["ALLIANCEPAY_API_URL"] ||
   ALLIANCEPAY_HPP_CREATE_ORDER_URL;
-const NOTIFICATION_URL =
-  process.env["ALLIANCEPAY_NOTIFICATION_URL"] || "";
-const PUBLIC_APP_ORIGIN =
-  process.env["PUBLIC_APP_ORIGIN"] || "https://raveera.group";
+const NOTIFICATION_URL = "";
+const PUBLIC_APP_ORIGIN = "https://rave-era.com.ua";
 const PRIVATE_JWK = process.env["ALLIANCEPAY_PRIVATE_JWK"];
 const DEVICE_ID = process.env["ALLIANCEPAY_DEVICE_ID"];
 const REFRESH_TOKEN = process.env["ALLIANCEPAY_REFRESH_TOKEN"];

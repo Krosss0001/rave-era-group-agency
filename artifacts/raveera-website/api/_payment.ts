@@ -51,6 +51,7 @@ const ALB_API_URL =
   ALLIANCEPAY_HPP_CREATE_ORDER_URL;
 const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
+const CANONICAL_PUBLIC_APP_ORIGIN = "https://rave-era.com.ua";
 let cachedAlliancePaySession: AlliancePaySession | null = null;
 
 const ticketPrices: Record<string, number> = {
@@ -114,47 +115,13 @@ async function readJsonBody(req: VercelApiRequest): Promise<unknown> {
   return JSON.parse(rawBody);
 }
 
-function normalizeHttpOrigin(value: string, label: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    throw new Error(`${label} must not be empty`);
-  }
-
-  const parsed = new URL(trimmed);
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error(`${label} must use http or https`);
-  }
-
-  return parsed.origin;
-}
-
-function validateAbsoluteHttpUrl(value: string, label: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    throw new Error(`${label} must not be empty`);
-  }
-
-  const parsed = new URL(trimmed);
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    throw new Error(`${label} must use http or https`);
-  }
-
-  return parsed.toString();
-}
-
 function buildPaymentUrls(): PaymentUrls {
-  const origin = normalizeHttpOrigin(
-    process.env["PUBLIC_APP_ORIGIN"] || "https://www.rave-era.com.ua",
-    "PUBLIC_APP_ORIGIN",
-  );
-  const notificationUrl = process.env["ALLIANCEPAY_NOTIFICATION_URL"] || "";
+  const origin = CANONICAL_PUBLIC_APP_ORIGIN;
 
   return {
     successUrl: `${origin}${EVENT_PAYMENT_PATH}/success`,
     failUrl: `${origin}${EVENT_PAYMENT_PATH}/fail`,
-    notificationUrl: notificationUrl.trim()
-      ? validateAbsoluteHttpUrl(notificationUrl, "ALLIANCEPAY_NOTIFICATION_URL")
-      : `${origin}${CALLBACK_PATH}`,
+    notificationUrl: `${origin}${CALLBACK_PATH}`,
   };
 }
 
@@ -209,7 +176,6 @@ function getMissingPaymentConfig(): string[] {
     "DATABASE_URL",
     "ALLIANCEPAY_MERCHANT_ID",
     "ALLIANCEPAY_SERVICE_CODE",
-    "PUBLIC_APP_ORIGIN",
   ].filter((key) => !process.env[key]?.trim());
 
   if (
