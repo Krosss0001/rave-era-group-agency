@@ -106,10 +106,10 @@ let cachedAlliancePaySession: AlliancePaySession | null = null;
 let cachedDbModule: DbModule | null = null;
 let cachedCyrillicFontBytes: Uint8Array | null = null;
 
-const ticketPrices: Record<string, number> = {
+export const ticketPrices: Record<string, number> = {
   sport: 250000,
   business: 650000,
-  online: 10000,
+  online: 100,
 };
 
 const createOrderBodySchema = z.object({
@@ -167,12 +167,12 @@ async function readJsonBody(req: VercelApiRequest): Promise<unknown> {
   return JSON.parse(rawBody);
 }
 
-function buildPaymentUrls(merchantRequestId: string): PaymentUrls {
+function buildPaymentUrls(merchantRequestId: string, ticketType: string): PaymentUrls {
   const origin = CANONICAL_PUBLIC_APP_ORIGIN;
 
   return {
     successUrl: `${origin}${EVENT_PAYMENT_PATH}/success?merchantRequestId=${encodeURIComponent(merchantRequestId)}`,
-    failUrl: `${origin}${EVENT_PAYMENT_PATH}/fail`,
+    failUrl: `${origin}${EVENT_PAYMENT_PATH}/fail?type=${encodeURIComponent(ticketType)}`,
     notificationUrl: `${origin}${CALLBACK_PATH}`,
   };
 }
@@ -273,6 +273,10 @@ function getProviderErrorSummary(data: Record<string, unknown>): Record<string, 
     }
   }
   return summary;
+}
+
+function getDiagnosticRef(value: string | null | undefined): string {
+  return value ? createHash("sha256").update(value).digest("hex").slice(0, 12) : "";
 }
 
 function getProviderString(data: Record<string, unknown>, keys: string[]): string {
@@ -644,10 +648,13 @@ function getSafeProviderValue(data: Record<string, unknown>, key: string): unkno
     return value;
   }
   if (Array.isArray(value)) {
-    return value;
-  }
-  if (value && typeof value === "object") {
-    return value;
+    return value.filter(
+      (item) =>
+        typeof item === "string" ||
+        typeof item === "number" ||
+        typeof item === "boolean" ||
+        item === null,
+    );
   }
   return undefined;
 }
@@ -667,7 +674,6 @@ function getAlliancePayServiceMessage(data: Record<string, unknown>): Record<str
     msgText: getSafeProviderValue(data, "msgText"),
     isLocalized: getSafeProviderValue(data, "isLocalized"),
     msgAttrs: getSafeProviderValue(data, "msgAttrs"),
-    errorCauses: getSafeProviderValue(data, "errorCauses"),
   };
 }
 
@@ -860,8 +866,8 @@ async function verifyAlliancePayHppOrder(order: TicketOrder): Promise<Record<str
   const serviceMessage = getAlliancePayServiceMessage(data);
   if (!response.ok || serviceMessage) {
     console.error("AlliancePay HPP status verification failed", {
-      merchantRequestId: order.merchant_request_id,
-      hppOrderId: order.hpp_order_id,
+      merchantRequestRef: getDiagnosticRef(order.merchant_request_id),
+      hppOrderRef: getDiagnosticRef(order.hpp_order_id),
       providerStatus: response.status,
       providerMessage: serviceMessage || getProviderErrorSummary(data),
     });
@@ -1055,7 +1061,7 @@ async function deliverTicketEmail(
   const smtpFrom = process.env["SMTP_FROM"]?.trim();
   if (!smtpHost || !smtpUser || !smtpPass || !smtpFrom || !Number.isInteger(smtpPort)) {
     console.warn("Ticket email not sent: SMTP is not configured", {
-      merchantRequestId: order.merchant_request_id,
+      merchantRequestRef: getDiagnosticRef(order.merchant_request_id),
     });
     await dbModule.pool.query(
       `update ticket_orders set email_status = 'NOT_CONFIGURED', updated_at = now() where id = $1`,
@@ -1112,7 +1118,7 @@ async function deliverTicketEmail(
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message.slice(0, 300) : "Unknown SMTP error";
     console.warn("Ticket email delivery failed", {
-      merchantRequestId: order.merchant_request_id,
+      merchantRequestRef: getDiagnosticRef(order.merchant_request_id),
       error: errorMessage,
     });
     await dbModule.pool.query(
@@ -1262,7 +1268,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   const merchantRequestId = crypto.randomUUID();
   let urls: ReturnType<typeof buildPaymentUrls>;
   try {
-    urls = buildPaymentUrls(merchantRequestId);
+    urls = buildPaymentUrls(merchantRequestId, ticketType);
   } catch (err) {
     console.error("Payment URL configuration invalid", {
       error: err instanceof Error ? err.message : "Unknown error",
@@ -1293,7 +1299,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   } catch (err) {
     console.error("Payment order insert failed", {
       error: err instanceof Error ? err.message : "Unknown error",
-      merchantRequestId,
+      merchantRequestRef: getDiagnosticRef(merchantRequestId),
     });
     sendJson(res, 503, { code: "DATABASE_ERROR", error: "Payment database write failed" });
     return;
@@ -1337,7 +1343,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
       const errorResponse = buildProviderErrorResponse(albRes.status, albData, orderId);
       console.error("ALB API error creating payment order", {
         status: albRes.status,
-        merchantRequestId,
+        merchantRequestRef: getDiagnosticRef(merchantRequestId),
         providerError: errorResponse.provider,
       });
       sendJson(res, 502, errorResponse);
@@ -1350,7 +1356,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
       const serviceMessageCode = getServiceMessageCode("hpp_create_order", serviceMessage);
       console.error("ALB API returned service message", {
         providerStep: "hpp_create_order",
-        merchantRequestId,
+        merchantRequestRef: getDiagnosticRef(merchantRequestId),
         providerStatus: albRes.status,
         providerMessage: serviceMessage,
         requestShape,
@@ -1384,7 +1390,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
 
     console.error("ALB API network error creating payment order", {
       error: err instanceof Error ? err.message : "Unknown error",
-      merchantRequestId,
+      merchantRequestRef: getDiagnosticRef(merchantRequestId),
     });
     sendJson(res, 502, {
       code: "ALLIANCEPAY_ERROR",
@@ -1397,7 +1403,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   if (!redirectUrl) {
     const providerShape = buildProviderShape(albData);
     console.error("ALB API response missing redirect URL", {
-      merchantRequestId,
+      merchantRequestRef: getDiagnosticRef(merchantRequestId),
       providerStatus: 200,
       providerShape,
     });
@@ -1421,7 +1427,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   } catch (err) {
     console.error("Payment order update failed", {
       error: err instanceof Error ? err.message : "Unknown error",
-      merchantRequestId,
+      merchantRequestRef: getDiagnosticRef(merchantRequestId),
     });
     sendJson(res, 503, {
       code: "DATABASE_ERROR",
@@ -1477,8 +1483,8 @@ export async function paymentCallback(req: VercelApiRequest, res: ServerResponse
       (hppOrderId ? await findTicketOrder(dbModule, { hppOrderId }) : null);
     if (!order) {
       console.warn("Payment callback order not found", {
-        hppOrderId,
-        merchantRequestId,
+        hppOrderRef: getDiagnosticRef(hppOrderId),
+        merchantRequestRef: getDiagnosticRef(merchantRequestId),
         orderStatus,
       });
       sendJson(res, 404, { code: "ORDER_NOT_FOUND", error: "Order not found" });
@@ -1502,7 +1508,7 @@ export async function paymentCallback(req: VercelApiRequest, res: ServerResponse
 
     const ticket = await refreshOrderFromAlliancePay(dbModule, order);
     console.info("AlliancePay callback processed after server-side verification", {
-      merchantRequestId: order.merchant_request_id,
+      merchantRequestRef: getDiagnosticRef(order.merchant_request_id),
       callbackStatus: orderStatus,
       verifiedStatus: order.payment_status,
       hasTicket: Boolean(ticket),
@@ -1511,8 +1517,8 @@ export async function paymentCallback(req: VercelApiRequest, res: ServerResponse
   } catch (err) {
     console.error("Payment callback update failed", {
       error: err instanceof Error ? err.message : "Unknown error",
-      hppOrderId,
-      merchantRequestId,
+      hppOrderRef: getDiagnosticRef(hppOrderId),
+      merchantRequestRef: getDiagnosticRef(merchantRequestId),
       orderStatus,
     });
     sendJson(res, 502, { code: "CALLBACK_PROCESSING_ERROR", error: "Payment callback processing failed" });
@@ -1542,7 +1548,7 @@ export async function getPaymentStatus(req: VercelApiRequest, res: ServerRespons
         ticket = await refreshOrderFromAlliancePay(dbModule, order);
       } catch (err) {
         console.warn("Payment status refresh deferred", {
-          merchantRequestId,
+          merchantRequestRef: getDiagnosticRef(merchantRequestId),
           error: err instanceof Error ? err.message : "Unknown error",
         });
       }
@@ -1555,7 +1561,7 @@ export async function getPaymentStatus(req: VercelApiRequest, res: ServerRespons
     });
   } catch (err) {
     console.error("Payment status lookup failed", {
-      merchantRequestId,
+      merchantRequestRef: getDiagnosticRef(merchantRequestId),
       error: err instanceof Error ? err.message : "Unknown error",
     });
     sendJson(res, 503, { code: "DATABASE_ERROR", error: "Payment status is temporarily unavailable" });
@@ -1599,7 +1605,7 @@ export async function getPublicTicket(ticketCode: string, res: ServerResponse): 
     });
   } catch (err) {
     console.error("Public ticket lookup failed", {
-      ticketCode,
+      ticketCodeRef: getDiagnosticRef(ticketCode),
       error: err instanceof Error ? err.message : "Unknown error",
     });
     sendJson(res, 503, { code: "DATABASE_ERROR", error: "Ticket lookup is temporarily unavailable" });
@@ -1629,7 +1635,7 @@ export async function getTicketPdf(ticketCode: string, res: ServerResponse): Pro
     res.end(pdf);
   } catch (err) {
     console.error("Ticket PDF generation failed", {
-      ticketCode,
+      ticketCodeRef: getDiagnosticRef(ticketCode),
       error: err instanceof Error ? err.message : "Unknown error",
     });
     sendJson(res, 503, { code: "PDF_GENERATION_ERROR", error: "Ticket PDF is temporarily unavailable" });

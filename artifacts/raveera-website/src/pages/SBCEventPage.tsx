@@ -72,7 +72,7 @@ const tickets = [
   },
   {
     key: "online",
-    price: "100",
+    price: "1",
     currency: "грн",
     name: "ONLINE",
     desc: "Дистанційний доступ до трансляції та матеріалів конференції.",
@@ -98,7 +98,7 @@ const faqs = [
   },
   {
     q: "Які формати квитків доступні?",
-    a: "SPORT за 2500 грн, BUSINESS за 6500 грн та ONLINE за 100 грн.",
+    a: "SPORT за 2500 грн, BUSINESS за 6500 грн та ONLINE за 1 грн.",
   },
 ];
 

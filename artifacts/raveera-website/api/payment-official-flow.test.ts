@@ -4,6 +4,7 @@ import {
   ALLIANCEPAY_HPP_CREATE_ORDER_URL,
   buildAlliancePayAuthHeaders,
   buildAlliancePayHppCreateOrderPayload,
+  ticketPrices,
 } from "./_payment.js";
 
 test("Vercel payment API builds the official AlliancePay HPP create-order payload", () => {
@@ -39,5 +40,13 @@ test("Vercel payment API uses the official AlliancePay ECOM endpoint and auth he
     "x-api_version": "v1",
     "x-device_id": "device-id",
     "x-refresh_token": "refresh-token",
+  });
+});
+
+test("ticket prices preserve SPORT and BUSINESS while ONLINE is one hryvnia", () => {
+  assert.deepEqual(ticketPrices, {
+    sport: 250000,
+    business: 650000,
+    online: 100,
   });
 });

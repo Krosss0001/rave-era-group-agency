@@ -12,7 +12,6 @@ export default async function handler(req: VercelApiRequest, res: ServerResponse
 
   console.info("Vercel create-order API request", {
     method: req.method,
-    rawUrl: req.url || "/api/payment/create-order",
     pathname: new URL(req.url || "/api/payment/create-order", "http://vercel.local").pathname,
   });
 

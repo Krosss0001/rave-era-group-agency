@@ -30,7 +30,7 @@ const tiers: Record<TicketType, { name: string; price: string; scope: string }> 
   },
   online: {
     name: "ONLINE",
-    price: "100 UAH",
+    price: "1 UAH",
     scope: "Remote access to the online broadcast and event recording.",
   },
 };
@@ -220,11 +220,11 @@ export default function TicketFormPage() {
           </div>
 
           <form onSubmit={onSubmit} className="space-y-6" noValidate>
-            <div>
-              <label className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/35 mb-3">
+            <fieldset>
+              <legend className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/35 mb-3">
                 <Ticket className="w-3 h-3" style={{ color: G }} />
                 {t.ticketLabel}
-              </label>
+              </legend>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {(Object.keys(tiers) as TicketType[]).map((key) => {
                   const option = tiers[key];
@@ -234,6 +234,7 @@ export default function TicketFormPage() {
                       key={key}
                       type="button"
                       onClick={() => selectTicketType(key)}
+                      aria-pressed={active}
                       className={`min-h-24 border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88] ${
                         active ? "border-[#00FF88]/40 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02] hover:border-white/20"
                       }`}
@@ -245,40 +246,40 @@ export default function TicketFormPage() {
                 })}
               </div>
               <p className="mt-3 text-xs text-white/35 leading-relaxed">{tier.scope}</p>
-            </div>
+            </fieldset>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label={t.firstName} error={errors.firstName} icon={<User className="w-4 h-4" />}>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" className="form-input" />
+              <Field id="first-name" label={t.firstName} error={errors.firstName} icon={<User className="w-4 h-4" />}>
+                <input id="first-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" aria-invalid={Boolean(errors.firstName)} aria-describedby={errors.firstName ? "first-name-error" : undefined} className="form-input" />
               </Field>
-              <Field label={t.lastName} error={errors.lastName} icon={<User className="w-4 h-4" />}>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" className="form-input" />
+              <Field id="last-name" label={t.lastName} error={errors.lastName} icon={<User className="w-4 h-4" />}>
+                <input id="last-name" value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" aria-invalid={Boolean(errors.lastName)} aria-describedby={errors.lastName ? "last-name-error" : undefined} className="form-input" />
               </Field>
-              <Field label={t.email} error={errors.email} icon={<Mail className="w-4 h-4" />}>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" inputMode="email" className="form-input" />
+              <Field id="email" label={t.email} error={errors.email} icon={<Mail className="w-4 h-4" />}>
+                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" inputMode="email" aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "email-error" : undefined} className="form-input" />
               </Field>
-              <Field label={t.phone} error={errors.phone} icon={<Phone className="w-4 h-4" />}>
-                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" placeholder="+380 XX XXX XX XX" className="form-input" />
+              <Field id="phone" label={t.phone} error={errors.phone} icon={<Phone className="w-4 h-4" />}>
+                <input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" placeholder="+380 XX XXX XX XX" aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "phone-error" : undefined} className="form-input" />
               </Field>
             </div>
 
             <label className="flex items-start gap-3 text-xs text-white/40 leading-relaxed border border-white/[0.08] bg-white/[0.02] p-4">
-              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#00FF88]" />
+              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} aria-invalid={Boolean(errors.consent)} aria-describedby={errors.consent ? "legal-consent-error" : undefined} className="mt-0.5 h-4 w-4 accent-[#00FF88]" />
               <span>
                 {t.legalCopy}{" "}
                 <Link href="/public-offer" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>,{" "}
                 <Link href="/privacy" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.privacy}</Link>,{" "}
                 <Link href="/returns" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>.
-                {errors.consent && <span className="mt-2 block text-red-400">{errors.consent}</span>}
+                {errors.consent && <span id="legal-consent-error" className="mt-2 block text-red-400">{errors.consent}</span>}
               </span>
             </label>
 
-            <button type="submit" disabled={isSubmitting} className="w-full min-h-12 py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]" style={{ background: G }}>
+            <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="w-full min-h-12 py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]" style={{ background: G }}>
               {isSubmitting ? t.submitting : t.submit}
             </button>
 
             {paymentError && (
-              <div className="border border-red-400/25 bg-red-400/[0.06] p-4 text-xs leading-relaxed text-red-200">
+              <div role="alert" className="border border-red-400/25 bg-red-400/[0.06] p-4 text-xs leading-relaxed text-red-200">
                 {paymentError}
               </div>
             )}
@@ -300,11 +301,13 @@ export default function TicketFormPage() {
 }
 
 function Field({
+  id,
   label,
   error,
   icon,
   children,
 }: {
+  id: string;
   label: string;
   error?: string;
   icon: ReactNode;
@@ -312,13 +315,13 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-[10px] font-mono uppercase tracking-widest text-white/35 mb-2">{label}</label>
+      <label htmlFor={id} className="block text-[10px] font-mono uppercase tracking-widest text-white/35 mb-2">{label}</label>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20">{icon}</span>
         {children}
       </div>
       {error && (
-        <p className="flex items-center gap-1 text-[10px] text-red-400 mt-1.5">
+        <p id={`${id}-error`} className="flex items-center gap-1 text-[10px] text-red-400 mt-1.5">
           <AlertCircle className="w-3 h-3" /> {error}
         </p>
       )}

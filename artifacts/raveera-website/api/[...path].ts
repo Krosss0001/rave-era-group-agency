@@ -65,18 +65,15 @@ function normalizeLoosePath(value: string): string {
 
 function logRequest({
   method,
-  rawUrl,
   pathname,
   normalizedPath,
 }: {
   method: string | undefined;
-  rawUrl: string;
   pathname: string;
   normalizedPath: string;
 }): void {
   console.info("Vercel API request", {
     method,
-    rawUrl,
     pathname,
     normalizedPath,
   });
@@ -145,7 +142,6 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
   const candidatePaths = getCandidatePaths(req, originalUrl, normalizedUrl);
   logRequest({
     method: req.method,
-    rawUrl: req.url || "/",
     pathname: originalUrl.pathname,
     normalizedPath: normalizedUrl.pathname,
   });
