@@ -303,7 +303,7 @@ export default function SBCEventPage() {
       {/* ── Sticky Nav ── */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#0A0A0F]/90 backdrop-blur-md border-b border-white/[0.06]" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-14 sm:h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white transition-colors group">
+          <Link href="/" className="flex min-h-10 items-center gap-2 text-sm font-medium text-white/60 hover:text-white transition-colors group focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
             <span className="uppercase tracking-wider text-xs sm:text-sm">{t.back}</span>
           </Link>
@@ -311,7 +311,7 @@ export default function SBCEventPage() {
             <span className="hidden sm:inline text-xs font-bold tracking-widest text-white/20 uppercase">RAVE'ERA GROUP</span>
             <button
               onClick={toggleLang}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-mono uppercase tracking-widest border border-white/10 hover:border-[#00FF88]/40 hover:text-[#00FF88] transition-colors"
+              className="flex min-h-10 items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-mono uppercase tracking-widest border border-white/10 hover:border-[#00FF88]/40 hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]"
             >
               <Globe className="w-3.5 h-3.5" />
               {lang === "uk" ? "UA" : "EN"}
@@ -378,7 +378,7 @@ export default function SBCEventPage() {
                   </span>
                   <motion.div className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
                 </a>
-                <a href="#program" className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-white/30 hover:text-white transition-colors border-b border-white/10 hover:border-white pb-0.5">
+                <a href="#program" className="inline-flex min-h-10 items-center text-xs sm:text-sm font-semibold uppercase tracking-widest text-white/30 hover:text-white transition-colors border-b border-white/10 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                   {t.viewProgram}
                 </a>
               </motion.div>
@@ -680,7 +680,7 @@ export default function SBCEventPage() {
                 href={mapExternal}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#00FF88] hover:text-white transition-colors border border-[#00FF88]/30 hover:border-white/30 px-4 py-2"
+                className="inline-flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#00FF88] hover:text-white transition-colors border border-[#00FF88]/30 hover:border-white/30 px-4 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 {t.mapOpen}
@@ -723,8 +723,9 @@ export default function SBCEventPage() {
               {faqs.map((faq, i) => (
                 <motion.div key={i} variants={fadeUpChild} className="border border-white/[0.06] bg-white/[0.02]">
                   <button
+                    type="button"
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between p-4 sm:p-5 text-left"
+                    className="w-full flex min-h-11 items-center justify-between p-4 sm:p-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]"
                   >
                     <span className="text-xs sm:text-sm font-bold text-white/70 pr-4">{faq.q}</span>
                     <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`} style={{ color: G }} />
@@ -817,9 +818,9 @@ export default function SBCEventPage() {
                 {t.footerContactsLabel}
               </div>
               <div className="space-y-2 text-xs text-white/35 leading-relaxed">
-                <p><span className="text-white/25 font-mono">Email:</span> <a href={`mailto:${t.footerEmail}`} className="hover:text-[#00FF88] transition-colors">{t.footerEmail}</a></p>
-                <p><span className="text-white/25 font-mono">{lang === "uk" ? "Телефон:" : "Phone:"}</span> <a href={`tel:+${t.footerPhone.replace(/\D/g, "")}`} className="hover:text-[#00FF88] transition-colors">{t.footerPhone}</a></p>
-                <p><span className="text-white/25 font-mono">Telegram:</span> <a href={`https://t.me/${t.footerTelegram}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#00FF88] transition-colors">{t.footerTelegram}</a></p>
+                <p><span className="text-white/25 font-mono">Email:</span> <a href={`mailto:${t.footerEmail}`} className="inline-flex min-h-10 items-center hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerEmail}</a></p>
+                <p><span className="text-white/25 font-mono">{lang === "uk" ? "Телефон:" : "Phone:"}</span> <a href={`tel:+${t.footerPhone.replace(/\D/g, "")}`} className="inline-flex min-h-10 items-center hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerPhone}</a></p>
+                <p><span className="text-white/25 font-mono">Telegram:</span> <a href={`https://t.me/${t.footerTelegram}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerTelegram}</a></p>
                 <p><span className="text-white/25 font-mono">{lang === "uk" ? "Підтримка:" : "Support:"}</span> {t.footerSupport}</p>
               </div>
             </div>
@@ -831,10 +832,10 @@ export default function SBCEventPage() {
                 {t.footerDocsLabel}
               </div>
               <div className="space-y-2">
-                <Link href="/contacts" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocContacts}</Link>
-                <Link href="/public-offer" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocOffer}</Link>
-                <Link href="/privacy" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocPrivacy}</Link>
-                <Link href="/returns" className="block text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2">{t.footerDocReturns}</Link>
+                <Link href="/contacts" className="flex min-h-10 items-center text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerDocContacts}</Link>
+                <Link href="/public-offer" className="flex min-h-10 items-center text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerDocOffer}</Link>
+                <Link href="/privacy" className="flex min-h-10 items-center text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerDocPrivacy}</Link>
+                <Link href="/returns" className="flex min-h-10 items-center text-xs text-white/35 hover:text-[#00FF88] transition-colors border border-white/[0.06] bg-white/[0.02] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerDocReturns}</Link>
               </div>
             </div>
           </div>

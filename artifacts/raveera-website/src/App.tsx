@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { lazy, Suspense, useState, useEffect, useRef } from "react";
 import {
   motion, AnimatePresence, useScroll, useTransform,
   useInView, useMotionValue, useSpring,
@@ -11,17 +11,18 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Link, Switch, Route, useLocation } from "wouter";
-import SBCEventPage from "./pages/SBCEventPage";
-import DocumentsPage from "./pages/DocumentsPage";
-import ContactsPage from "./pages/ContactsPage";
-import PublicOfferPage from "./pages/PublicOfferPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import ReturnsPage from "./pages/ReturnsPage";
-import TicketFormPage from "./pages/TicketFormPage";
-import PaymentSuccessPage from "./pages/PaymentSuccessPage";
-import PaymentFailPage from "./pages/PaymentFailPage";
-import TicketPage from "./pages/TicketPage";
-import NotFound from "./pages/not-found";
+
+const SBCEventPage = lazy(() => import("./pages/SBCEventPage"));
+const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
+const ContactsPage = lazy(() => import("./pages/ContactsPage"));
+const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const ReturnsPage = lazy(() => import("./pages/ReturnsPage"));
+const TicketFormPage = lazy(() => import("./pages/TicketFormPage"));
+const PaymentSuccessPage = lazy(() => import("./pages/PaymentSuccessPage"));
+const PaymentFailPage = lazy(() => import("./pages/PaymentFailPage"));
+const TicketPage = lazy(() => import("./pages/TicketPage"));
+const NotFound = lazy(() => import("./pages/not-found"));
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -702,7 +703,7 @@ function HomePage() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/[0.06]" : ""}`}
       >
         <div className="max-w-7xl 2xl:max-w-[1500px] mx-auto px-4 sm:px-6 md:px-10 lg:px-12 h-14 sm:h-16 md:h-20 flex items-center justify-between gap-3">
-          <button onClick={() => scrollTo("hero")} className="text-xs sm:text-sm md:text-base font-black tracking-tight uppercase leading-none text-white hover:opacity-80 transition-opacity whitespace-nowrap min-w-0 truncate">
+          <button onClick={() => scrollTo("hero")} className="inline-flex min-h-10 items-center text-xs sm:text-sm md:text-base font-black tracking-tight uppercase leading-none text-white hover:opacity-80 transition-opacity whitespace-nowrap min-w-0 truncate focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <span className="lg:hidden"><BrandLine compact /></span>
             <span className="hidden lg:inline"><BrandLine /></span>
           </button>
@@ -710,15 +711,15 @@ function HomePage() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-7">
             {navLinks.map((k) => (
-              <button key={k} onClick={() => scrollTo(k)} className={`relative text-[11px] font-semibold tracking-[0.14em] uppercase transition-colors duration-200 ${activeSection === k ? "text-white" : "text-white/40 hover:text-white"}`}>
+              <button key={k} onClick={() => scrollTo(k)} className={`relative inline-flex min-h-10 items-center text-[11px] font-semibold tracking-[0.14em] uppercase transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88] ${activeSection === k ? "text-white" : "text-white/40 hover:text-white"}`}>
                 {tr.nav[k]}
                 {activeSection === k && <motion.span layoutId="nav-ul" className="absolute -bottom-1 left-0 right-0 h-px" style={{ background: G }} />}
               </button>
             ))}
-            <button onClick={() => scrollTo("contact")} className="text-[11px] font-bold tracking-[0.14em] uppercase px-4 py-2 border transition-all duration-200 hover:bg-[#00FF88] hover:text-black" style={{ borderColor: G, color: G }}>
+            <button onClick={() => scrollTo("contact")} className="inline-flex min-h-10 items-center text-[11px] font-bold tracking-[0.14em] uppercase px-4 py-2 border transition-all duration-200 hover:bg-[#00FF88] hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]" style={{ borderColor: G, color: G }}>
               {tr.nav.contact}
             </button>
-            <button onClick={toggleLang} className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 px-3 py-2 text-white/35 hover:border-white/25 hover:text-white transition-all">
+            <button onClick={toggleLang} className="flex min-h-10 items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 px-3 py-2 text-white/35 hover:border-white/25 hover:text-white transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
               <Globe className="w-3 h-3" />
               <AnimatePresence mode="wait">
                 <motion.span key={lang} initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }} transition={{ duration: 0.18 }}>
@@ -730,10 +731,10 @@ function HomePage() {
 
           {/* Mobile controls */}
           <div className="flex md:hidden items-center gap-2">
-            <button onClick={toggleLang} className="flex items-center gap-1 text-[10px] font-mono tracking-widest uppercase border border-white/10 px-2 py-1.5 text-white/35 hover:text-[#00FF88] transition-all">
+            <button onClick={toggleLang} className="flex min-h-10 items-center gap-1 text-[10px] font-mono tracking-widest uppercase border border-white/10 px-2 py-1.5 text-white/35 hover:text-[#00FF88] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
               <Globe className="w-3 h-3" />{lang === "en" ? "UA" : "EN"}
             </button>
-            <button onClick={() => setMenuOpen((v) => !v)} className="p-1.5 text-white/50 hover:text-white transition-colors">
+            <button onClick={() => setMenuOpen((v) => !v)} className="inline-flex min-h-10 min-w-10 items-center justify-center p-1.5 text-white/50 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]" aria-label={menuOpen ? "Close menu" : "Open menu"}>
               <AnimatePresence mode="wait">
                 <motion.div key={String(menuOpen)} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }}>
                   {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -814,7 +815,7 @@ function HomePage() {
                 </span>
                 <motion.div className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }} />
               </button>
-              <button onClick={() => scrollTo("cases")} className="text-sm font-semibold uppercase tracking-widest text-white/30 hover:text-white transition-colors border-b border-white/10 hover:border-white pb-0.5">
+              <button onClick={() => scrollTo("cases")} className="inline-flex min-h-10 items-center text-sm font-semibold uppercase tracking-widest text-white/30 hover:text-white transition-colors border-b border-white/10 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                 {lang === "en" ? "View Cases" : "Дивитись кейси"}
               </button>
             </motion.div>
@@ -832,13 +833,14 @@ function HomePage() {
           </motion.div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.2 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer" onClick={() => scrollTo("cases")}>
+        <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.2 }}
+          type="button"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex min-h-10 flex-col items-center gap-2 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]" onClick={() => scrollTo("cases")}>
           <span className="text-[9px] font-mono text-white/15 uppercase tracking-[0.22em]">{tr.hero.scroll}</span>
           <motion.div animate={{ y: [0, 7, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}>
             <ChevronDown className="w-4 h-4 text-white/15" />
           </motion.div>
-        </motion.div>
+        </motion.button>
       </section>
 
       {/* ── Cases ── */}
@@ -1178,7 +1180,7 @@ function HomePage() {
                     <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/25 mb-1">{item.label}</p>
                     {item.href ? (
                       <a href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                        className="text-sm font-bold hover:text-[#00FF88] transition-colors duration-200 block">{item.main}</a>
+                        className="inline-flex min-h-10 items-center text-sm font-bold hover:text-[#00FF88] transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{item.main}</a>
                     ) : (
                       <span className="text-sm font-bold block">{item.main}</span>
                     )}
@@ -1221,32 +1223,32 @@ function HomePage() {
             <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/20 mb-4">{lang === "en" ? "Menu" : "Меню"}</p>
             <div className="flex flex-col gap-2.5">
               {(["cases", "about", "services", "team", "contact"] as const).map((k, i) => (
-                <button key={k} onClick={() => scrollTo(k)} className="text-left text-xs font-semibold uppercase tracking-wider text-white/35 hover:text-white transition-colors">{tr.footer.menu[i]}</button>
+                <button key={k} onClick={() => scrollTo(k)} className="inline-flex min-h-10 items-center text-left text-xs font-semibold uppercase tracking-wider text-white/35 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{tr.footer.menu[i]}</button>
               ))}
             </div>
           </div>
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/20 mb-4">{lang === "en" ? "Contacts" : "Контакти"}</p>
             <div className="space-y-2 text-xs text-white/35">
-              <a href={`mailto:${tr.contact.emailAddr}`} className="block hover:text-[#00FF88] transition-colors">{tr.contact.emailAddr}</a>
-              <a href="tel:+380934307551" className="block hover:text-[#00FF88] transition-colors">{tr.contact.phoneNum}</a>
+              <a href={`mailto:${tr.contact.emailAddr}`} className="inline-flex min-h-10 items-center hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{tr.contact.emailAddr}</a>
+              <a href="tel:+380934307551" className="inline-flex min-h-10 items-center hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{tr.contact.phoneNum}</a>
               <div>{tr.contact.locAddr}</div>
             </div>
             <div className="flex items-center gap-2.5 mt-6">
               <a href="https://t.me/bogdan_chekan" target="_blank" rel="noopener noreferrer" aria-label="Telegram"
-                className="w-9 h-9 flex items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all">
+                className="flex min-h-10 min-w-10 items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                 <MessageCircle className="w-4 h-4" />
               </a>
               <a href={`mailto:${tr.contact.emailAddr}`} aria-label="Email"
-                className="w-9 h-9 flex items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all">
+                className="flex min-h-10 min-w-10 items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                 <Mail className="w-4 h-4" />
               </a>
               <a href="tel:+380934307551" aria-label="Phone"
-                className="w-9 h-9 flex items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all">
+                className="flex min-h-10 min-w-10 items-center justify-center border border-white/10 hover:border-[#00FF88]/50 hover:text-[#00FF88] hover:bg-[#00FF88]/5 text-white/40 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                 <Phone className="w-4 h-4" />
               </a>
               <button onClick={toggleLang} aria-label="Switch language"
-                className="ml-2 h-9 px-3 flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 hover:border-[#00FF88]/50 text-white/40 hover:text-[#00FF88] transition-all">
+                className="ml-2 min-h-10 px-3 flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 hover:border-[#00FF88]/50 text-white/40 hover:text-[#00FF88] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                 <Globe className="w-3 h-3" />{lang === "en" ? "UA" : "EN"}
               </button>
             </div>
@@ -1275,47 +1277,69 @@ function HomePage() {
 export default function App() {
   return (
     <>
-      <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
-        <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
-        <Route path="/event/sbc-summit-ukraine-2026/payment/success" component={PaymentSuccessPage} />
-        <Route path="/event/sbc-summit-ukraine-2026/payment/fail" component={PaymentFailPage} />
-        <Route path="/ticket/:ticketCode" component={TicketPage} />
-        <Route path="/documents" component={DocumentsPage} />
-        <Route path="/contacts" component={ContactsPage} />
-        <Route path="/public-offer" component={PublicOfferPage} />
-        <Route path="/privacy" component={PrivacyPage} />
-        <Route path="/returns" component={ReturnsPage} />
-        <Route component={NotFound} />
-      </Switch>
+      <Suspense fallback={<PageFallback />}>
+        <Switch>
+          <Route path="/" component={HomePage} />
+          <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
+          <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
+          <Route path="/event/sbc-summit-ukraine-2026/payment/success" component={PaymentSuccessPage} />
+          <Route path="/event/sbc-summit-ukraine-2026/payment/fail" component={PaymentFailPage} />
+          <Route path="/payment/success" component={PaymentSuccessPage} />
+          <Route path="/payment/fail" component={PaymentFailPage} />
+          <Route path="/ticket/:ticketCode" component={TicketPage} />
+          <Route path="/documents" component={DocumentsPage} />
+          <Route path="/contacts" component={ContactsPage} />
+          <Route path="/public-offer" component={PublicOfferPage} />
+          <Route path="/privacy" component={PrivacyPage} />
+          <Route path="/returns" component={ReturnsPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
       <CookieBanner />
     </>
   );
 }
 
+function PageFallback() {
+  return (
+    <div className="min-h-screen bg-[#0A0A0F] px-4 py-20 text-white">
+      <div className="mx-auto max-w-3xl animate-pulse space-y-5">
+        <div className="h-4 w-36 bg-white/10" />
+        <div className="h-12 w-3/4 bg-white/10" />
+        <div className="h-40 border border-white/10 bg-white/[0.03]" />
+      </div>
+    </div>
+  );
+}
+
 function CookieBanner() {
   const [lang] = useState<Lang>("uk");
+  const [location] = useLocation();
   const [visible, setVisible] = useState(false);
   const copy = T[lang].cookie;
+  const isTransactionalRoute =
+    location.startsWith("/event/sbc-summit-ukraine-2026/ticket-form") ||
+    location.startsWith("/event/sbc-summit-ukraine-2026/payment/") ||
+    location.startsWith("/payment/") ||
+    location.startsWith("/ticket/");
 
   useEffect(() => {
     setVisible(localStorage.getItem("raveera-cookie-consent") !== "accepted");
-  }, []);
+  }, [location]);
 
   function accept() {
     localStorage.setItem("raveera-cookie-consent", "accepted");
     setVisible(false);
   }
 
-  if (!visible) return null;
+  if (!visible || isTransactionalRoute) return null;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[80] px-4 pb-4 sm:px-6 sm:pb-6 pointer-events-none">
       <div className="pointer-events-auto mx-auto flex max-w-4xl flex-col gap-4 border border-white/[0.1] bg-[#050508]/95 p-4 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-relaxed text-white/50">
           {copy.text}{" "}
-          <Link href="/privacy" className="font-semibold text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <Link href="/privacy" className="inline-flex min-h-10 items-center font-semibold text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             {copy.privacy}
           </Link>
         </p>

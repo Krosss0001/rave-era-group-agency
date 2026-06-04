@@ -80,11 +80,11 @@ export default function ContactsPage() {
     <div className="min-h-screen bg-[#0A0A0F] text-white font-sans overflow-x-hidden selection:bg-[#00FF88] selection:text-black">
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all ${scrolled ? "bg-[#0A0A0F]/90 backdrop-blur-md border-b border-white/[0.06]" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-14 sm:h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] transition-colors">
+          <Link href="/" className="flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="w-3.5 h-3.5" />
             {t.back}
           </Link>
-          <button onClick={toggleLang} className="h-9 px-3 flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 hover:border-[#00FF88]/50 text-white/40 hover:text-[#00FF88] transition-all">
+          <button type="button" onClick={toggleLang} className="min-h-10 px-3 flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase border border-white/10 hover:border-[#00FF88]/50 text-white/40 hover:text-[#00FF88] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <Globe className="w-3 h-3" />{lang === "en" ? "UA" : "EN"}
           </button>
         </div>
@@ -119,7 +119,7 @@ export default function ContactsPage() {
                   {c.label}
                 </div>
                 {c.href ? (
-                  <a href={c.href} className="text-sm sm:text-base font-bold text-white/80 hover:text-[#00FF88] transition-colors break-all" target={c.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
+                  <a href={c.href} className="inline-flex min-h-10 items-center text-sm sm:text-base font-bold text-white/80 hover:text-[#00FF88] transition-colors break-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]" target={c.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
                     {c.value}
                   </a>
                 ) : (

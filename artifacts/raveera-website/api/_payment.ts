@@ -99,7 +99,7 @@ const ALB_HPP_OPERATIONS_URL =
   `${new URL(ALB_API_URL).origin}/ecom/execute_request/hpp/v1/operations`;
 const EVENT_PAYMENT_PATH = "/event/sbc-summit-ukraine-2026/payment";
 const CALLBACK_PATH = "/api/payment/callback";
-const CANONICAL_PUBLIC_APP_ORIGIN = "https://rave-era.com.ua";
+const CANONICAL_PUBLIC_APP_ORIGIN = "https://www.rave-era.com.ua";
 const EVENT_SLUG = "sbc-summit-ukraine-2026";
 const EVENT_TITLE = "SBC Summit Ukraine 2026";
 const require = createRequire(import.meta.url);
@@ -148,7 +148,7 @@ export function sendJson(res: ServerResponse, statusCode: number, body: unknown)
 }
 
 export function sendCors(res: ServerResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", CANONICAL_PUBLIC_APP_ORIGIN);
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept");
 }
