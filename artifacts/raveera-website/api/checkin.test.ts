@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import adminHandler from "./admin/[...path].js";
+import adminCheckinHandler from "./admin-checkin.js";
 import handler from "./[...path].js";
 import {
   extractTicketCodeFromCheckinInput,
@@ -55,23 +55,20 @@ async function callHandler({
   };
 }
 
-async function callAdminHandler({
+async function callAdminCheckinHandler({
   method,
   url,
   body,
-  query,
 }: {
   method: string;
   url: string;
   body?: unknown;
-  query?: { path?: string | string[] };
 }): Promise<{ statusCode: number; body: Record<string, unknown>; headers: MockResponse["headers"] }> {
   const res = new MockResponse();
-  await adminHandler({
+  await adminCheckinHandler({
     method,
     url,
     body,
-    query,
     headers: {},
     socket: { remoteAddress: "127.0.0.1" },
   } as never, res as never);
@@ -201,44 +198,31 @@ test("check-in login catch-all rejects bad PIN with JSON for path variants", asy
   }
 });
 
-test("single admin catch-all session route returns JSON unauthenticated", async () => {
-  for (const request of [
-    { url: "/api/admin/checkin/session" },
-    { url: "/api/admin/[...path]", query: { path: ["checkin", "session"] } },
-    { url: "/api/admin/[...path]?path=checkin/session" },
-  ]) {
-    const response = await callAdminHandler({
-      method: "GET",
-      url: request.url,
-      query: request.query,
-    });
+test("flat admin check-in session route returns JSON unauthenticated", async () => {
+  const response = await callAdminCheckinHandler({
+    method: "GET",
+    url: "/api/admin-checkin?action=session",
+  });
 
-    assert.equal(response.statusCode, 200, request.url);
-    assert.deepEqual(response.body, { authenticated: false }, request.url);
-  }
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.body, { authenticated: false });
 });
 
-test("single admin catch-all login route rejects bad PIN with JSON", async () => {
+test("flat admin check-in login route rejects bad PIN with JSON", async () => {
   const originalEnv = { ...process.env };
   try {
     process.env["CHECKIN_ADMIN_PIN"] = "123456";
     process.env["CHECKIN_SESSION_SECRET"] = "session-secret-for-tests";
 
-    for (const request of [
-      { url: "/api/admin/checkin/login" },
-      { url: "/api/admin/[...path]", query: { path: ["checkin", "login"] } },
-      { url: "/api/admin/[...path]?path=checkin/login" },
-    ]) {
-      const response = await callAdminHandler({
-        method: "POST",
-        url: request.url,
-        query: request.query,
-        body: { pin: "bad-pin" },
-      });
+    const response = await callAdminCheckinHandler({
+      method: "POST",
+      url: "/api/admin-checkin?action=login",
+      body: { pin: "bad-pin" },
+    });
 
-      assert.equal(response.statusCode, 401, request.url);
-      assert.equal(response.body["code"], "INVALID_PIN", request.url);
-    }
+    assert.equal(response.statusCode, 401);
+    assert.equal(response.body["code"], "INVALID_PIN");
+    assert.equal(response.body["error"], "Invalid PIN");
   } finally {
     process.env = originalEnv;
   }
@@ -253,18 +237,18 @@ test("routes diagnostic includes admin check-in endpoints and safe path matching
 
   assert.equal(response.statusCode, 200);
   const routes = response.body["routes"] as string[];
-  assert.ok(routes.includes("GET /api/admin/checkin/session"));
-  assert.ok(routes.includes("POST /api/admin/checkin/login"));
-  assert.ok(routes.includes("POST /api/admin/checkin/logout"));
-  assert.ok(routes.includes("POST /api/admin/checkin/verify"));
-  assert.ok(routes.includes("POST /api/admin/checkin/mark-used"));
+  assert.ok(routes.includes("GET /api/admin-checkin?action=session"));
+  assert.ok(routes.includes("POST /api/admin-checkin?action=login"));
+  assert.ok(routes.includes("POST /api/admin-checkin?action=logout"));
+  assert.ok(routes.includes("POST /api/admin-checkin?action=verify"));
+  assert.ok(routes.includes("POST /api/admin-checkin?action=mark-used"));
   const matching = response.body["matching"] as Record<string, unknown>;
   const diagnostics = matching["diagnostics"] as Record<string, unknown>;
   const adminCheckin = matching["adminCheckin"] as Record<string, unknown>;
   assert.equal(diagnostics["method"], "GET");
   assert.equal(diagnostics["rawUrl"], "/api/[...path]");
   assert.deepEqual(diagnostics["pathSegments"], ["routes"]);
-  assert.equal(adminCheckin["explicitCatchAll"], "/api/admin/[...path].ts");
+  assert.equal(adminCheckin["flatFunction"], "/api/admin-checkin.ts");
 });
 
 test("check-in verify requires auth", async () => {

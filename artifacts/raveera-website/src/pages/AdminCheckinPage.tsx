@@ -54,7 +54,7 @@ export default function AdminCheckinPage() {
 
   const refreshSession = useCallback(async () => {
     try {
-      const response = await fetch("/api/admin/checkin/session", { credentials: "include" });
+      const response = await fetch("/api/admin-checkin?action=session", { credentials: "include" });
       const data = await response.json() as { authenticated?: boolean };
       setAuthenticated(Boolean(data.authenticated));
     } catch {
@@ -120,7 +120,7 @@ function LoginPanel({ onAuthenticated }: { onAuthenticated: () => void }) {
     setSubmitting(true);
     setError("");
     try {
-      const response = await fetch("/api/admin/checkin/login", {
+      const response = await fetch("/api/admin-checkin?action=login", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -197,7 +197,7 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/admin/checkin/verify", {
+      const response = await fetch("/api/admin-checkin?action=verify", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -234,7 +234,7 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/admin/checkin/mark-used", {
+      const response = await fetch("/api/admin-checkin?action=mark-used", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -258,7 +258,7 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
   }
 
   async function logout() {
-    await fetch("/api/admin/checkin/logout", { method: "POST", credentials: "include" }).catch(() => undefined);
+    await fetch("/api/admin-checkin?action=logout", { method: "POST", credentials: "include" }).catch(() => undefined);
     onLogout();
   }
 
