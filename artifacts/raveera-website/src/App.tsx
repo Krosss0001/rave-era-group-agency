@@ -22,6 +22,7 @@ const TicketFormPage = lazy(() => import("./pages/TicketFormPage"));
 const PaymentSuccessPage = lazy(() => import("./pages/PaymentSuccessPage"));
 const PaymentFailPage = lazy(() => import("./pages/PaymentFailPage"));
 const TicketPage = lazy(() => import("./pages/TicketPage"));
+const AdminCheckinPage = lazy(() => import("./pages/AdminCheckinPage"));
 const NotFound = lazy(() => import("./pages/not-found"));
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1287,6 +1288,7 @@ export default function App() {
           <Route path="/payment/success" component={PaymentSuccessPage} />
           <Route path="/payment/fail" component={PaymentFailPage} />
           <Route path="/ticket/:ticketCode" component={TicketPage} />
+          <Route path="/admin/checkin" component={AdminCheckinPage} />
           <Route path="/documents" component={DocumentsPage} />
           <Route path="/contacts" component={ContactsPage} />
           <Route path="/public-offer" component={PublicOfferPage} />
@@ -1321,7 +1323,8 @@ function CookieBanner() {
     location.startsWith("/event/sbc-summit-ukraine-2026/ticket-form") ||
     location.startsWith("/event/sbc-summit-ukraine-2026/payment/") ||
     location.startsWith("/payment/") ||
-    location.startsWith("/ticket/");
+    location.startsWith("/ticket/") ||
+    location.startsWith("/admin/checkin");
 
   useEffect(() => {
     setVisible(localStorage.getItem("raveera-cookie-consent") !== "accepted");

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import fontkit from "@pdf-lib/fontkit";
@@ -14,7 +14,7 @@ export type VercelApiRequest = IncomingMessage & {
   body?: unknown;
 };
 
-type DbModule = {
+export type DbModule = {
   pool: pg.Pool;
 };
 
@@ -72,6 +72,9 @@ type TicketRecord = {
   status: "ACTIVE" | "USED" | "CANCELLED";
   qr_payload: string;
   issued_at: Date;
+  checked_in_at?: Date | null;
+  checked_in_by?: string | null;
+  updated_at?: Date | null;
 };
 
 class AlliancePayServiceMessageError extends Error {
@@ -140,6 +143,22 @@ const callbackBodySchema = z
     message: "Missing order identifier",
     path: ["merchantRequestId"],
   });
+
+const checkinLoginBodySchema = z.object({
+  pin: z.string().min(1).max(128),
+});
+
+const checkinVerifyBodySchema = z.object({
+  ticketCode: z.string().max(256).optional(),
+  qrPayload: z.string().max(512).optional(),
+}).refine((body) => Boolean(body.ticketCode?.trim() || body.qrPayload?.trim()), {
+  message: "ticketCode or qrPayload is required",
+  path: ["ticketCode"],
+});
+
+const checkinMarkUsedBodySchema = z.object({
+  ticketCode: z.string().min(1).max(256),
+});
 
 export function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
   res.statusCode = statusCode;
@@ -785,8 +804,28 @@ async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
       qr_token_hash text,
       issued_at timestamptz not null default now(),
       checked_in_at timestamptz,
+      checked_in_by text,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
+    )
+  `);
+
+  await dbModule.pool.query(`
+    alter table tickets add column if not exists checked_in_at timestamptz;
+    alter table tickets add column if not exists checked_in_by text;
+    alter table tickets add column if not exists updated_at timestamptz default now();
+  `);
+
+  await dbModule.pool.query(`
+    create table if not exists ticket_checkins (
+      id serial primary key,
+      ticket_id integer references tickets(id),
+      ticket_code text not null,
+      action text not null,
+      result text not null,
+      checked_in_at timestamptz,
+      device_label text,
+      created_at timestamptz not null default now()
     )
   `);
 
@@ -807,6 +846,8 @@ async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
     create index if not exists tickets_hpp_order_id_idx on tickets (hpp_order_id);
     create index if not exists tickets_customer_email_idx on tickets (customer_email);
     create index if not exists tickets_status_idx on tickets (status);
+    create index if not exists ticket_checkins_ticket_code_idx on ticket_checkins (ticket_code);
+    create index if not exists ticket_checkins_created_at_idx on ticket_checkins (created_at);
   `);
 }
 
@@ -1335,6 +1376,385 @@ function toSafeTicketResponse(ticket: TicketRecord): Record<string, unknown> {
     qrPayload: ticket.qr_payload,
     issuedAt: ticket.issued_at,
   };
+}
+
+const checkinAttempts = new Map<string, { count: number; resetAt: number }>();
+const CHECKIN_COOKIE_NAME = "raveera_checkin";
+const CHECKIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+
+function getHeaderValue(req: VercelApiRequest, headerName: string): string {
+  const value = req.headers[headerName.toLowerCase()];
+  if (Array.isArray(value)) {
+    return value[0] || "";
+  }
+  return typeof value === "string" ? value : "";
+}
+
+function getRequestIp(req: VercelApiRequest): string {
+  return (
+    getHeaderValue(req, "x-forwarded-for").split(",")[0]?.trim() ||
+    req.socket.remoteAddress ||
+    "unknown"
+  );
+}
+
+function safeCompareSecret(received: string, expected: string): boolean {
+  const left = Buffer.from(received);
+  const right = Buffer.from(expected);
+  if (left.length !== right.length) {
+    return false;
+  }
+  return timingSafeEqual(left, right);
+}
+
+function getCheckinSecret(name: "CHECKIN_ADMIN_PIN" | "CHECKIN_SESSION_SECRET"): string {
+  return process.env[name]?.trim() || "";
+}
+
+function getCookie(req: VercelApiRequest, name: string): string {
+  const cookieHeader = getHeaderValue(req, "cookie");
+  for (const part of cookieHeader.split(";")) {
+    const [rawKey, ...rawValue] = part.trim().split("=");
+    if (rawKey === name) {
+      return decodeURIComponent(rawValue.join("="));
+    }
+  }
+  return "";
+}
+
+function signCheckinSession(payload: string, secret: string): string {
+  return createHmac("sha256", secret).update(payload).digest("base64url");
+}
+
+function createCheckinSessionToken(now = Date.now()): string {
+  const secret = getCheckinSecret("CHECKIN_SESSION_SECRET");
+  if (!secret) {
+    throw new Error("CHECKIN_SESSION_SECRET is not configured");
+  }
+  const expiresAt = now + CHECKIN_SESSION_TTL_MS;
+  const nonce = randomBytes(16).toString("base64url");
+  const payload = `${expiresAt}.${nonce}`;
+  const signature = signCheckinSession(payload, secret);
+  return `${payload}.${signature}`;
+}
+
+export function isAuthenticatedCheckinRequest(req: VercelApiRequest, now = Date.now()): boolean {
+  const token = getCookie(req, CHECKIN_COOKIE_NAME);
+  const secret = getCheckinSecret("CHECKIN_SESSION_SECRET");
+  if (!token || !secret) {
+    return false;
+  }
+
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return false;
+  }
+  const [expiresAtRaw, nonce, signature] = parts;
+  const expiresAt = Number(expiresAtRaw);
+  if (!Number.isFinite(expiresAt) || expiresAt <= now || !nonce || !signature) {
+    return false;
+  }
+
+  const expected = signCheckinSession(`${expiresAtRaw}.${nonce}`, secret);
+  return safeCompareSecret(signature, expected);
+}
+
+function shouldUseSecureCookie(req: VercelApiRequest): boolean {
+  return process.env["NODE_ENV"] === "production" || getHeaderValue(req, "x-forwarded-proto") === "https";
+}
+
+function setCheckinCookie(req: VercelApiRequest, res: ServerResponse, token: string): void {
+  const secure = shouldUseSecureCookie(req) ? "; Secure" : "";
+  res.setHeader(
+    "Set-Cookie",
+    `${CHECKIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(CHECKIN_SESSION_TTL_MS / 1000)}${secure}`,
+  );
+}
+
+function clearCheckinCookie(req: VercelApiRequest, res: ServerResponse): void {
+  const secure = shouldUseSecureCookie(req) ? "; Secure" : "";
+  res.setHeader(
+    "Set-Cookie",
+    `${CHECKIN_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`,
+  );
+}
+
+function isRateLimited(req: VercelApiRequest): boolean {
+  const key = getRequestIp(req);
+  const now = Date.now();
+  const current = checkinAttempts.get(key);
+  if (!current || current.resetAt <= now) {
+    checkinAttempts.set(key, { count: 1, resetAt: now + 10 * 60 * 1000 });
+    return false;
+  }
+  current.count += 1;
+  return current.count > 10;
+}
+
+function clearRateLimit(req: VercelApiRequest): void {
+  checkinAttempts.delete(getRequestIp(req));
+}
+
+export function extractTicketCodeFromCheckinInput(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    const match = parsed.pathname.match(/\/ticket\/([^/]+)/);
+    if (match?.[1]) {
+      return decodeURIComponent(match[1]).trim().toUpperCase();
+    }
+  } catch {
+    // Plain ticket code input is handled below.
+  }
+
+  const match = trimmed.match(/SBC-2026-[A-Z0-9]{6,24}/i);
+  return match?.[0] ? match[0].toUpperCase() : null;
+}
+
+function isSafeCheckinTicketCode(ticketCode: string): boolean {
+  return /^SBC-2026-[A-Z0-9]{6,24}$/.test(ticketCode);
+}
+
+function toSafeCheckinTicketResponse(ticket: TicketRecord): Record<string, unknown> {
+  return {
+    ticketCode: ticket.ticket_code,
+    status: ticket.status,
+    eventTitle: ticket.event_title,
+    ticketType: ticket.ticket_type,
+    customerName: `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim(),
+    issuedAt: ticket.issued_at,
+    checkedInAt: ticket.checked_in_at || null,
+  };
+}
+
+async function auditCheckin(
+  dbModule: DbModule,
+  ticket: TicketRecord | null,
+  ticketCode: string,
+  action: "VERIFY" | "MARK_USED",
+  result: string,
+): Promise<void> {
+  try {
+    await dbModule.pool.query(
+      `insert into ticket_checkins (
+        ticket_id, ticket_code, action, result, checked_in_at, device_label
+      ) values ($1, $2, $3, $4, $5, $6)`,
+      [ticket?.id || null, ticketCode, action, result, ticket?.checked_in_at || null, "admin-checkin"],
+    );
+  } catch (err) {
+    console.warn("Ticket check-in audit insert failed", {
+      ticketCodeRef: getDiagnosticRef(ticketCode),
+      action,
+      result,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+  }
+}
+
+function requireCheckinAuth(req: VercelApiRequest, res: ServerResponse): boolean {
+  if (isAuthenticatedCheckinRequest(req)) {
+    return true;
+  }
+  sendJson(res, 401, { code: "UNAUTHENTICATED", error: "Authentication required" });
+  return false;
+}
+
+export async function checkinLogin(req: VercelApiRequest, res: ServerResponse): Promise<void> {
+  const pin = getCheckinSecret("CHECKIN_ADMIN_PIN");
+  const secret = getCheckinSecret("CHECKIN_SESSION_SECRET");
+  if (!pin || !secret) {
+    sendJson(res, 503, { code: "MISSING_CONFIG", error: "Check-in is not configured" });
+    return;
+  }
+  if (isRateLimited(req)) {
+    sendJson(res, 429, { code: "RATE_LIMITED", error: "Too many attempts. Try again later." });
+    return;
+  }
+
+  let parsedBody: z.infer<typeof checkinLoginBodySchema>;
+  try {
+    const parsed = checkinLoginBodySchema.safeParse(await readJsonBody(req));
+    if (!parsed.success) {
+      sendJson(res, 400, { code: "INVALID_REQUEST", error: "Invalid request body" });
+      return;
+    }
+    parsedBody = parsed.data;
+  } catch {
+    sendJson(res, 400, { code: "INVALID_REQUEST", error: "Invalid JSON body" });
+    return;
+  }
+
+  if (!safeCompareSecret(parsedBody.pin, pin)) {
+    sendJson(res, 401, { code: "INVALID_PIN", error: "Invalid PIN" });
+    return;
+  }
+
+  clearRateLimit(req);
+  setCheckinCookie(req, res, createCheckinSessionToken());
+  sendJson(res, 200, { ok: true });
+}
+
+export async function checkinLogout(req: VercelApiRequest, res: ServerResponse): Promise<void> {
+  clearCheckinCookie(req, res);
+  sendJson(res, 200, { ok: true });
+}
+
+export function getCheckinSession(req: VercelApiRequest, res: ServerResponse): void {
+  sendJson(res, 200, { authenticated: isAuthenticatedCheckinRequest(req) });
+}
+
+async function loadCheckinTicket(dbModule: DbModule, ticketCode: string): Promise<TicketRecord | null> {
+  const result = await dbModule.pool.query<TicketRecord>(
+    `select * from tickets where ticket_code = $1 limit 1`,
+    [ticketCode],
+  );
+  return result.rows[0] || null;
+}
+
+export async function verifyCheckinTicketWithDb(
+  dbModule: DbModule,
+  ticketCode: string,
+): Promise<{ statusCode: number; body: Record<string, unknown> }> {
+  if (!isSafeCheckinTicketCode(ticketCode)) {
+    return { statusCode: 400, body: { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" } };
+  }
+
+  const ticket = await loadCheckinTicket(dbModule, ticketCode);
+  if (!ticket) {
+    await auditCheckin(dbModule, null, ticketCode, "VERIFY", "NOT_FOUND");
+    return { statusCode: 404, body: { code: "TICKET_NOT_FOUND", error: "Ticket not found" } };
+  }
+
+  await auditCheckin(dbModule, ticket, ticketCode, "VERIFY", ticket.status);
+  return { statusCode: 200, body: { ok: true, ticket: toSafeCheckinTicketResponse(ticket) } };
+}
+
+export async function markCheckinTicketUsedWithDb(
+  dbModule: DbModule,
+  ticketCode: string,
+): Promise<{ statusCode: number; body: Record<string, unknown> }> {
+  if (!isSafeCheckinTicketCode(ticketCode)) {
+    return { statusCode: 400, body: { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" } };
+  }
+
+  const updated = await dbModule.pool.query<TicketRecord>(
+    `update tickets
+     set status = 'USED',
+         checked_in_at = coalesce(checked_in_at, now()),
+         checked_in_by = coalesce(checked_in_by, $2),
+         updated_at = now()
+     where ticket_code = $1 and status = 'ACTIVE'
+     returning *`,
+    [ticketCode, "admin-checkin"],
+  );
+
+  const checkedInTicket = updated.rows[0];
+  if (checkedInTicket) {
+    await auditCheckin(dbModule, checkedInTicket, ticketCode, "MARK_USED", "USED");
+    return {
+      statusCode: 200,
+      body: { ok: true, result: "CHECKED_IN", ticket: toSafeCheckinTicketResponse(checkedInTicket) },
+    };
+  }
+
+  const ticket = await loadCheckinTicket(dbModule, ticketCode);
+  if (!ticket) {
+    await auditCheckin(dbModule, null, ticketCode, "MARK_USED", "NOT_FOUND");
+    return { statusCode: 404, body: { code: "TICKET_NOT_FOUND", error: "Ticket not found" } };
+  }
+  if (ticket.status === "USED") {
+    await auditCheckin(dbModule, ticket, ticketCode, "MARK_USED", "ALREADY_USED");
+    return {
+      statusCode: 200,
+      body: { ok: true, result: "ALREADY_USED", ticket: toSafeCheckinTicketResponse(ticket) },
+    };
+  }
+
+  await auditCheckin(dbModule, ticket, ticketCode, "MARK_USED", ticket.status);
+  return {
+    statusCode: 409,
+    body: { code: "TICKET_INVALID", error: "Ticket is not active", ticket: toSafeCheckinTicketResponse(ticket) },
+  };
+}
+
+export async function checkinVerify(req: VercelApiRequest, res: ServerResponse): Promise<void> {
+  if (!requireCheckinAuth(req, res)) {
+    return;
+  }
+
+  let parsedBody: z.infer<typeof checkinVerifyBodySchema>;
+  try {
+    const parsed = checkinVerifyBodySchema.safeParse(await readJsonBody(req));
+    if (!parsed.success) {
+      sendJson(res, 400, { code: "INVALID_REQUEST", error: "Invalid request body" });
+      return;
+    }
+    parsedBody = parsed.data;
+  } catch {
+    sendJson(res, 400, { code: "INVALID_REQUEST", error: "Invalid JSON body" });
+    return;
+  }
+
+  const ticketCode = extractTicketCodeFromCheckinInput(parsedBody.qrPayload || parsedBody.ticketCode || "");
+  if (!ticketCode) {
+    sendJson(res, 400, { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" });
+    return;
+  }
+
+  try {
+    const dbModule = await getDb();
+    await ensurePaymentOrdersTable(dbModule);
+    const result = await verifyCheckinTicketWithDb(dbModule, ticketCode);
+    sendJson(res, result.statusCode, result.body);
+  } catch (err) {
+    console.error("Check-in ticket verify failed", {
+      ticketCodeRef: getDiagnosticRef(ticketCode),
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, { code: "DATABASE_ERROR", error: "Ticket verification is temporarily unavailable" });
+  }
+}
+
+export async function checkinMarkUsed(req: VercelApiRequest, res: ServerResponse): Promise<void> {
+  if (!requireCheckinAuth(req, res)) {
+    return;
+  }
+
+  let parsedBody: z.infer<typeof checkinMarkUsedBodySchema>;
+  try {
+    const parsed = checkinMarkUsedBodySchema.safeParse(await readJsonBody(req));
+    if (!parsed.success) {
+      sendJson(res, 400, { code: "INVALID_REQUEST", error: "Invalid request body" });
+      return;
+    }
+    parsedBody = parsed.data;
+  } catch {
+    sendJson(res, 400, { code: "INVALID_REQUEST", error: "Invalid JSON body" });
+    return;
+  }
+
+  const ticketCode = extractTicketCodeFromCheckinInput(parsedBody.ticketCode);
+  if (!ticketCode) {
+    sendJson(res, 400, { code: "INVALID_TICKET_CODE", error: "Invalid ticket code" });
+    return;
+  }
+
+  try {
+    const dbModule = await getDb();
+    await ensurePaymentOrdersTable(dbModule);
+    const result = await markCheckinTicketUsedWithDb(dbModule, ticketCode);
+    sendJson(res, result.statusCode, result.body);
+  } catch (err) {
+    console.error("Check-in ticket mark-used failed", {
+      ticketCodeRef: getDiagnosticRef(ticketCode),
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+    sendJson(res, 503, { code: "DATABASE_ERROR", error: "Ticket check-in is temporarily unavailable" });
+  }
 }
 
 export async function createOrder(req: VercelApiRequest, res: ServerResponse): Promise<void> {

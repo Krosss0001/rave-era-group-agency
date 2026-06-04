@@ -40,8 +40,24 @@ create table if not exists tickets (
   qr_token_hash text,
   issued_at timestamptz not null default now(),
   checked_in_at timestamptz,
+  checked_in_by text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+alter table tickets add column if not exists checked_in_at timestamptz;
+alter table tickets add column if not exists checked_in_by text;
+alter table tickets add column if not exists updated_at timestamptz default now();
+
+create table if not exists ticket_checkins (
+  id serial primary key,
+  ticket_id integer references tickets(id),
+  ticket_code text not null,
+  action text not null,
+  result text not null,
+  checked_in_at timestamptz,
+  device_label text,
+  created_at timestamptz not null default now()
 );
 
 create index if not exists ticket_orders_merchant_request_id_idx on ticket_orders (merchant_request_id);
@@ -52,3 +68,5 @@ create index if not exists tickets_merchant_request_id_idx on tickets (merchant_
 create index if not exists tickets_hpp_order_id_idx on tickets (hpp_order_id);
 create index if not exists tickets_customer_email_idx on tickets (customer_email);
 create index if not exists tickets_status_idx on tickets (status);
+create index if not exists ticket_checkins_ticket_code_idx on ticket_checkins (ticket_code);
+create index if not exists ticket_checkins_created_at_idx on ticket_checkins (created_at);

@@ -1,7 +1,12 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
+  checkinLogin,
+  checkinLogout,
+  checkinMarkUsed,
+  checkinVerify,
   createOrder,
   getEmailConfigCheck,
+  getCheckinSession,
   getPaymentStatus,
   getPaymentConfigCheck,
   getPublicTicket,
@@ -124,6 +129,15 @@ function isEmailConfigCheckPath(pathname: string): boolean {
   return path === "/api/email/config-check" || path === "/email/config-check" || path.endsWith("/email/config-check");
 }
 
+function isAdminCheckinPath(pathname: string, action: string): boolean {
+  const path = normalizeLoosePath(pathname);
+  return (
+    path === `/api/admin/checkin/${action}` ||
+    path === `/admin/checkin/${action}` ||
+    path.endsWith(`/admin/checkin/${action}`)
+  );
+}
+
 function getTicketCode(pathname: string): string | null {
   const match = normalizeLoosePath(pathname).match(/(?:^|\/api)\/ticket\/([^/?]+)$/);
   return match?.[1] ? decodeURIComponent(match[1]) : null;
@@ -172,6 +186,31 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     return;
   }
 
+  if (req.method === "POST" && candidatePaths.some((path) => isAdminCheckinPath(path, "login"))) {
+    await checkinLogin(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && candidatePaths.some((path) => isAdminCheckinPath(path, "logout"))) {
+    await checkinLogout(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && candidatePaths.some((path) => isAdminCheckinPath(path, "session"))) {
+    getCheckinSession(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && candidatePaths.some((path) => isAdminCheckinPath(path, "verify"))) {
+    await checkinVerify(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && candidatePaths.some((path) => isAdminCheckinPath(path, "mark-used"))) {
+    await checkinMarkUsed(req, res);
+    return;
+  }
+
   const ticketPdfCode = candidatePaths.map(getTicketPdfCode).find(Boolean);
   if (req.method === "GET" && ticketPdfCode) {
     await getTicketPdf(ticketPdfCode, res);
@@ -201,6 +240,11 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
         "GET /api/payment/status?merchantRequestId=...",
         "GET /api/ticket/:ticketCode",
         "GET /api/ticket/:ticketCode/pdf",
+        "POST /api/admin/checkin/login",
+        "POST /api/admin/checkin/logout",
+        "GET /api/admin/checkin/session",
+        "POST /api/admin/checkin/verify",
+        "POST /api/admin/checkin/mark-used",
       ],
       matching: {
         createOrder: {
