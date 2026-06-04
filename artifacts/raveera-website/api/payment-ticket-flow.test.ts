@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { buildTicketPdf, createTicketCode, getPublicTicket, getSafeCallbackSummary } from "./_payment.js";
+import {
+  buildTicketPdf,
+  createTicketCode,
+  getEmailConfigCheck,
+  getPublicTicket,
+  getSafeCallbackSummary,
+} from "./_payment.js";
 
 class MockResponse {
   statusCode = 200;
@@ -76,4 +82,54 @@ test("PDF ticket generation returns a valid PDF document", async () => {
 
   assert.equal(pdf.subarray(0, 5).toString("ascii"), "%PDF-");
   assert.ok(pdf.length > 5000);
+});
+
+test("PDF ticket embeds bundled Noto fonts for Ukrainian ticket text", async () => {
+  const ticketCode = "SBC-2026-ABCDEF123456";
+  const pdf = await buildTicketPdf({
+    id: 1,
+    ticket_code: ticketCode,
+    order_id: 1,
+    merchant_request_id: "merchant-1",
+    hpp_order_id: "hpp-1",
+    event_slug: "sbc-summit-ukraine-2026",
+    event_title: "SBC Summit Ukraine 2026",
+    ticket_type: "business",
+    customer_email: "customer@example.com",
+    customer_first_name: "Олена",
+    customer_last_name: "Київська",
+    status: "ACTIVE",
+    qr_payload: `https://www.rave-era.com.ua/ticket/${ticketCode}`,
+    issued_at: new Date("2026-05-01T10:00:00Z"),
+  });
+  const pdfText = pdf.toString("latin1");
+
+  assert.doesNotThrow(() => Buffer.from("27 травня 2026", "utf8"));
+  assert.doesNotThrow(() => Buffer.from("КВЦ Парковий, Київ", "utf8"));
+  assert.doesNotThrow(() => Buffer.from("Квиток дійсний лише після успішної оплати", "utf8"));
+  assert.match(pdfText, /FontFile2|FontFile3/);
+  assert.match(pdfText, /NotoSans/);
+  assert.doesNotMatch(pdfText, /Helvetica|ZapfDingbats|Symbol/);
+});
+
+test("email config check exposes SMTP booleans only", () => {
+  const originalEnv = { ...process.env };
+  try {
+    process.env["SMTP_HOST"] = "smtp.example.com";
+    process.env["SMTP_PORT"] = "587";
+    process.env["SMTP_USER"] = "user@example.com";
+    process.env["SMTP_PASS"] = "configured-pass";
+    process.env["SMTP_FROM"] = "tickets@example.com";
+
+    assert.deepEqual(getEmailConfigCheck(), {
+      ok: true,
+      hasSmtpHost: true,
+      hasSmtpPort: true,
+      hasSmtpUser: true,
+      hasSmtpPass: true,
+      hasSmtpFrom: true,
+    });
+  } finally {
+    process.env = originalEnv;
+  }
 });

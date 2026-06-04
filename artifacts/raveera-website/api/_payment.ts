@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import fontkit from "@pdf-lib/fontkit";
 import { compactDecrypt, importJWK, type JWK } from "jose";
 import nodemailer from "nodemailer";
-import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { PDFDocument, rgb, type PDFFont } from "pdf-lib";
 import pg from "pg";
 import QRCode from "qrcode";
 import { z } from "zod";
@@ -54,6 +54,7 @@ type TicketOrder = {
   customer_first_name: string;
   customer_last_name: string;
   email_status: string;
+  email_sent_at?: Date | null;
 };
 
 type TicketRecord = {
@@ -104,7 +105,10 @@ const EVENT_TITLE = "SBC Summit Ukraine 2026";
 const require = createRequire(import.meta.url);
 let cachedAlliancePaySession: AlliancePaySession | null = null;
 let cachedDbModule: DbModule | null = null;
-let cachedCyrillicFontBytes: Uint8Array | null = null;
+let cachedNotoLatinFontBytes: Uint8Array | null = null;
+let cachedNotoLatinBoldFontBytes: Uint8Array | null = null;
+let cachedNotoCyrillicFontBytes: Uint8Array | null = null;
+let cachedNotoCyrillicBoldFontBytes: Uint8Array | null = null;
 
 export const ticketPrices: Record<string, number> = {
   sport: 250000,
@@ -637,6 +641,17 @@ export function getPaymentConfigCheck(): Record<string, unknown> {
   };
 }
 
+export function getEmailConfigCheck(): Record<string, boolean> {
+  return {
+    ok: true,
+    hasSmtpHost: Boolean(process.env["SMTP_HOST"]?.trim()),
+    hasSmtpPort: Boolean(process.env["SMTP_PORT"]?.trim()),
+    hasSmtpUser: Boolean(process.env["SMTP_USER"]?.trim()),
+    hasSmtpPass: Boolean(process.env["SMTP_PASS"]?.trim()),
+    hasSmtpFrom: Boolean(process.env["SMTP_FROM"]?.trim()),
+  };
+}
+
 function getSafeProviderValue(data: Record<string, unknown>, key: string): unknown {
   const value = data[key];
   if (
@@ -956,13 +971,40 @@ async function issueTicket(dbModule: DbModule, order: TicketOrder): Promise<Tick
   throw new Error("Ticket issuance failed");
 }
 
-function getCyrillicFontBytes(): Uint8Array {
-  if (!cachedCyrillicFontBytes) {
-    cachedCyrillicFontBytes = readFileSync(
+function getNotoLatinFontBytes(): Uint8Array {
+  if (!cachedNotoLatinFontBytes) {
+    cachedNotoLatinFontBytes = readFileSync(
+      require.resolve("@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff"),
+    );
+  }
+  return cachedNotoLatinFontBytes;
+}
+
+function getNotoLatinBoldFontBytes(): Uint8Array {
+  if (!cachedNotoLatinBoldFontBytes) {
+    cachedNotoLatinBoldFontBytes = readFileSync(
+      require.resolve("@fontsource/noto-sans/files/noto-sans-latin-700-normal.woff"),
+    );
+  }
+  return cachedNotoLatinBoldFontBytes;
+}
+
+function getNotoCyrillicFontBytes(): Uint8Array {
+  if (!cachedNotoCyrillicFontBytes) {
+    cachedNotoCyrillicFontBytes = readFileSync(
       require.resolve("@fontsource/noto-sans/files/noto-sans-cyrillic-400-normal.woff"),
     );
   }
-  return cachedCyrillicFontBytes;
+  return cachedNotoCyrillicFontBytes;
+}
+
+function getNotoCyrillicBoldFontBytes(): Uint8Array {
+  if (!cachedNotoCyrillicBoldFontBytes) {
+    cachedNotoCyrillicBoldFontBytes = readFileSync(
+      require.resolve("@fontsource/noto-sans/files/noto-sans-cyrillic-700-normal.woff"),
+    );
+  }
+  return cachedNotoCyrillicBoldFontBytes;
 }
 
 function getTicketTypeLabel(ticketType: string): string {
@@ -976,9 +1018,10 @@ function getTicketTypeLabel(ticketType: string): string {
 export async function buildTicketPdf(ticket: TicketRecord): Promise<Buffer> {
   const pdfDocument = await PDFDocument.create();
   pdfDocument.registerFontkit(fontkit);
-  const latinFont = await pdfDocument.embedFont(StandardFonts.Helvetica);
-  const latinBoldFont = await pdfDocument.embedFont(StandardFonts.HelveticaBold);
-  const cyrillicFont = await pdfDocument.embedFont(getCyrillicFontBytes(), { subset: true });
+  const latinFont = await pdfDocument.embedFont(getNotoLatinFontBytes(), { subset: true });
+  const latinBoldFont = await pdfDocument.embedFont(getNotoLatinBoldFontBytes(), { subset: true });
+  const cyrillicFont = await pdfDocument.embedFont(getNotoCyrillicFontBytes(), { subset: true });
+  const cyrillicBoldFont = await pdfDocument.embedFont(getNotoCyrillicBoldFontBytes(), { subset: true });
   const page = pdfDocument.addPage([842, 420]);
   const green = rgb(0, 1, 0.53);
   const white = rgb(0.96, 0.97, 0.98);
@@ -997,15 +1040,39 @@ export async function buildTicketPdf(ticket: TicketRecord): Promise<Buffer> {
     text: string,
     x: number,
     y: number,
-    options: { size?: number; color?: ReturnType<typeof rgb>; font?: PDFFont } = {},
+    options: { size?: number; color?: ReturnType<typeof rgb>; font?: PDFFont; bold?: boolean } = {},
   ) => {
-    page.drawText(text, {
-      x,
-      y,
-      size: options.size || 12,
-      color: options.color || white,
-      font: options.font || (/[А-Яа-яІіЇїЄєҐґ]/.test(text) ? cyrillicFont : latinFont),
-    });
+    const size = options.size || 12;
+    const color = options.color || white;
+    if (options.font) {
+      page.drawText(text, { x, y, size, color, font: options.font });
+      return;
+    }
+
+    let cursorX = x;
+    let currentText = "";
+    let currentFont: PDFFont | null = null;
+    const flush = () => {
+      if (!currentText || !currentFont) {
+        return;
+      }
+      page.drawText(currentText, { x: cursorX, y, size, color, font: currentFont });
+      cursorX += currentFont.widthOfTextAtSize(currentText, size);
+      currentText = "";
+      currentFont = null;
+    };
+
+    for (const char of text) {
+      const font = /[А-Яа-яІіЇїЄєҐґ]/.test(char)
+        ? options.bold ? cyrillicBoldFont : cyrillicFont
+        : options.bold ? latinBoldFont : latinFont;
+      if (currentFont && currentFont !== font) {
+        flush();
+      }
+      currentFont = font;
+      currentText += char;
+    }
+    flush();
   };
 
   page.drawRectangle({ x: 0, y: 0, width: 842, height: 420, color: rgb(0.025, 0.027, 0.04) });
@@ -1014,26 +1081,26 @@ export async function buildTicketPdf(ticket: TicketRecord): Promise<Buffer> {
   page.drawRectangle({ x: 606, y: 38, width: 200, height: 324, color: white });
   page.drawLine({ start: { x: 581, y: 38 }, end: { x: 581, y: 362 }, color: green, thickness: 1 });
 
-  drawText("RAVE'ERA GROUP", 60, 326, { size: 18, color: green, font: latinBoldFont });
-  drawText(EVENT_TITLE, 60, 281, { size: 28, font: latinBoldFont });
+  drawText("RAVE'ERA GROUP", 60, 326, { size: 18, color: green, bold: true });
+  drawText(EVENT_TITLE, 60, 281, { size: 28, bold: true });
   drawText("27 травня 2026", 60, 233, { size: 16 });
   drawText("КВЦ Парковий, Київ", 60, 204, { size: 16 });
 
   drawText("ТИП КВИТКА", 60, 148, { size: 10, color: muted });
-  drawText(getTicketTypeLabel(ticket.ticket_type), 60, 126, { size: 15, font: latinBoldFont });
+  drawText(getTicketTypeLabel(ticket.ticket_type), 60, 126, { size: 15, bold: true });
   drawText("ВЛАСНИК КВИТКА", 264, 148, { size: 10, color: muted });
   drawText(customerName, 264, 126, { size: 15 });
   drawText("КОД КВИТКА", 60, 88, { size: 10, color: muted });
-  drawText(ticket.ticket_code, 60, 64, { size: 16, color: green, font: latinBoldFont });
+  drawText(ticket.ticket_code, 60, 64, { size: 16, color: green, bold: true });
 
   page.drawImage(qrImage, { x: 625, y: 145, width: 162, height: 162 });
-  drawText("SCAN TO VERIFY", 648, 116, { size: 11, color: rgb(0.08, 0.09, 0.12), font: latinBoldFont });
+  drawText("SCAN TO VERIFY", 648, 116, { size: 11, color: rgb(0.08, 0.09, 0.12), bold: true });
   drawText(ticket.ticket_code, 635, 92, { size: 9, color: rgb(0.2, 0.22, 0.25), font: latinFont });
 
   drawText("Квиток дійсний лише після успішної оплати.", 36, 16, { size: 10, color: muted });
   drawText("www.rave-era.com.ua", 688, 16, { size: 9, color: muted, font: latinFont });
 
-  return Buffer.from(await pdfDocument.save());
+  return Buffer.from(await pdfDocument.save({ useObjectStreams: false }));
 }
 
 function escapeHtml(value: string): string {
@@ -1045,42 +1112,108 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#039;");
 }
 
+type SmtpConfig = {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+  from: string;
+};
+
+function getSmtpConfig(): SmtpConfig | null {
+  const host = process.env["SMTP_HOST"]?.trim();
+  const rawPort = process.env["SMTP_PORT"]?.trim();
+  const port = Number(rawPort);
+  const user = process.env["SMTP_USER"]?.trim();
+  const pass = process.env["SMTP_PASS"]?.trim();
+  const from = process.env["SMTP_FROM"]?.trim();
+  if (!host || !rawPort || !user || !pass || !from || !Number.isInteger(port) || port < 1 || port > 65535) {
+    return null;
+  }
+  return { host, port, user, pass, from };
+}
+
+function redactEmails(value: string): string {
+  return value.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]");
+}
+
+function getSafeSmtpValue(value: unknown): string | number | undefined {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value !== "string" || !value.trim()) {
+    return undefined;
+  }
+  return redactEmails(value).replace(/\s+/g, " ").trim().slice(0, 180);
+}
+
+function getSafeEmailError(err: unknown): string {
+  if (!(err instanceof Error)) {
+    return "Unknown SMTP error";
+  }
+  return redactEmails(err.message).replace(/\s+/g, " ").trim().slice(0, 300) || "SMTP error";
+}
+
+function getSafeSmtpInfo(info: unknown): Record<string, string | number> {
+  const record = asRecord(info);
+  const safe: Record<string, string | number> = {};
+  if (!record) {
+    return safe;
+  }
+  const responseCode = getSafeSmtpValue(record["responseCode"]);
+  const response = getSafeSmtpValue(record["response"]);
+  if (responseCode !== undefined) {
+    safe.responseCode = responseCode;
+  }
+  if (response !== undefined) {
+    safe.response = response;
+  }
+  return safe;
+}
+
 async function deliverTicketEmail(
   dbModule: DbModule,
   order: TicketOrder,
   ticket: TicketRecord,
 ): Promise<void> {
-  if (order.email_status !== "PENDING") {
+  if (order.email_status === "SENT" || order.email_sent_at) {
     return;
   }
 
-  const smtpHost = process.env["SMTP_HOST"]?.trim();
-  const smtpPort = Number(process.env["SMTP_PORT"] || "587");
-  const smtpUser = process.env["SMTP_USER"]?.trim();
-  const smtpPass = process.env["SMTP_PASS"]?.trim();
-  const smtpFrom = process.env["SMTP_FROM"]?.trim();
-  if (!smtpHost || !smtpUser || !smtpPass || !smtpFrom || !Number.isInteger(smtpPort)) {
+  const smtpConfig = getSmtpConfig();
+  const logRefs = {
+    orderIdRef: getDiagnosticRef(String(order.id)),
+    merchantRequestRef: getDiagnosticRef(order.merchant_request_id),
+    ticketCodeRef: getDiagnosticRef(ticket.ticket_code),
+  };
+  if (!smtpConfig) {
     console.warn("Ticket email not sent: SMTP is not configured", {
-      merchantRequestRef: getDiagnosticRef(order.merchant_request_id),
+      ...logRefs,
+      emailStatus: "NOT_CONFIGURED",
     });
     await dbModule.pool.query(
-      `update ticket_orders set email_status = 'NOT_CONFIGURED', updated_at = now() where id = $1`,
+      `update ticket_orders
+       set email_status = 'NOT_CONFIGURED',
+           email_error_safe = 'SMTP is not configured',
+           updated_at = now()
+       where id = $1`,
       [order.id],
     );
+    order.email_status = "NOT_CONFIGURED";
     return;
   }
 
   try {
     const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: { user: smtpUser, pass: smtpPass },
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.port === 465,
+      auth: { user: smtpConfig.user, pass: smtpConfig.pass },
     });
     const customerName = `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim();
     const ticketPdf = await buildTicketPdf(ticket);
-    await transporter.sendMail({
-      from: smtpFrom,
+    const info = await transporter.sendMail({
+      from: smtpConfig.from,
       to: ticket.customer_email,
       subject: "Ваш квиток на SBC Summit Ukraine 2026",
       text: [
@@ -1115,11 +1248,20 @@ async function deliverTicketEmail(
        where id = $1`,
       [order.id],
     );
+    order.email_status = "SENT";
+    console.info("Ticket email delivered", {
+      ...logRefs,
+      emailStatus: "SENT",
+      ...getSafeSmtpInfo(info),
+    });
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message.slice(0, 300) : "Unknown SMTP error";
+    const errorMessage = getSafeEmailError(err);
+    const smtpInfo = getSafeSmtpInfo(err);
     console.warn("Ticket email delivery failed", {
-      merchantRequestRef: getDiagnosticRef(order.merchant_request_id),
+      ...logRefs,
+      emailStatus: "FAILED",
       error: errorMessage,
+      ...smtpInfo,
     });
     await dbModule.pool.query(
       `update ticket_orders
@@ -1127,6 +1269,7 @@ async function deliverTicketEmail(
        where id = $2`,
       [errorMessage, order.id],
     );
+    order.email_status = "FAILED";
   }
 }
 
@@ -1552,6 +1695,9 @@ export async function getPaymentStatus(req: VercelApiRequest, res: ServerRespons
           error: err instanceof Error ? err.message : "Unknown error",
         });
       }
+    }
+    if (order.payment_status === "SUCCESS" && ticket) {
+      await deliverTicketEmail(dbModule, order, ticket);
     }
 
     sendJson(res, 200, {

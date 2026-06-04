@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   createOrder,
+  getEmailConfigCheck,
   getPaymentStatus,
   getPaymentConfigCheck,
   getPublicTicket,
@@ -118,6 +119,11 @@ function isPaymentStatusPath(pathname: string): boolean {
   return path === "/api/payment/status" || path === "/payment/status" || path.endsWith("/payment/status");
 }
 
+function isEmailConfigCheckPath(pathname: string): boolean {
+  const path = normalizeLoosePath(pathname);
+  return path === "/api/email/config-check" || path === "/email/config-check" || path.endsWith("/email/config-check");
+}
+
 function getTicketCode(pathname: string): string | null {
   const match = normalizeLoosePath(pathname).match(/(?:^|\/api)\/ticket\/([^/?]+)$/);
   return match?.[1] ? decodeURIComponent(match[1]) : null;
@@ -161,6 +167,11 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     return;
   }
 
+  if (req.method === "GET" && candidatePaths.some(isEmailConfigCheckPath)) {
+    sendJson(res, 200, getEmailConfigCheck());
+    return;
+  }
+
   const ticketPdfCode = candidatePaths.map(getTicketPdfCode).find(Boolean);
   if (req.method === "GET" && ticketPdfCode) {
     await getTicketPdf(ticketPdfCode, res);
@@ -183,6 +194,7 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
       ok: true,
       routes: [
         "GET /api/health",
+        "GET /api/email/config-check",
         "GET /api/payment/config-check",
         "POST /api/payment/create-order",
         "POST /api/payment/callback",

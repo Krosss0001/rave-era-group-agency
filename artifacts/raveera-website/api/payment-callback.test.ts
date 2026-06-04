@@ -46,3 +46,20 @@ test("POST /api/payment/callback is routed to callback validation", async () => 
   assert.equal(response.statusCode, 400);
   assert.equal(response.body["code"], "INVALID_REQUEST");
 });
+
+test("GET /api/email/config-check returns SMTP booleans only", async () => {
+  const response = await callHandler({
+    method: "GET",
+    url: "/api/email/config-check",
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(Object.keys(response.body).sort(), [
+    "hasSmtpFrom",
+    "hasSmtpHost",
+    "hasSmtpPass",
+    "hasSmtpPort",
+    "hasSmtpUser",
+    "ok",
+  ]);
+});
