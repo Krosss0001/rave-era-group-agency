@@ -1280,6 +1280,8 @@ export default function App() {
     <>
       <Suspense fallback={<PageFallback />}>
         <Switch>
+          <Route path="/admin/checkin" component={AdminCheckinPage} />
+          <Route path="/admin/checkin/" component={AdminCheckinPage} />
           <Route path="/" component={HomePage} />
           <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
           <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
@@ -1288,7 +1290,6 @@ export default function App() {
           <Route path="/payment/success" component={PaymentSuccessPage} />
           <Route path="/payment/fail" component={PaymentFailPage} />
           <Route path="/ticket/:ticketCode" component={TicketPage} />
-          <Route path="/admin/checkin" component={AdminCheckinPage} />
           <Route path="/documents" component={DocumentsPage} />
           <Route path="/contacts" component={ContactsPage} />
           <Route path="/public-offer" component={PublicOfferPage} />
