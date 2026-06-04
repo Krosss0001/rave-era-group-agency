@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import handler from "./[...path].js";
-import loginHandler from "./admin/checkin/login.js";
-import sessionHandler from "./admin/checkin/session.js";
 import {
   extractTicketCodeFromCheckinInput,
   markCheckinTicketUsedWithDb,
@@ -26,52 +24,25 @@ class MockResponse {
   }
 }
 
-async function callRouteHandler(
-  routeHandler: (req: never, res: never) => Promise<void> | void,
-  {
-    method,
-    url,
-    body,
-    cookie,
-  }: {
-    method: string;
-    url: string;
-    body?: unknown;
-    cookie?: string;
-  },
-): Promise<{ statusCode: number; body: Record<string, unknown>; headers: MockResponse["headers"] }> {
-  const res = new MockResponse();
-  await routeHandler({
-    method,
-    url,
-    body,
-    headers: cookie ? { cookie } : {},
-    socket: { remoteAddress: "127.0.0.1" },
-  } as never, res as never);
-
-  return {
-    statusCode: res.statusCode,
-    body: res.body ? JSON.parse(res.body) as Record<string, unknown> : {},
-    headers: res.headers,
-  };
-}
-
 async function callHandler({
   method,
   url,
   body,
   cookie,
+  query,
 }: {
   method: string;
   url: string;
   body?: unknown;
   cookie?: string;
+  query?: { path?: string | string[] };
 }): Promise<{ statusCode: number; body: Record<string, unknown>; headers: MockResponse["headers"] }> {
   const res = new MockResponse();
   await handler({
     method,
     url,
     body,
+    query,
     headers: cookie ? { cookie } : {},
     socket: { remoteAddress: "127.0.0.1" },
   } as never, res as never);
@@ -154,34 +125,72 @@ test("check-in login rejects bad PIN without exposing secrets", async () => {
   }
 });
 
-test("explicit check-in session route returns JSON unauthenticated", async () => {
-  const response = await callRouteHandler(sessionHandler as never, {
-    method: "GET",
-    url: "/api/admin/checkin/session",
-  });
+test("check-in session catch-all returns JSON unauthenticated for path variants", async () => {
+  for (const request of [
+    { url: "/api/admin/checkin/session" },
+    { url: "/admin/checkin/session" },
+    { url: "admin/checkin/session" },
+    { url: "/api/[...path]", query: { path: ["admin", "checkin", "session"] } },
+    { url: "/api/[...path]?path=admin/checkin/session" },
+  ]) {
+    const response = await callHandler({
+      method: "GET",
+      url: request.url,
+      query: request.query,
+    });
 
-  assert.equal(response.statusCode, 200);
-  assert.deepEqual(response.body, { authenticated: false });
+    assert.equal(response.statusCode, 200, request.url);
+    assert.deepEqual(response.body, { authenticated: false }, request.url);
+  }
 });
 
-test("explicit check-in login route rejects bad PIN with JSON", async () => {
+test("check-in login catch-all rejects bad PIN with JSON for path variants", async () => {
   const originalEnv = { ...process.env };
   try {
     process.env["CHECKIN_ADMIN_PIN"] = "123456";
     process.env["CHECKIN_SESSION_SECRET"] = "session-secret-for-tests";
 
-    const response = await callRouteHandler(loginHandler as never, {
-      method: "POST",
-      url: "/api/admin/checkin/login",
-      body: { pin: "bad-pin" },
-    });
+    for (const request of [
+      { url: "/api/admin/checkin/login" },
+      { url: "/admin/checkin/login" },
+      { url: "admin/checkin/login" },
+      { url: "/api/[...path]", query: { path: ["admin", "checkin", "login"] } },
+    ]) {
+      const response = await callHandler({
+        method: "POST",
+        url: request.url,
+        query: request.query,
+        body: { pin: "bad-pin" },
+      });
 
-    assert.equal(response.statusCode, 401);
-    assert.equal(response.body["code"], "INVALID_PIN");
-    assert.equal(response.body["error"], "Invalid PIN");
+      assert.equal(response.statusCode, 401, request.url);
+      assert.equal(response.body["code"], "INVALID_PIN", request.url);
+      assert.equal(response.body["error"], "Invalid PIN", request.url);
+    }
   } finally {
     process.env = originalEnv;
   }
+});
+
+test("routes diagnostic includes admin check-in endpoints and safe path matching data", async () => {
+  const response = await callHandler({
+    method: "GET",
+    url: "/api/[...path]",
+    query: { path: ["routes"] },
+  });
+
+  assert.equal(response.statusCode, 200);
+  const routes = response.body["routes"] as string[];
+  assert.ok(routes.includes("GET /api/admin/checkin/session"));
+  assert.ok(routes.includes("POST /api/admin/checkin/login"));
+  assert.ok(routes.includes("POST /api/admin/checkin/logout"));
+  assert.ok(routes.includes("POST /api/admin/checkin/verify"));
+  assert.ok(routes.includes("POST /api/admin/checkin/mark-used"));
+  const matching = response.body["matching"] as Record<string, unknown>;
+  const diagnostics = matching["diagnostics"] as Record<string, unknown>;
+  assert.equal(diagnostics["method"], "GET");
+  assert.equal(diagnostics["rawUrl"], "/api/[...path]");
+  assert.deepEqual(diagnostics["pathSegments"], ["routes"]);
 });
 
 test("check-in verify requires auth", async () => {

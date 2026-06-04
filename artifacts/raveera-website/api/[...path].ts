@@ -20,28 +20,44 @@ import {
 type VercelCatchAllRequest = VercelApiRequest & {
   query?: {
     path?: string | string[];
+    [key: string]: string | string[] | undefined;
   };
 };
 
-function getCatchAllPath(req: VercelCatchAllRequest, parsed: URL): string | null {
+function normalizePathSegments(segments: string[]): string[] {
+  return segments
+    .flatMap((segment) => segment.split("/"))
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment);
+      } catch {
+        return segment;
+      }
+    });
+}
+
+function getPathSegments(req: VercelCatchAllRequest, parsed: URL): string[] {
   const queryPath = req.query?.path;
   if (Array.isArray(queryPath) && queryPath.length > 0) {
-    return queryPath.map((segment) => encodeURIComponent(segment)).join("/");
+    return normalizePathSegments(queryPath);
   }
   if (typeof queryPath === "string" && queryPath.length > 0) {
-    return queryPath
-      .split("/")
-      .filter(Boolean)
-      .map((segment) => encodeURIComponent(segment))
-      .join("/");
+    return normalizePathSegments([queryPath]);
   }
 
   const searchPath = parsed.searchParams.getAll("path");
   if (searchPath.length > 0) {
-    return searchPath.map((segment) => encodeURIComponent(segment)).join("/");
+    return normalizePathSegments(searchPath);
   }
 
-  return null;
+  return [];
+}
+
+function getCatchAllPath(req: VercelCatchAllRequest, parsed: URL): string | null {
+  const pathSegments = getPathSegments(req, parsed);
+  return pathSegments.length > 0 ? pathSegments.map((segment) => encodeURIComponent(segment)).join("/") : null;
 }
 
 function normalizeApiUrl(req: VercelCatchAllRequest): URL {
@@ -69,6 +85,15 @@ function normalizeLoosePath(value: string): string {
   return withoutQuery.startsWith("/") ? withoutQuery : `/${withoutQuery}`;
 }
 
+function withoutApiPrefix(pathname: string): string {
+  const path = normalizeLoosePath(pathname);
+  return path === "/api" ? "/" : path.startsWith("/api/") ? path.slice(4) || "/" : path;
+}
+
+function uniquePaths(paths: string[]): string[] {
+  return [...new Set(paths.map(normalizeLoosePath).filter(Boolean))];
+}
+
 function logRequest({
   method,
   pathname,
@@ -91,12 +116,30 @@ function matchesPath(pathname: string, ...paths: string[]): boolean {
 function getCandidatePaths(req: VercelCatchAllRequest, originalUrl: URL, normalizedUrl: URL): string[] {
   const rawUrl = req.url || "/";
   const catchAllPath = getCatchAllPath(req, originalUrl);
-  return [
+  const basePaths = [
     normalizeLoosePath(rawUrl),
     originalUrl.pathname,
     normalizedUrl.pathname,
     catchAllPath ? normalizeLoosePath(catchAllPath) : "",
+    catchAllPath ? `/api/${catchAllPath}` : "",
   ].filter(Boolean);
+
+  return uniquePaths([
+    ...basePaths,
+    ...basePaths.map(withoutApiPrefix),
+  ]);
+}
+
+function getRouteDiagnostics(req: VercelCatchAllRequest, originalUrl: URL, normalizedUrl: URL): Record<string, unknown> {
+  const pathSegments = getPathSegments(req, originalUrl);
+  return {
+    method: req.method,
+    rawUrl: req.url || "",
+    pathname: originalUrl.pathname,
+    normalizedPath: normalizedUrl.pathname,
+    ...(pathSegments.length > 0 ? { pathSegments } : {}),
+    candidatePaths: getCandidatePaths(req, originalUrl, normalizedUrl),
+  };
 }
 
 function isCreateOrderPath(pathname: string): boolean {
@@ -223,12 +266,12 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
     return;
   }
 
-  if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/health", "/api/healthz", "/health")) {
+  if (req.method === "GET" && candidatePaths.some((path) => matchesPath(path, "/api/health", "/api/healthz", "/health"))) {
     sendJson(res, 200, { ok: true, service: "raveera-api" });
     return;
   }
 
-  if (req.method === "GET" && matchesPath(normalizedUrl.pathname, "/api/routes", "/routes")) {
+  if (req.method === "GET" && candidatePaths.some((path) => matchesPath(path, "/api/routes", "/routes"))) {
     sendJson(res, 200, {
       ok: true,
       routes: [
@@ -247,6 +290,20 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
         "POST /api/admin/checkin/mark-used",
       ],
       matching: {
+        diagnostics: getRouteDiagnostics(req, originalUrl, normalizedUrl),
+        adminCheckin: {
+          paths: [
+            "/api/admin/checkin/session",
+            "/admin/checkin/session",
+            "admin/checkin/session",
+            "/api/admin/checkin/login",
+            "/admin/checkin/login",
+            "admin/checkin/login",
+            "/api/admin/checkin/logout",
+            "/api/admin/checkin/verify",
+            "/api/admin/checkin/mark-used",
+          ],
+        },
         createOrder: {
           method: "POST",
           paths: ["/api/payment/create-order", "/payment/create-order", "payment/create-order"],
@@ -269,7 +326,7 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
 
   if (
     req.method === "GET" &&
-    matchesPath(normalizedUrl.pathname, "/api/payment/config-check", "/payment/config-check")
+    candidatePaths.some((path) => matchesPath(path, "/api/payment/config-check", "/payment/config-check"))
   ) {
     sendJson(res, 200, getPaymentConfigCheck());
     return;
