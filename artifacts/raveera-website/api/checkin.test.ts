@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import handler from "./[...path].js";
+import loginHandler from "./admin/checkin/login.js";
+import sessionHandler from "./admin/checkin/session.js";
 import {
   extractTicketCodeFromCheckinInput,
   markCheckinTicketUsedWithDb,
@@ -22,6 +24,36 @@ class MockResponse {
       this.body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : chunk;
     }
   }
+}
+
+async function callRouteHandler(
+  routeHandler: (req: never, res: never) => Promise<void> | void,
+  {
+    method,
+    url,
+    body,
+    cookie,
+  }: {
+    method: string;
+    url: string;
+    body?: unknown;
+    cookie?: string;
+  },
+): Promise<{ statusCode: number; body: Record<string, unknown>; headers: MockResponse["headers"] }> {
+  const res = new MockResponse();
+  await routeHandler({
+    method,
+    url,
+    body,
+    headers: cookie ? { cookie } : {},
+    socket: { remoteAddress: "127.0.0.1" },
+  } as never, res as never);
+
+  return {
+    statusCode: res.statusCode,
+    body: res.body ? JSON.parse(res.body) as Record<string, unknown> : {},
+    headers: res.headers,
+  };
 }
 
 async function callHandler({
@@ -117,6 +149,36 @@ test("check-in login rejects bad PIN without exposing secrets", async () => {
     assert.equal(response.statusCode, 401);
     assert.equal(response.body["code"], "INVALID_PIN");
     assert.equal(response.headers.has("set-cookie"), false);
+  } finally {
+    process.env = originalEnv;
+  }
+});
+
+test("explicit check-in session route returns JSON unauthenticated", async () => {
+  const response = await callRouteHandler(sessionHandler as never, {
+    method: "GET",
+    url: "/api/admin/checkin/session",
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.body, { authenticated: false });
+});
+
+test("explicit check-in login route rejects bad PIN with JSON", async () => {
+  const originalEnv = { ...process.env };
+  try {
+    process.env["CHECKIN_ADMIN_PIN"] = "123456";
+    process.env["CHECKIN_SESSION_SECRET"] = "session-secret-for-tests";
+
+    const response = await callRouteHandler(loginHandler as never, {
+      method: "POST",
+      url: "/api/admin/checkin/login",
+      body: { pin: "bad-pin" },
+    });
+
+    assert.equal(response.statusCode, 401);
+    assert.equal(response.body["code"], "INVALID_PIN");
+    assert.equal(response.body["error"], "Invalid PIN");
   } finally {
     process.env = originalEnv;
   }
