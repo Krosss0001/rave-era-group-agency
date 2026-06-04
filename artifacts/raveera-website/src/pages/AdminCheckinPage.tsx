@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type FormEvent, type ReactNode, type SetStateAction } from "react";
+import type { CameraDevice, Html5Qrcode } from "html5-qrcode";
 import {
   AlertTriangle,
   Camera,
@@ -33,21 +34,13 @@ type RecentScan = {
   at: string;
 };
 
-type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => {
-  detect(source: CanvasImageSource): Promise<Array<{ rawValue: string }>>;
-};
-
-declare global {
-  interface Window {
-    BarcodeDetector?: BarcodeDetectorConstructor;
-  }
-}
-
 const ticketTypeLabels: Record<string, string> = {
   sport: "SPORT",
   business: "BUSINESS",
   online: "ONLINE",
 };
+
+const ticketCodePattern = /SBC-2026-[A-Z0-9-]+/i;
 
 export default function AdminCheckinPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
@@ -189,8 +182,8 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
   const [recent, setRecent] = useState<RecentScan[]>([]);
 
   const verify = useCallback(async (value: string) => {
-    const payload = value.trim();
-    if (!payload) {
+    const ticketCode = extractTicketCodeFromScan(value);
+    if (!ticketCode) {
       setError("Введіть код квитка або відскануйте QR.");
       return;
     }
@@ -201,7 +194,7 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrPayload: payload }),
+        body: JSON.stringify({ ticketCode }),
       });
       const data = await response.json() as { ticket?: CheckinTicket; error?: string };
       if (response.status === 401) {
@@ -309,109 +302,206 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
 }
 
 function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; disabled: boolean }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const lastScanRef = useRef("");
-  const [enabled, setEnabled] = useState(false);
-  const [message, setMessage] = useState("Камера вимкнена. Ручний ввід доступний завжди.");
-  const supported = typeof window !== "undefined" && Boolean(window.BarcodeDetector && navigator.mediaDevices?.getUserMedia);
+  const scannerIdRef = useRef(`checkin-qr-reader-${Math.random().toString(36).slice(2)}`);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scanHandledRef = useRef(false);
+  const mountedRef = useRef(false);
+  const [status, setStatus] = useState<"idle" | "starting" | "scanning" | "stopping">("idle");
+  const [message, setMessage] = useState("Натисніть «Увімкнути камеру», щоб сканувати QR.");
+  const [error, setError] = useState("");
+  const canUseCamera = typeof window !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
+  const isRunning = status === "starting" || status === "scanning" || status === "stopping";
 
-  useEffect(() => {
-    if (!enabled || !supported || disabled) {
-      return undefined;
+  const stopScanner = useCallback(async () => {
+    const scanner = scannerRef.current;
+    if (!scanner) {
+      if (mountedRef.current) {
+        setStatus("idle");
+      }
+      return;
     }
 
-    let cancelled = false;
-    let frame = 0;
+    if (mountedRef.current) {
+      setStatus("stopping");
+    }
 
-    async function start() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
-        if (cancelled) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-        }
-        setMessage("Наведіть камеру на QR-код квитка.");
-        const Detector = window.BarcodeDetector;
-        if (!Detector) {
-          setMessage("Браузер не підтримує QR-сканер. Скористайтеся ручним вводом.");
-          setEnabled(false);
-          return;
-        }
-        const detector = new Detector({ formats: ["qr_code"] });
-        const scan = async () => {
-          if (cancelled || !videoRef.current || !canvasRef.current || !detector) {
-            return;
-          }
-          const video = videoRef.current;
-          if (video.readyState >= 2 && video.videoWidth > 0) {
-            const canvas = canvasRef.current;
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const codes = await detector.detect(canvas).catch(() => []);
-            const rawValue = codes[0]?.rawValue?.trim();
-            if (rawValue && rawValue !== lastScanRef.current) {
-              lastScanRef.current = rawValue;
-              onScan(rawValue);
-            }
-          }
-          frame = window.setTimeout(scan, 450);
-        };
-        void scan();
-      } catch {
-        setMessage("Камера недоступна. Скористайтеся ручним вводом.");
-        setEnabled(false);
+    try {
+      if (scanner.isScanning) {
+        await scanner.stop();
+      }
+      scanner.clear();
+    } catch {
+      // The browser may already have stopped the stream after permission changes.
+    } finally {
+      scannerRef.current = null;
+      scanHandledRef.current = false;
+      if (mountedRef.current) {
+        setStatus("idle");
+        setMessage("Сканер зупинено. Ручний ввід доступний завжди.");
       }
     }
+  }, []);
 
-    void start();
+  const startScanner = useCallback(async () => {
+    if (!canUseCamera) {
+      setError("Браузер не надає доступ до камери. Скористайтеся ручним вводом.");
+      return;
+    }
+
+    setStatus("starting");
+    setError("");
+    setMessage("Запитуємо доступ до камери...");
+    scanHandledRef.current = false;
+
+    try {
+      const { Html5Qrcode: Html5QrcodeScanner, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+      const scanner = new Html5QrcodeScanner(scannerIdRef.current, {
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        useBarCodeDetectorIfSupported: true,
+        verbose: false,
+      });
+      scannerRef.current = scanner;
+
+      const scanConfig = {
+        fps: 10,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const size = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72);
+          return { width: Math.max(180, size), height: Math.max(180, size) };
+        },
+        aspectRatio: 1.333,
+        disableFlip: false,
+      };
+
+      const handleSuccess = (decodedText: string) => {
+        if (scanHandledRef.current) {
+          return;
+        }
+        const ticketCode = extractTicketCodeFromScan(decodedText);
+        if (!ticketCode) {
+          setError("QR код не містить код квитка. Спробуйте ще раз або введіть код вручну.");
+          return;
+        }
+        scanHandledRef.current = true;
+        setMessage("QR зчитано. Перевіряємо квиток...");
+        void stopScanner().finally(() => onScan(ticketCode));
+      };
+
+      await scanner.start(
+        { facingMode: { ideal: "environment" } },
+        scanConfig,
+        handleSuccess,
+        () => undefined,
+      ).catch(async (firstError: unknown) => {
+        const cameras = await Html5QrcodeScanner.getCameras();
+        const cameraId = selectCameraId(cameras);
+        if (!cameraId) {
+          throw firstError;
+        }
+        await scanner.start(cameraId, scanConfig, handleSuccess, () => undefined);
+      });
+
+      if (mountedRef.current) {
+        setStatus("scanning");
+        setMessage("Наведіть камеру на QR-код квитка.");
+      }
+    } catch (err) {
+      scannerRef.current = null;
+      if (mountedRef.current) {
+        setStatus("idle");
+        setError(getCameraErrorMessage(err));
+        setMessage("Сканер не запущено. Ручний ввід доступний.");
+      }
+    }
+  }, [canUseCamera, onScan, stopScanner]);
+
+  useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      cancelled = true;
-      window.clearTimeout(frame);
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+      mountedRef.current = false;
+      const scanner = scannerRef.current;
+      scannerRef.current = null;
+      if (scanner?.isScanning) {
+        void scanner.stop().catch(() => undefined);
+      }
     };
-  }, [disabled, enabled, onScan, supported]);
+  }, []);
 
   return (
     <section className="border border-white/[0.1] bg-[#101018] p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-widest text-white/45">QR сканер</p>
-          <p className="mt-1 text-sm text-white/55">{supported ? message : "Браузер не підтримує QR-сканер. Ручний ввід працює."}</p>
+          <p className="mt-1 text-sm leading-relaxed text-white/60">{message}</p>
         </div>
-        <button
-          type="button"
-          disabled={!supported || disabled}
-          onClick={() => setEnabled((value) => !value)}
-          className="inline-flex min-h-11 shrink-0 items-center gap-2 border border-[#00FF88]/40 px-3 py-2 text-xs font-bold uppercase tracking-widest text-[#00FF88] transition-colors hover:bg-[#00FF88] hover:text-black disabled:cursor-not-allowed disabled:border-white/10 disabled:text-white/25"
-        >
-          <Camera className="h-4 w-4" aria-hidden="true" />
-          {enabled ? "Стоп" : "Камера"}
-        </button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-52">
+          {isRunning ? (
+            <button
+              type="button"
+              disabled={status === "stopping"}
+              onClick={() => void stopScanner()}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 border border-red-400/50 px-4 py-3 text-xs font-black uppercase tracking-widest text-red-200 transition-colors hover:bg-red-400 hover:text-black disabled:cursor-wait disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-[#00FF88] focus-visible:ring-offset-2 focus-visible:ring-offset-[#101018]"
+            >
+              <XCircle className="h-5 w-5" aria-hidden="true" />
+              Зупинити сканер
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => void startScanner()}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-[#00FF88] px-4 py-3 text-xs font-black uppercase tracking-widest text-black transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#101018]"
+            >
+              <Camera className="h-5 w-5" aria-hidden="true" />
+              Увімкнути камеру
+            </button>
+          )}
+        </div>
       </div>
-      <div className="relative aspect-[4/3] overflow-hidden border border-white/10 bg-black">
-        {enabled ? (
-          <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
-        ) : (
-          <div className="grid h-full place-items-center px-6 text-center text-sm text-white/45">
+      {error ? (
+        <p className="mb-3 flex items-start gap-2 border border-red-400/30 bg-red-400/10 p-3 text-sm leading-relaxed text-red-200">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          {error}
+        </p>
+      ) : null}
+      <div className="relative aspect-[4/3] min-h-64 w-full overflow-hidden border border-white/10 bg-black">
+        <div id={scannerIdRef.current} className="h-full w-full [&_img]:hidden [&_video]:h-full [&_video]:w-full [&_video]:object-cover" />
+        {!isRunning ? (
+          <div className="absolute inset-0 grid place-items-center px-6 text-center text-sm text-white/45">
             QR камера опційна. Введіть код вручну, якщо камера недоступна.
           </div>
-        )}
-        <canvas ref={canvasRef} className="hidden" />
+        ) : null}
       </div>
     </section>
   );
+}
+
+function extractTicketCodeFromScan(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const match = trimmed.match(ticketCodePattern);
+  return (match?.[0] || trimmed).toUpperCase();
+}
+
+function selectCameraId(cameras: CameraDevice[]): string | null {
+  const rearCamera = cameras.find((camera) => /back|rear|environment|зад|основ/i.test(camera.label));
+  return rearCamera?.id || cameras[0]?.id || null;
+}
+
+function getCameraErrorMessage(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err || "");
+  if (/NotAllowedError|Permission|permission|denied|NotReadableError/i.test(message)) {
+    return "Доступ до камери заборонено. Дозвольте камеру для сайту та спробуйте ще раз.";
+  }
+  if (/NotFoundError|DevicesNotFoundError|no camera|Requested device not found/i.test(message)) {
+    return "Камеру не знайдено. Перевірте підключення або введіть код вручну.";
+  }
+  if (/NotSupportedError|Insecure|HTTPS|secure origin/i.test(message)) {
+    return "Камера доступна лише на HTTPS або localhost. Відкрийте сторінку через захищене з'єднання.";
+  }
+  return "Не вдалося запустити камеру. Спробуйте ще раз або введіть код вручну.";
 }
 
 function ResultCard({ result, busy, onMarkUsed }: { result: CheckinResult; busy: boolean; onMarkUsed: () => void }) {
