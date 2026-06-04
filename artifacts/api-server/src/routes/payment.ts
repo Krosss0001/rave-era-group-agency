@@ -59,7 +59,7 @@ const callbackBodySchema = z
 const ticketPrices: Record<string, number> = {
   sport: 250000,
   business: 650000,
-  online: 10000,
+  online: 100,
 };
 
 const router: IRouter = Router();
