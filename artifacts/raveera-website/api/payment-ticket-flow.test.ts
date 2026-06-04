@@ -55,7 +55,7 @@ test("invalid public ticket codes are rejected before database access", async ()
 });
 
 test("migration enforces idempotent one-ticket-per-order issuance", () => {
-  const migration = readFileSync(new URL("./migrations/001_post_payment_tickets.sql", import.meta.url), "utf8");
+  const migration = readFileSync(new URL("./api/migrations/001_post_payment_tickets.sql", `file://${process.cwd()}/`), "utf8");
   assert.match(migration, /order_id integer not null unique references ticket_orders\(id\)/);
   assert.match(migration, /create table if not exists tickets/);
   assert.match(migration, /add column if not exists email_status/);

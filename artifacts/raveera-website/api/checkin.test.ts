@@ -80,7 +80,26 @@ async function callAdminCheckinHandler({
   };
 }
 
-function makeTicket(overrides: Record<string, unknown> = {}) {
+type CheckinTestTicket = {
+  id: number;
+  ticket_code: string;
+  order_id: number;
+  merchant_request_id: string;
+  hpp_order_id: string;
+  event_slug: string;
+  event_title: string;
+  ticket_type: string;
+  customer_email: string;
+  customer_first_name: string;
+  customer_last_name: string;
+  status: string;
+  qr_payload: string;
+  issued_at: Date;
+  checked_in_at: Date | null;
+  checked_in_by: string | null;
+};
+
+function makeTicket(overrides: Partial<CheckinTestTicket> = {}): CheckinTestTicket {
   return {
     id: 1,
     ticket_code: "SBC-2026-ABCDEF123456",
@@ -102,7 +121,7 @@ function makeTicket(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function mockDb(ticket: ReturnType<typeof makeTicket> | null, options: { updateSucceeds?: boolean } = {}): DbModule {
+function mockDb(ticket: CheckinTestTicket | null, options: { updateSucceeds?: boolean } = {}): DbModule {
   const state = { ticket };
   return {
     pool: {
