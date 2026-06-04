@@ -292,6 +292,7 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
       matching: {
         diagnostics: getRouteDiagnostics(req, originalUrl, normalizedUrl),
         adminCheckin: {
+          explicitCatchAll: "/api/admin/[...path].ts",
           paths: [
             "/api/admin/checkin/session",
             "/admin/checkin/session",
