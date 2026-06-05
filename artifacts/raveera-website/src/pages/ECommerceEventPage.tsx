@@ -56,6 +56,7 @@ const content = {
     heroSub: "Головна подія року для eCommerce, маркетплейсів, логістики, фінтеху та digital commerce в Україні.",
     heroDesc:
       "Велика українська eCommerce конференція для онлайн-ритейлу, маркетплейсів, логістики, фінтеху, платежів, performance marketing, CRM/CDP, автоматизації, AI commerce tools, фаундерів і брендів.",
+    heroVisualLine: "Digital commerce для команд, які масштабуються",
     meta: ["2026", "Kyiv, Ukraine", "ECC-2026 tickets", "B2B & B2C sales"],
     stats: [
       ["2 000+", "учасників"],
@@ -133,7 +134,26 @@ const content = {
     ctaLines: ["БУДЬТЕ В ЗАЛІ,", "ДЕ ФОРМУЮТЬСЯ", "НАСТУПНІ ЛІДЕРИ", "УКРАЇНСЬКОГО ECOMMERCE."],
     footerBrand: "Найбільша конференція для eCommerce, маркетплейсів, логістики та digital commerce в Україні.",
     footerOrgLabel: "Організатор",
+    footerOrgName: "ФОП Чекан Богдан Орестович",
+    footerOrgFull: "RAVE'ERA GROUP",
+    footerIpn: "ІПН / РНОКПП: 3411613291",
+    footerKveds: [
+      "КВЕД 90.01 Театральна та концертна діяльність",
+      "КВЕД 90.03 Індивідуальна мистецька діяльність",
+      "КВЕД 90.02 Діяльність із підтримки театральних і концертних заходів",
+      "КВЕД 79.90 Надання інших послуг бронювання та пов'язана з цим діяльність",
+    ],
+    footerAddress: "Україна, 03022, м. Київ, вул. Здановської Юлії, буд. 49, корп. 10, кв. 306",
+    footerBank: "Банк: АТ БАНК АЛЬЯНС",
+    footerRecipient: "Отримувач: ФОП Чекан Б.О.",
+    footerIban: "IBAN: UA303001190000026006744298001",
+    footerCurrency: "Валюта: UAH",
+    footerPurpose: "Призначення платежу: Оплата за товар/послугу",
     footerContactsLabel: "Контакти",
+    footerEmail: "ceo@rave-era.com.ua",
+    footerPhone: "+38 (093) 430-75-51",
+    footerTelegram: "bogdan_chekan",
+    footerSupport: "Пн-Пт 10:00-19:00",
     footerDocsLabel: "Документи",
     footerDocContacts: "Контакти",
     footerDocOffer: "Публічна оферта",
@@ -152,6 +172,7 @@ const content = {
     heroSub: "The flagship Ukrainian conference for eCommerce, marketplaces, logistics, fintech and digital commerce.",
     heroDesc:
       "A large Ukrainian eCommerce conference for online retail, marketplaces, logistics, fintech, payments, performance marketing, CRM/CDP, automation, AI commerce tools, founders and brands.",
+    heroVisualLine: "Digital commerce for teams that scale",
     meta: ["2026", "Kyiv, Ukraine", "ECC-2026 tickets", "B2B & B2C sales"],
     stats: [
       ["2,000+", "attendees"],
@@ -229,7 +250,26 @@ const content = {
     ctaLines: ["BE IN THE ROOM", "WHERE THE NEXT LEADERS", "OF UKRAINIAN ECOMMERCE", "ARE FORMED."],
     footerBrand: "A flagship conference for eCommerce, marketplaces, logistics and digital commerce in Ukraine.",
     footerOrgLabel: "Organizer",
+    footerOrgName: "FOP Chekan Bohdan Orestovych",
+    footerOrgFull: "RAVE'ERA GROUP",
+    footerIpn: "IPN / Tax ID: 3411613291",
+    footerKveds: [
+      "KVED 90.01 Performing arts",
+      "KVED 90.03 Artistic creation",
+      "KVED 90.02 Support activities to performing arts",
+      "KVED 79.90 Other reservation service and related activities",
+    ],
+    footerAddress: "Ukraine, 03022, Kyiv, Zdanovska Yuliia St., 49, bld. 10, apt. 306",
+    footerBank: "Bank: JSC Alliance Bank",
+    footerRecipient: "Recipient: FOP Chekan B.O.",
+    footerIban: "IBAN: UA303001190000026006744298001",
+    footerCurrency: "Currency: UAH",
+    footerPurpose: "Payment purpose: Payment for goods/services",
     footerContactsLabel: "Contacts",
+    footerEmail: "ceo@rave-era.com.ua",
+    footerPhone: "+38 (093) 430-75-51",
+    footerTelegram: "bogdan_chekan",
+    footerSupport: "Mon-Fri 10:00-19:00",
     footerDocsLabel: "Documents",
     footerDocContacts: "Contacts",
     footerDocOffer: "Public Offer",
@@ -260,13 +300,16 @@ export default function ECommerceEventPage() {
   const t = content[lang];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#050508] text-white selection:bg-[#00FF88] selection:text-black">
-      <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "border-b border-white/[0.08] bg-black/86 backdrop-blur-md" : "bg-black/25"}`}>
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 md:px-12">
+    <div className="min-h-screen overflow-x-hidden bg-[#0A0A0F] font-sans text-white selection:bg-[#00FF88] selection:text-black">
+      <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "border-b border-white/[0.06] bg-[#0A0A0F]/90 backdrop-blur-md" : "bg-transparent"}`}>
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16 sm:px-6 md:px-12">
           <Link href="/" className="inline-flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/50 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             {t.back}
           </Link>
+          <div className="hidden text-[10px] font-mono uppercase tracking-[0.28em] text-white/25 md:block">
+            RAVE'ERA GROUP
+          </div>
           <div className="flex items-center gap-3">
             <Link href={`/event/${slug}/ticket-form?type=standard`} className="hidden min-h-10 items-center bg-[#00FF88] px-4 text-[10px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88] sm:inline-flex">
               {t.buyTicket}
@@ -278,81 +321,90 @@ export default function ECommerceEventPage() {
               aria-label="Switch language"
             >
               <Globe className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className={lang === "uk" ? "text-[#00FF88]" : ""}>UA</span>
-              <span className="text-white/20">/</span>
-              <span className={lang === "en" ? "text-[#00FF88]" : ""}>EN</span>
+              {lang === "uk" ? "UA" : "EN"}
             </button>
           </div>
         </div>
       </nav>
 
-      <header className="relative flex min-h-screen items-end overflow-hidden px-4 pb-14 pt-28 sm:px-6 md:px-12 md:pb-20">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[#050508]" />
-          <div className="absolute inset-0 opacity-[0.045]">
-            <img src="/images/case-smart-commerce.jpg" alt="E-Commerce Conference visual identity" className="h-full w-full object-cover grayscale" />
-          </div>
-          <div className="absolute right-[-8vw] top-[18vh] hidden max-w-[900px] select-none text-right text-[7rem] font-black uppercase leading-[0.78] tracking-tight text-white/[0.035] lg:block">
-            Digital<br />Commerce<br />Ukraine
-          </div>
-          <div className="absolute inset-0 bg-[linear-gradient(115deg,#050508_0%,rgba(5,5,8,0.96)_46%,rgba(5,5,8,0.82)_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#050508] to-transparent" />
+      <header className="relative flex min-h-[85vh] items-center overflow-hidden px-4 pb-12 pt-16 sm:min-h-screen sm:px-6 sm:pb-16 sm:pt-20 md:px-12">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-[-12%] top-[12%] h-[360px] w-[360px] rounded-full bg-[#00FF88]/[0.055] blur-[140px]" />
+          <div className="absolute bottom-[10%] right-[-12%] h-[420px] w-[420px] rounded-full bg-[#00FF88]/[0.045] blur-[170px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(255,255,255,0.05),transparent_34%),linear-gradient(180deg,rgba(10,10,15,0.12),#0A0A0F_95%)]" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-7xl">
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-5xl">
-            <motion.div variants={fadeUpChild} className="mb-6 inline-flex items-center gap-2 border border-[#00FF88]/25 bg-[#00FF88]/[0.07] px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.22em] text-[#00FF88]">
-              <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
-              {t.badge}
-            </motion.div>
-            <motion.div variants={fadeUpChild} className="mt-7 flex flex-wrap gap-2">
-              {t.meta.map((item) => (
-                <span key={item} className="inline-flex min-h-10 items-center gap-2 border border-white/[0.1] bg-black/35 px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-white/48 backdrop-blur-sm">
-                  <span className="h-1.5 w-1.5 bg-[#00FF88]" />
-                  {item}
-                </span>
-              ))}
-            </motion.div>
-            <motion.h1 variants={fadeUpChild} className="mt-6 max-w-5xl break-words text-4xl font-black uppercase leading-[0.88] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
-              {t.heroTitle}
-            </motion.h1>
-            <motion.p variants={fadeUpChild} className="mt-6 max-w-3xl text-base font-semibold leading-relaxed text-white/76 sm:text-xl">
-              {t.heroSub}
-            </motion.p>
-            <motion.p variants={fadeUpChild} className="mt-4 max-w-2xl text-sm leading-relaxed text-white/52 sm:text-base">
-              {t.heroDesc}
-            </motion.p>
-            <motion.div variants={fadeUpChild} className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href={`/event/${slug}/ticket-form?type=standard`} className="group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden bg-[#00FF88] px-6 py-3 text-xs font-bold uppercase tracking-widest text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
-                <span className="relative z-10">{t.buyTicket}</span>
-                <ArrowRight className="relative z-10 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
-                <motion.span className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
-              </Link>
-              <a href="#program" className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/15 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white/70 transition-colors hover:border-[#00FF88]/50 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
-                {t.viewProgram}
-              </a>
-            </motion.div>
-          </motion.div>
-
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-4">
-            {t.stats.map(([value, label]) => (
-              <motion.div key={`${value}-${label}`} variants={fadeUpChild} className="border border-white/[0.08] bg-black/50 p-5 backdrop-blur-sm">
-                <p className="break-words text-2xl font-black tracking-tight text-white sm:text-3xl">{value}</p>
-                <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-white/35">{label}</p>
+          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+            <div>
+              <motion.div variants={fadeUpChild} className="mb-6 inline-flex items-center gap-2 border border-[#00FF88]/20 bg-[#00FF88]/[0.05] px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.22em] text-[#00FF88]">
+                <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
+                {t.badge}
               </motion.div>
-            ))}
+              <motion.div variants={fadeUpChild} className="mb-6 flex flex-wrap gap-2">
+                {t.meta.map((item, index) => {
+                  const Icon = index === 0 ? Calendar : index === 1 ? MapPin : index === 2 ? Ticket : Clock;
+                  return (
+                    <span key={item} className="inline-flex min-h-10 items-center gap-2 border border-white/[0.1] bg-white/[0.025] px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-white/45 backdrop-blur-sm">
+                      <Icon className="h-3.5 w-3.5 text-[#00FF88]" aria-hidden="true" />
+                      {item}
+                    </span>
+                  );
+                })}
+              </motion.div>
+              <motion.h1 variants={fadeUpChild} className="max-w-4xl break-words text-4xl font-black uppercase leading-[0.85] tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
+                {t.heroTitle}
+              </motion.h1>
+              <motion.p variants={fadeUpChild} className="mt-6 max-w-xl text-base font-semibold leading-relaxed text-white/68 sm:text-lg md:text-xl">
+                {t.heroSub}
+              </motion.p>
+              <motion.p variants={fadeUpChild} className="mt-4 max-w-lg text-sm leading-relaxed text-white/42">
+                {t.heroDesc}
+              </motion.p>
+              <motion.div variants={fadeUpChild} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link href={`/event/${slug}/ticket-form?type=standard`} className="group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden bg-[#00FF88] px-6 py-3 text-xs font-bold uppercase tracking-widest text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+                  <span className="relative z-10">{t.buyTicket}</span>
+                  <ArrowRight className="relative z-10 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+                  <motion.span className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
+                </Link>
+                <a href="#program" className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/15 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white/70 transition-colors hover:border-[#00FF88]/50 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+                  {t.viewProgram}
+                </a>
+              </motion.div>
+              <motion.div variants={fadeUpChild} className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+                {t.stats.map(([value, label]) => (
+                  <div key={`${value}-${label}`} className="border border-white/[0.08] bg-white/[0.025] p-4 backdrop-blur-sm sm:p-5">
+                    <p className="break-words text-2xl font-black tracking-tight text-white sm:text-3xl">{value}</p>
+                    <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-white/32">{label}</p>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+            <motion.div variants={fadeUpChild} className="order-first w-full lg:order-last">
+              <div className="relative overflow-hidden border border-white/[0.06] bg-white/[0.02]">
+                <img src="/images/case-smart-commerce.jpg" alt="E-Commerce Conference 2026 visual" className="aspect-[16/11] w-full object-cover grayscale lg:aspect-[4/5]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                <div className="absolute inset-0 border border-[#00FF88]/10" />
+                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-[#00FF88]">ECC-2026</p>
+                  <p className="mt-2 max-w-sm text-2xl font-black uppercase leading-[0.9] tracking-tighter text-white sm:text-3xl">
+                    {t.heroVisualLine}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </header>
 
       <main>
         <Section>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer} className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-            <div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer} className="grid gap-10 lg:grid-cols-2 lg:gap-20">
+            <div className="lg:sticky lg:top-28 lg:self-start">
               <SectionBadge icon={<Zap className="h-3.5 w-3.5" />} label="01 / Event" />
-              <motion.h2 variants={fadeUpChild} className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.aboutTitle}</motion.h2>
+              <motion.h2 variants={fadeUpChild} className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.aboutTitle}</motion.h2>
             </div>
-            <div>
-              <div className="space-y-5">
+            <div className="space-y-8">
+              <div className="space-y-5 border-l border-white/[0.08] pl-5 sm:pl-7">
                 {t.aboutCopy.map((paragraph) => (
                   <motion.p key={paragraph} variants={fadeUpChild} className="text-sm leading-relaxed text-white/56 sm:text-base">{paragraph}</motion.p>
                 ))}
@@ -365,6 +417,18 @@ export default function ECommerceEventPage() {
                   </motion.div>
                 ))}
               </div>
+              <motion.div variants={fadeUpChild} className="grid gap-4 sm:grid-cols-2">
+                <div className="border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
+                  <CreditCard className="mb-5 h-5 w-5 text-[#00FF88]" aria-hidden="true" />
+                  <p className="text-xs font-mono uppercase tracking-widest text-white/30">RAVEERA Tickets Service</p>
+                  <p className="mt-4 text-sm leading-relaxed text-white/48">{t.paymentNote}</p>
+                </div>
+                <div className="border border-[#00FF88]/18 bg-[#00FF88]/[0.035] p-5 sm:p-6">
+                  <PackageCheck className="mb-5 h-5 w-5 text-[#00FF88]" aria-hidden="true" />
+                  <p className="text-xs font-mono uppercase tracking-widest text-white/30">Production infrastructure</p>
+                  <p className="mt-4 text-sm leading-relaxed text-white/48">{t.locationText}</p>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </Section>
@@ -411,15 +475,15 @@ export default function ECommerceEventPage() {
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
             <SectionBadge icon={<Ticket className="h-3.5 w-3.5" />} label="04 / Tickets" />
-            <motion.h2 variants={fadeUpChild} className="mb-10 text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.ticketsTitle}</motion.h2>
+            <motion.h2 variants={fadeUpChild} className="mb-10 text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.ticketsTitle}</motion.h2>
             <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
               {tickets.map((tier) => (
-                <motion.div key={tier.key} variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
+                <motion.div key={tier.key} variants={fadeUpChild} className={`relative flex min-h-[520px] flex-col border p-5 sm:p-6 ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
                   {tier.popular ? <span className="absolute -top-3 left-5 bg-[#00FF88] px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.popular}</span> : null}
                   {tier.premium ? <span className="absolute -top-3 left-5 bg-white px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.premium}</span> : null}
-                  <p className="text-xs font-mono uppercase tracking-widest text-white/30">{tier.name}</p>
+                  <p className="text-xs font-mono uppercase tracking-widest text-white/30">{tier.corporate && lang === "en" ? "CORPORATE" : tier.name}</p>
                   <div className="mt-3 flex items-baseline gap-2">
-                    <p className="text-4xl font-black tracking-tight sm:text-5xl" style={{ color: tier.popular ? G : "white" }}>{tier.price}</p>
+                    <p className="break-words text-4xl font-black tracking-tighter sm:text-5xl" style={{ color: tier.popular ? G : "white" }}>{tier.price}</p>
                     {!tier.corporate && <span className="text-sm font-mono text-white/30">UAH</span>}
                   </div>
                   <p className="mt-5 text-sm leading-relaxed text-white/45">{t.ticketDescriptions[tier.key]}</p>
@@ -519,68 +583,85 @@ export default function ECommerceEventPage() {
           </motion.div>
         </Section>
 
-        <section className="relative overflow-hidden border-t border-white/[0.05] px-4 py-20 text-center sm:px-6 md:px-12 md:py-32">
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(0,255,136,0.09),transparent_48%)]" />
+        <section className="relative overflow-hidden border-t border-white/[0.04] px-4 py-20 text-center sm:px-6 sm:py-24 md:px-12 md:py-36">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00FF88]/5 blur-[150px] sm:h-[600px] sm:w-[600px] sm:blur-[200px]" />
+          </div>
           <div className="relative mx-auto max-w-4xl">
-            <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl md:text-6xl">
+            <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl md:text-6xl">
               {t.ctaLines.map((line) => (
                 <span key={line} className="block">{line}</span>
               ))}
             </h2>
-            <Link href={`/event/${slug}/ticket-form?type=vip`} className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 bg-[#00FF88] px-8 py-4 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
-              {t.buyTicket}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <Link href={`/event/${slug}/ticket-form?type=vip`} className="group relative mt-8 inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden bg-[#00FF88] px-8 py-4 text-xs font-bold uppercase tracking-widest text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88] sm:px-10 sm:py-5">
+              <span className="relative z-10">{t.buyTicket}</span>
+              <ArrowRight className="relative z-10 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+              <motion.span className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
             </Link>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-white/[0.06] px-4 py-10 sm:px-6 md:px-12">
-        <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <p className="text-base font-black uppercase tracking-tight">RAVE'ERA <span className="text-[#00FF88]">GROUP</span></p>
-            <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-white/25">E-COMMERCE CONFERENCE 2026</p>
-            <p className="mt-4 text-xs leading-relaxed text-white/35">{t.footerBrand}</p>
-          </div>
-          <div>
-            <FooterLabel>{t.footerOrgLabel}</FooterLabel>
-            <div className="space-y-2 text-xs leading-relaxed text-white/35">
-              <p className="font-bold text-white/52">ФОП Чекан Богдан Орестович</p>
-              <p className="font-mono text-white/30">ІПН / РНОКПП: 3411613291</p>
-              <p className="font-mono text-white/30">КВЕД 90.01 Театральна та концертна діяльність</p>
-              <p className="font-mono text-white/30">КВЕД 90.03 Індивідуальна мистецька діяльність</p>
-              <p className="font-mono text-white/25">Bank: JSC Alliance Bank</p>
-              <p className="break-words font-mono text-white/25">IBAN: UA303001190000026006744298001</p>
-              <p className="font-mono text-white/25">Currency: UAH</p>
+      <footer className="border-t border-white/[0.06] px-4 py-10 sm:px-6 sm:py-14 md:px-12">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 grid gap-8 sm:mb-12 sm:grid-cols-2 sm:gap-10 lg:grid-cols-4">
+            <div>
+              <p className="text-base font-black uppercase tracking-tighter sm:text-lg">RAVE'ERA <span className="text-[#00FF88]">GROUP</span></p>
+              <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/30">E-COMMERCE CONFERENCE 2026</p>
+              <p className="mt-3 text-xs leading-relaxed text-white/30">{t.footerBrand}</p>
+            </div>
+
+            <div>
+              <FooterLabel>{t.footerOrgLabel}</FooterLabel>
+              <div className="space-y-2 text-xs leading-relaxed text-white/35">
+                <p className="font-bold text-white/50">{t.footerOrgName}</p>
+                <p>{t.footerOrgFull}</p>
+                <p className="font-mono text-white/30">{t.footerIpn}</p>
+                {t.footerKveds.map((item) => (
+                  <p key={item} className="font-mono text-white/30">{item}</p>
+                ))}
+                <p className="font-mono leading-relaxed text-white/30">{t.footerAddress}</p>
+                <p className="font-mono text-white/25">{t.footerBank}</p>
+                <p className="font-mono text-white/25">{t.footerRecipient}</p>
+                <p className="break-words font-mono text-white/25">{t.footerIban}</p>
+                <p className="font-mono text-white/25">{t.footerCurrency}</p>
+                <p className="font-mono text-white/25">{t.footerPurpose}</p>
+              </div>
+            </div>
+
+            <div>
+              <FooterLabel>{t.footerContactsLabel}</FooterLabel>
+              <div className="space-y-2 text-xs leading-relaxed text-white/35">
+                <p><span className="font-mono text-white/25">Email:</span> <a href={`mailto:${t.footerEmail}`} className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerEmail}</a></p>
+                <p><span className="font-mono text-white/25">{lang === "uk" ? "Телефон:" : "Phone:"}</span> <a href={`tel:+${t.footerPhone.replace(/\D/g, "")}`} className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerPhone}</a></p>
+                <p><span className="font-mono text-white/25">Telegram:</span> <a href={`https://t.me/${t.footerTelegram}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">@{t.footerTelegram}</a></p>
+                <p><span className="font-mono text-white/25">{lang === "uk" ? "Підтримка:" : "Support:"}</span> {t.footerSupport}</p>
+              </div>
+            </div>
+
+            <div>
+              <FooterLabel>{t.footerDocsLabel}</FooterLabel>
+              <div className="space-y-2">
+                {[
+                  ["/contacts", t.footerDocContacts],
+                  ["/public-offer", t.footerDocOffer],
+                  ["/privacy", t.footerDocPrivacy],
+                  ["/returns", t.footerDocReturns],
+                ].map(([href, label]) => (
+                  <Link key={href} href={href} className="flex min-h-10 items-center border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-xs text-white/35 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+                    {label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
-          <div>
-            <FooterLabel>{t.footerContactsLabel}</FooterLabel>
-            <div className="space-y-2 text-xs leading-relaxed text-white/35">
-              <p><span className="font-mono text-white/25">Email:</span> <a href="mailto:ceo@rave-era.com.ua" className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">ceo@rave-era.com.ua</a></p>
-              <p><span className="font-mono text-white/25">Phone:</span> <a href="tel:+380934307551" className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">+38 (093) 430-75-51</a></p>
-              <p><span className="font-mono text-white/25">Telegram:</span> <a href="https://t.me/bogdan_chekan" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">@bogdan_chekan</a></p>
-            </div>
+
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-white/[0.05] pt-5 sm:flex-row sm:pt-6">
+            <p className="text-[10px] font-mono text-white/15">{t.footerRights}</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-white/15">
+              RAVE'ERA GROUP · <span className="text-[#00FF88]">ECC-2026</span>
+            </p>
           </div>
-          <div>
-            <FooterLabel>{t.footerDocsLabel}</FooterLabel>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                ["/contacts", t.footerDocContacts],
-                ["/public-offer", t.footerDocOffer],
-                ["/privacy", t.footerDocPrivacy],
-                ["/returns", t.footerDocReturns],
-              ].map(([href, label]) => (
-                <Link key={href} href={href} className="inline-flex min-h-10 items-center border border-white/[0.06] bg-white/[0.02] px-3 text-xs text-white/35 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-white/[0.05] pt-6 sm:flex-row">
-          <p className="text-[10px] font-mono text-white/18">{t.footerRights}</p>
-          <p className="text-[10px] font-mono uppercase tracking-widest text-white/15">RAVE'ERA GROUP · <span className="text-[#00FF88]">ECC-2026</span></p>
         </div>
       </footer>
     </div>
@@ -589,7 +670,7 @@ export default function ECommerceEventPage() {
 
 function Section({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <section id={id} className="border-t border-white/[0.05] px-4 py-16 sm:px-6 md:px-12 md:py-24">
+    <section id={id} className="border-t border-white/[0.04] px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-28">
       <div className="mx-auto max-w-7xl">{children}</div>
     </section>
   );
