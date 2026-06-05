@@ -14,7 +14,6 @@ import { Link, Switch, Route, useLocation } from "wouter";
 
 const SBCEventPage = lazy(() => import("./pages/SBCEventPage"));
 const ECommerceEventPage = lazy(() => import("./pages/ECommerceEventPage"));
-const ECommercePortfolioPage = lazy(() => import("./pages/ECommercePortfolioPage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
 const ContactsPage = lazy(() => import("./pages/ContactsPage"));
 const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
@@ -83,7 +82,7 @@ const T = {
             "Expo and sponsor participation architecture",
             "AlliancePay, PDF, email, QR and check-in infrastructure",
           ],
-          eventUrl: "/portfolio/e-commerce-conference-2026",
+          eventUrl: "/event/e-commerce-conference-2026",
         },
         {
           title: "SBC Summit Ukraine 2026",
@@ -371,7 +370,7 @@ const T = {
             "Архітектура expo-зони, партнерів і спонсорів",
             "AlliancePay, PDF, email, QR та check-in інфраструктура",
           ],
-          eventUrl: "/portfolio/e-commerce-conference-2026",
+          eventUrl: "/event/e-commerce-conference-2026",
         },
         {
           title: "SBC Summit Ukraine 2026",
@@ -1315,7 +1314,6 @@ export default function App() {
           <Route path="/admin/checkin" component={AdminCheckinPage} />
           <Route path="/admin/checkin/" component={AdminCheckinPage} />
           <Route path="/" component={HomePage} />
-          <Route path="/portfolio/e-commerce-conference-2026" component={ECommercePortfolioPage} />
           <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
           <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
           <Route path="/event/sbc-summit-ukraine-2026/payment/success" component={PaymentSuccessPage} />
