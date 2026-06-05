@@ -93,6 +93,7 @@ const text = {
     offer: "Публічна оферта",
     privacy: "Політика конфіденційності",
     returns: "Політика повернення",
+    contacts: "Контакти",
   },
   en: {
     back: "Back",
@@ -119,6 +120,7 @@ const text = {
     offer: "Public Offer",
     privacy: "Privacy Policy",
     returns: "Refund Policy",
+    contacts: "Contacts",
   },
 };
 
@@ -263,6 +265,7 @@ export default function TicketFormPage() {
                 <p className="text-xs text-white/35 leading-relaxed mt-2">{t.issueCopy}</p>
               </div>
             </div>
+            <PaymentLogos />
           </div>
 
           <form onSubmit={onSubmit} className="space-y-6" noValidate>
@@ -340,8 +343,32 @@ export default function TicketFormPage() {
               </div>
             )}
           </form>
+          <div className="mt-8 flex flex-wrap justify-center gap-3 border-t border-white/[0.06] pt-5 text-xs">
+            <Link href="/contacts" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.contacts}</Link>
+            <Link href="/public-offer" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>
+            <Link href="/privacy" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.privacy}</Link>
+            <Link href="/returns" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>
+          </div>
         </motion.div>
       </main>
+    </div>
+  );
+}
+
+function PaymentLogos() {
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      {[
+        ["/images/payment-visa.png", "Visa"],
+        ["/images/payment-mastercard.png", "Mastercard"],
+        ["/images/payment-applepay.png", "Apple Pay"],
+        ["/images/payment-googlepay.png", "Google Pay"],
+        ["/images/payment-alliancepay.png", "AlliancePay"],
+      ].map(([src, alt]) => (
+        <div key={alt} className="flex h-8 items-center justify-center rounded-md bg-white px-2.5">
+          <img src={src} alt={alt} className="h-4 w-auto object-contain" />
+        </div>
+      ))}
     </div>
   );
 }
