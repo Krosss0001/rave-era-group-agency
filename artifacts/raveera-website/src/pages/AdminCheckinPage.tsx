@@ -5,6 +5,7 @@ import {
   Camera,
   CheckCircle2,
   Clock,
+  ImageUp,
   LogOut,
   Search,
   ShieldCheck,
@@ -32,6 +33,10 @@ type RecentScan = {
   status: string;
   result: string;
   at: string;
+};
+
+type QrFileScanner = Html5Qrcode & {
+  scanFile: (imageFile: File, showImage?: boolean) => Promise<string>;
 };
 
 const ticketTypeLabels: Record<string, string> = {
@@ -304,6 +309,7 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
 function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; disabled: boolean }) {
   const scannerIdRef = useRef(`checkin-qr-reader-${Math.random().toString(36).slice(2)}`);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const startingRef = useRef(false);
   const scanHandledRef = useRef(false);
   const mountedRef = useRef(false);
@@ -311,6 +317,7 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
   const [message, setMessage] = useState("Натисніть «Увімкнути камеру», щоб сканувати QR.");
   const [error, setError] = useState("");
   const [diagnostic, setDiagnostic] = useState("");
+  const [photoBusy, setPhotoBusy] = useState(false);
   const canUseCamera = typeof window !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
   const isRunning = status === "starting" || status === "scanning" || status === "stopping";
 
@@ -393,10 +400,10 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       const scanConfig = {
         fps: 10,
         qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-          const size = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72);
-          return { width: Math.max(180, size), height: Math.max(180, size) };
+          const size = Math.min(280, Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.75));
+          return { width: Math.max(140, size), height: Math.max(140, size) };
         },
-        aspectRatio: 1.333,
+        aspectRatio: 1.0,
         disableFlip: false,
       };
 
@@ -406,7 +413,8 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
         }
         const ticketCode = extractTicketCodeFromScan(decodedText);
         if (!ticketCode) {
-          setError("QR код не містить код квитка. Спробуйте ще раз або введіть код вручну.");
+          setError("QR зчитано, але код квитка не знайдено");
+          setDiagnostic(`Зчитаний QR: ${formatDecodedPreview(decodedText)}`);
           return;
         }
         scanHandledRef.current = true;
@@ -474,6 +482,44 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
     }
   }, [canUseCamera, onScan, stopScanner]);
 
+  const scanPhoto = useCallback(async (file: File) => {
+    if (photoBusy || startingRef.current || disabled) {
+      return;
+    }
+    setPhotoBusy(true);
+    setError("");
+    setDiagnostic("Тест з фото: декодуємо QR із зображення.");
+    let scanner: QrFileScanner | null = null;
+    try {
+      await waitForScannerContainer(scannerIdRef.current);
+      const { Html5Qrcode: Html5QrcodeScanner, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+      scanner = new Html5QrcodeScanner(scannerIdRef.current, {
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        useBarCodeDetectorIfSupported: true,
+        verbose: false,
+      }) as QrFileScanner;
+      const decodedText = await scanner.scanFile(file, false);
+      const ticketCode = extractTicketCodeFromScan(decodedText);
+      if (!ticketCode) {
+        setError("QR зчитано, але код квитка не знайдено");
+        setDiagnostic(`Зчитаний QR: ${formatDecodedPreview(decodedText)}`);
+        return;
+      }
+      setMessage("QR з фото зчитано. Перевіряємо квиток...");
+      onScan(ticketCode);
+    } catch {
+      setError("Не вдалося зчитати QR з фото. Спробуйте інше фото або введіть код вручну.");
+    } finally {
+      if (scanner) {
+        await resetScanner(scanner);
+      }
+      setPhotoBusy(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [disabled, onScan, photoBusy]);
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -516,13 +562,35 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
               Увімкнути камеру
             </button>
           )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              if (file) {
+                void scanPhoto(file);
+              }
+            }}
+          />
+          <button
+            type="button"
+            disabled={disabled || isRunning || photoBusy}
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-widest text-white/70 transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88] disabled:cursor-wait disabled:opacity-45 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#101018]"
+          >
+            <ImageUp className="h-4 w-4" aria-hidden="true" />
+            {photoBusy ? "Зчитуємо..." : "Тест з фото"}
+          </button>
         </div>
       </div>
       {error ? (
         <div className="mb-3 border border-red-400/30 bg-red-400/10 p-3 text-sm leading-relaxed text-red-200">
           <p className="flex items-start gap-2">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          {error}
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            {error}
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-6 text-red-100/90">
             <li>Перевірте дозвіл камери: iPhone Settings Safari Camera Allow.</li>
@@ -536,8 +604,25 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
           {diagnostic}
         </p>
       ) : null}
-      <div className="relative aspect-[4/3] min-h-64 w-full overflow-hidden border border-white/10 bg-black">
+      <div className="mb-3 border border-white/10 bg-white/[0.04] p-3 text-xs leading-relaxed text-white/55">
+        <p className="font-bold uppercase tracking-widest text-white/45">Поради для сканування</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>Збільшіть яскравість екрана з квитком.</li>
+          <li>Тримайте камеру на відстані 15-30 см.</li>
+          <li>Тримайте QR-код повністю всередині рамки.</li>
+          <li>Протріть об'єктив камери.</li>
+        </ul>
+      </div>
+      <div className="relative aspect-square min-h-64 w-full overflow-hidden border border-white/10 bg-black">
         <div id={scannerIdRef.current} className="h-full w-full [&_img]:hidden [&_video]:h-full [&_video]:w-full [&_video]:object-cover" />
+        {isRunning ? (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center">
+            <div className="aspect-square w-[75%] max-w-[280px] border-2 border-[#00FF88] bg-black/5 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
+            <p className="absolute bottom-5 left-4 right-4 text-xs font-black uppercase tracking-widest text-white drop-shadow">
+              Наведіть QR-код у рамку
+            </p>
+          </div>
+        ) : null}
         {!isRunning ? (
           <div className="absolute inset-0 grid place-items-center px-6 text-center text-sm text-white/45">
             QR камера опційна. Введіть код вручну, якщо камера недоступна.
@@ -554,17 +639,38 @@ function extractTicketCodeFromScan(value: string): string {
     return "";
   }
 
-  const match = trimmed.match(ticketCodePattern);
-  return (match?.[0] || trimmed).toUpperCase();
+  try {
+    const url = new URL(trimmed);
+    const ticketPathMatch = safeDecode(trimmed, url.pathname).match(/\/ticket\/(SBC-2026-[A-Z0-9-]+)/i);
+    if (ticketPathMatch?.[1]) {
+      return ticketPathMatch[1].toUpperCase();
+    }
+  } catch {
+    // Plain ticket codes are handled below.
+  }
+
+  const match = safeDecode(trimmed, trimmed).match(ticketCodePattern);
+  return match?.[0]?.toUpperCase() || "";
+}
+
+function safeDecode(original: string, value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return original;
+  }
 }
 
 async function waitForScannerContainer(elementId: string) {
-  await animationFrame();
-  await animationFrame();
-  const element = document.getElementById(elementId);
-  if (!element) {
-    throw new Error("Scanner container is not ready");
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    await animationFrame();
+    const element = document.getElementById(elementId);
+    const rect = element?.getBoundingClientRect();
+    if (rect && rect.width > 0 && rect.height > 0) {
+      return;
+    }
   }
+  throw new Error("Scanner container is not ready");
 }
 
 function animationFrame() {
@@ -611,6 +717,14 @@ function selectCameraIds(cameras: CameraDevice[]): string[] {
     cameras[0]?.id,
   ].filter((id): id is string => Boolean(id));
   return Array.from(new Set(ids));
+}
+
+function formatDecodedPreview(value: string): string {
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  if (!trimmed) {
+    return "порожній QR";
+  }
+  return trimmed.length > 120 ? `${trimmed.slice(0, 120)}...` : trimmed;
 }
 
 function getCameraErrorMessage(err: unknown): string {
