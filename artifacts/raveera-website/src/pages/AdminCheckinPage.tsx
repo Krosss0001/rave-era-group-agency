@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type FormEvent, type ReactNode, type SetStateAction } from "react";
 import type { CameraDevice, Html5Qrcode, Html5QrcodeCameraScanConfig } from "html5-qrcode";
+import type { IScannerControls } from "@zxing/browser";
 import {
   AlertTriangle,
   Camera,
@@ -38,6 +39,12 @@ type RecentScan = {
 type QrFileScanner = Html5Qrcode & {
   scanFile: (imageFile: File, showImage?: boolean) => Promise<string>;
 };
+
+class InvalidQrCodeError extends Error {
+  constructor(readonly decodedText: string) {
+    super("QR decoded without ticket code");
+  }
+}
 
 const ticketTypeLabels: Record<string, string> = {
   sport: "SPORT",
@@ -308,57 +315,119 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
 
 function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; disabled: boolean }) {
   const scannerIdRef = useRef(`checkin-qr-reader-${Math.random().toString(36).slice(2)}`);
+  const zxingVideoIdRef = useRef(`checkin-zxing-reader-${Math.random().toString(36).slice(2)}`);
+  const zxingVideoRef = useRef<HTMLVideoElement | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const zxingControlsRef = useRef<IScannerControls | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const startingRef = useRef(false);
   const scanHandledRef = useRef(false);
   const mountedRef = useRef(false);
+  const compatibilityTimerRef = useRef<number | null>(null);
   const [status, setStatus] = useState<"idle" | "starting" | "scanning" | "stopping">("idle");
+  const [scannerMode, setScannerMode] = useState<"html5" | "zxing" | null>(null);
   const [message, setMessage] = useState("Натисніть «Увімкнути камеру», щоб сканувати QR.");
   const [error, setError] = useState("");
   const [diagnostic, setDiagnostic] = useState("");
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [showCompatibilityPrompt, setShowCompatibilityPrompt] = useState(false);
   const canUseCamera = typeof window !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
   const isRunning = status === "starting" || status === "scanning" || status === "stopping";
 
-  const stopScanner = useCallback(async () => {
-    const scanner = scannerRef.current;
-    if (!scanner) {
-      if (mountedRef.current) {
-        setStatus("idle");
-      }
-      return;
+  const stopZxingScanner = useCallback(() => {
+    const controls = zxingControlsRef.current;
+    zxingControlsRef.current = null;
+    if (controls) {
+      controls.stop();
     }
+    const video = zxingVideoRef.current;
+    if (video) {
+      video.pause();
+      video.srcObject = null;
+      video.removeAttribute("src");
+      video.load();
+    }
+  }, []);
 
+  const clearCompatibilityTimer = useCallback(() => {
+    if (compatibilityTimerRef.current !== null) {
+      window.clearTimeout(compatibilityTimerRef.current);
+      compatibilityTimerRef.current = null;
+    }
+  }, []);
+
+  const armCompatibilityPrompt = useCallback(() => {
+    clearCompatibilityTimer();
+    setShowCompatibilityPrompt(false);
+    compatibilityTimerRef.current = window.setTimeout(() => {
+      if (mountedRef.current && !scanHandledRef.current) {
+        setShowCompatibilityPrompt(true);
+      }
+    }, 4500);
+  }, [clearCompatibilityTimer]);
+
+  const stopHtml5Scanner = useCallback(async () => {
+    const scanner = scannerRef.current;
+    if (scanner) {
+      try {
+        if (scanner.isScanning) {
+          await scanner.stop();
+        }
+        scanner.clear();
+      } catch {
+        // The browser may already have stopped the stream after permission changes.
+      } finally {
+        scannerRef.current = null;
+      }
+    }
+  }, []);
+
+  const stopScanner = useCallback(async () => {
     if (mountedRef.current) {
       setStatus("stopping");
     }
 
     try {
-      if (scanner.isScanning) {
-        await scanner.stop();
-      }
-      scanner.clear();
-    } catch {
-      // The browser may already have stopped the stream after permission changes.
+      await stopHtml5Scanner();
+      stopZxingScanner();
     } finally {
-      scannerRef.current = null;
+      clearCompatibilityTimer();
       startingRef.current = false;
       scanHandledRef.current = false;
       if (mountedRef.current) {
         setStatus("idle");
+        setScannerMode(null);
+        setShowCompatibilityPrompt(false);
         setMessage("Сканер зупинено. Ручний ввід доступний завжди.");
         setDiagnostic("");
       }
     }
-  }, []);
+  }, [clearCompatibilityTimer, stopHtml5Scanner, stopZxingScanner]);
+
+  const handleDecodedText = useCallback((decodedText: string, source: string) => {
+    if (scanHandledRef.current) {
+      return;
+    }
+    const ticketCode = extractTicketCodeFromScan(decodedText);
+    if (!ticketCode) {
+      setError("QR зчитано, але код квитка не знайдено");
+      setDiagnostic(`${source}: ${formatDecodedPreview(decodedText)}`);
+      return;
+    }
+    scanHandledRef.current = true;
+    clearCompatibilityTimer();
+    setShowCompatibilityPrompt(false);
+    setMessage("QR зчитано. Перевіряємо квиток...");
+    void stopScanner().finally(() => onScan(ticketCode));
+  }, [clearCompatibilityTimer, onScan, stopScanner]);
 
   const startScanner = useCallback(async () => {
-    if (startingRef.current || scannerRef.current?.isScanning) {
+    if (startingRef.current || scannerRef.current?.isScanning || zxingControlsRef.current) {
       return;
     }
 
     startingRef.current = true;
+    stopZxingScanner();
 
     if (typeof window !== "undefined" && !window.isSecureContext) {
       startingRef.current = false;
@@ -375,9 +444,11 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
     }
 
     setStatus("starting");
+    setScannerMode("html5");
     setError("");
     setDiagnostic("Перевірка: запитуємо дозвіл камери Safari.");
     setMessage("Запитуємо доступ до камери...");
+    setShowCompatibilityPrompt(false);
     scanHandledRef.current = false;
 
     try {
@@ -408,18 +479,7 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       };
 
       const handleSuccess = (decodedText: string) => {
-        if (scanHandledRef.current) {
-          return;
-        }
-        const ticketCode = extractTicketCodeFromScan(decodedText);
-        if (!ticketCode) {
-          setError("QR зчитано, але код квитка не знайдено");
-          setDiagnostic(`Зчитаний QR: ${formatDecodedPreview(decodedText)}`);
-          return;
-        }
-        scanHandledRef.current = true;
-        setMessage("QR зчитано. Перевіряємо квиток...");
-        void stopScanner().finally(() => onScan(ticketCode));
+        handleDecodedText(decodedText, "html5-qrcode");
       };
 
       type ScannerCameraInput = Parameters<Html5Qrcode["start"]>[0];
@@ -464,7 +524,9 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
 
       if (mountedRef.current) {
         setStatus("scanning");
+        setScannerMode("html5");
         setMessage("Наведіть камеру на QR-код квитка.");
+        armCompatibilityPrompt();
       }
     } catch (err) {
       const scanner = scannerRef.current;
@@ -474,13 +536,65 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       scannerRef.current = null;
       if (mountedRef.current) {
         setStatus("idle");
+        setScannerMode(null);
         setError(getCameraErrorMessage(err));
         setMessage("Сканер не запущено. Ручний ввід доступний.");
       }
     } finally {
       startingRef.current = false;
     }
-  }, [canUseCamera, onScan, stopScanner]);
+  }, [armCompatibilityPrompt, canUseCamera, handleDecodedText, stopZxingScanner]);
+
+  const startCompatibilityMode = useCallback(async () => {
+    if (startingRef.current || disabled || zxingControlsRef.current) {
+      return;
+    }
+
+    startingRef.current = true;
+    clearCompatibilityTimer();
+    setShowCompatibilityPrompt(false);
+    setStatus("starting");
+    setScannerMode("zxing");
+    setError("");
+    setDiagnostic("Режим сумісності: запускаємо ZXing.");
+    setMessage("Запускаємо режим сумісності...");
+    scanHandledRef.current = false;
+
+    try {
+      await stopHtml5Scanner();
+      await waitForVideoContainer(zxingVideoRef.current);
+      const { BrowserQRCodeReader } = await import("@zxing/browser");
+      const reader = new BrowserQRCodeReader();
+      const devices = await BrowserQRCodeReader.listVideoInputDevices();
+      const cameraId = selectZxingCameraId(devices);
+      const controls = await reader.decodeFromVideoDevice(
+        cameraId,
+        zxingVideoRef.current || zxingVideoIdRef.current,
+        (result) => {
+          if (result) {
+            handleDecodedText(result.getText(), "ZXing");
+          }
+        },
+      );
+      zxingControlsRef.current = controls;
+      if (mountedRef.current) {
+        setStatus("scanning");
+        setScannerMode("zxing");
+        setMessage("Режим сумісності активний. Наведіть QR-код у рамку.");
+        setDiagnostic("ZXing: активний режим сумісності.");
+      }
+    } catch (err) {
+      stopZxingScanner();
+      if (mountedRef.current) {
+        setStatus("idle");
+        setScannerMode(null);
+        setError(getCameraErrorMessage(err));
+        setMessage("Режим сумісності не запущено. Ручний ввід доступний.");
+      }
+    } finally {
+      startingRef.current = false;
+    }
+  }, [clearCompatibilityTimer, disabled, handleDecodedText, stopHtml5Scanner, stopZxingScanner]);
 
   const scanPhoto = useCallback(async (file: File) => {
     if (photoBusy || startingRef.current || disabled) {
@@ -488,8 +602,9 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
     }
     setPhotoBusy(true);
     setError("");
-    setDiagnostic("Тест з фото: декодуємо QR із зображення.");
+    setDiagnostic("Сканування з фото: декодуємо QR із зображення.");
     let scanner: QrFileScanner | null = null;
+    let objectUrl = "";
     try {
       await waitForScannerContainer(scannerIdRef.current);
       const { Html5Qrcode: Html5QrcodeScanner, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
@@ -501,15 +616,40 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       const decodedText = await scanner.scanFile(file, false);
       const ticketCode = extractTicketCodeFromScan(decodedText);
       if (!ticketCode) {
-        setError("QR зчитано, але код квитка не знайдено");
-        setDiagnostic(`Зчитаний QR: ${formatDecodedPreview(decodedText)}`);
-        return;
+        throw new InvalidQrCodeError(decodedText);
       }
       setMessage("QR з фото зчитано. Перевіряємо квиток...");
       onScan(ticketCode);
-    } catch {
-      setError("Не вдалося зчитати QR з фото. Спробуйте інше фото або введіть код вручну.");
+    } catch (html5Error) {
+      try {
+        const { BrowserQRCodeReader } = await import("@zxing/browser");
+        const reader = new BrowserQRCodeReader();
+        objectUrl = URL.createObjectURL(file);
+        const result = await reader.decodeFromImageUrl(objectUrl);
+        const decodedText = result.getText();
+        const ticketCode = extractTicketCodeFromScan(decodedText);
+        if (!ticketCode) {
+          throw new InvalidQrCodeError(decodedText);
+        }
+        setMessage("QR з фото зчитано. Перевіряємо квиток...");
+        onScan(ticketCode);
+      } catch (zxingError) {
+        const decodedText = html5Error instanceof InvalidQrCodeError
+          ? html5Error.decodedText
+          : zxingError instanceof InvalidQrCodeError
+            ? zxingError.decodedText
+            : "";
+        if (decodedText) {
+          setError("QR зчитано, але код квитка не знайдено");
+          setDiagnostic(`Зчитаний QR: ${formatDecodedPreview(decodedText)}`);
+        } else {
+          setError("Не вдалося зчитати QR з фото. Спробуйте інше фото або введіть код вручну.");
+        }
+      }
     } finally {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
       if (scanner) {
         await resetScanner(scanner);
       }
@@ -529,9 +669,11 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       if (scanner?.isScanning) {
         void scanner.stop().catch(() => undefined);
       }
+      stopZxingScanner();
+      clearCompatibilityTimer();
       startingRef.current = false;
     };
-  }, []);
+  }, [clearCompatibilityTimer, stopZxingScanner]);
 
   return (
     <section className="border border-white/[0.1] bg-[#101018] p-4">
@@ -562,6 +704,18 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
               Увімкнути камеру
             </button>
           )}
+          {showCompatibilityPrompt && scannerMode === "html5" ? (
+            <div className="border border-amber-300/30 bg-amber-300/10 p-3 text-xs leading-relaxed text-amber-100">
+              <p className="font-semibold">Не зчитується? Спробуйте режим сумісності</p>
+              <button
+                type="button"
+                onClick={() => void startCompatibilityMode()}
+                className="mt-2 inline-flex min-h-10 w-full items-center justify-center border border-amber-200/60 px-3 py-2 text-xs font-black uppercase tracking-widest text-amber-50 transition-colors hover:bg-amber-200 hover:text-black"
+              >
+                Режим сумісності
+              </button>
+            </div>
+          ) : null}
           <input
             ref={fileInputRef}
             type="file"
@@ -582,7 +736,7 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-widest text-white/70 transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88] disabled:cursor-wait disabled:opacity-45 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#101018]"
           >
             <ImageUp className="h-4 w-4" aria-hidden="true" />
-            {photoBusy ? "Зчитуємо..." : "Тест з фото"}
+            {photoBusy ? "Зчитуємо..." : "Сканувати з фото"}
           </button>
         </div>
       </div>
@@ -607,14 +761,23 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       <div className="mb-3 border border-white/10 bg-white/[0.04] p-3 text-xs leading-relaxed text-white/55">
         <p className="font-bold uppercase tracking-widest text-white/45">Поради для сканування</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>Тримайте QR на відстані 20-40 см.</li>
           <li>Збільшіть яскравість екрана з квитком.</li>
-          <li>Тримайте камеру на відстані 15-30 см.</li>
-          <li>Тримайте QR-код повністю всередині рамки.</li>
-          <li>Протріть об'єктив камери.</li>
+          <li>Переконайтесь, що QR повністю різкий.</li>
         </ul>
       </div>
       <div className="relative aspect-square min-h-64 w-full overflow-hidden border border-white/10 bg-black">
-        <div id={scannerIdRef.current} className="h-full w-full [&_img]:hidden [&_video]:h-full [&_video]:w-full [&_video]:object-cover" />
+        <div
+          id={scannerIdRef.current}
+          className={`h-full w-full [&_img]:hidden [&_video]:h-full [&_video]:w-full [&_video]:object-cover ${scannerMode === "zxing" ? "hidden" : ""}`}
+        />
+        <video
+          ref={zxingVideoRef}
+          id={zxingVideoIdRef.current}
+          muted
+          playsInline
+          className={`h-full w-full object-cover ${scannerMode === "zxing" ? "" : "hidden"}`}
+        />
         {isRunning ? (
           <div className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center">
             <div className="aspect-square w-[75%] max-w-[280px] border-2 border-[#00FF88] bg-black/5 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
@@ -673,6 +836,17 @@ async function waitForScannerContainer(elementId: string) {
   throw new Error("Scanner container is not ready");
 }
 
+async function waitForVideoContainer(element: HTMLVideoElement | null) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    await animationFrame();
+    const rect = element?.getBoundingClientRect();
+    if (rect && rect.width > 0 && rect.height > 0) {
+      return;
+    }
+  }
+  throw new Error("Compatibility scanner video is not ready");
+}
+
 function animationFrame() {
   return new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => resolve());
@@ -717,6 +891,11 @@ function selectCameraIds(cameras: CameraDevice[]): string[] {
     cameras[0]?.id,
   ].filter((id): id is string => Boolean(id));
   return Array.from(new Set(ids));
+}
+
+function selectZxingCameraId(devices: MediaDeviceInfo[]): string | undefined {
+  const rearCamera = devices.find((device) => /back|rear|environment|зад|основ/i.test(device.label));
+  return rearCamera?.deviceId || devices[devices.length - 1]?.deviceId || devices[0]?.deviceId;
 }
 
 function formatDecodedPreview(value: string): string {
