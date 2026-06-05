@@ -15,7 +15,7 @@ import {
 const G = "#00FF88";
 
 type Lang = "en" | "uk";
-type TicketType = "sport" | "business" | "online";
+type TicketType = "sport" | "business" | "online" | "standard" | "vip" | "corporate";
 type EventSlug = "sbc-summit-ukraine-2026" | "e-commerce-conference-2026";
 
 const events: Record<EventSlug, { title: string; eventHref: string; formHref: string }> = {
@@ -31,39 +31,53 @@ const events: Record<EventSlug, { title: string; eventHref: string; formHref: st
   },
 };
 
-const tiers: Record<TicketType, { name: string; price: string; scope: string }> = {
+type TicketOption = { name: string; price: string; scope: string; payment: boolean };
+
+const tiers: Record<"sport" | "business" | "online", TicketOption> = {
   sport: {
     name: "SPORT",
     price: "2 500 UAH",
     scope: "In-person event access, partner expo, Sport&Business Club community, networking, participant package, photo/video report.",
+    payment: true,
   },
   business: {
     name: "BUSINESS",
     price: "6 500 UAH",
     scope: "SPORT access plus business lounge, speaker zone, priority entry, front-row seating, speaker materials, event recording and parking.",
+    payment: true,
   },
   online: {
     name: "ONLINE",
     price: "1 UAH",
     scope: "Remote access to the online broadcast and event recording.",
+    payment: true,
   },
 };
 
-const ecommerceTiers: Record<TicketType, { name: string; price: string; scope: string }> = {
-  sport: {
-    name: "STANDARD",
-    price: "2 500 UAH",
-    scope: "Offline access to the conference, expo zone, networking, participant package and photo/video report.",
-  },
-  business: {
-    name: "BUSINESS",
-    price: "6 500 UAH",
-    scope: "STANDARD access plus business lounge, priority entry, speaker materials, premium networking and event recording.",
-  },
+const ecommerceTiers: Record<"online" | "standard" | "vip" | "corporate", TicketOption> = {
   online: {
     name: "ONLINE",
-    price: "1 UAH",
-    scope: "Remote access to the online broadcast and event recording.",
+    price: "1 500 UAH",
+    scope: "Online stream access, post-event photo/video report, private Telegram networking chat and speaker recordings.",
+    payment: true,
+  },
+  standard: {
+    name: "STANDARD",
+    price: "1 800 UAH",
+    scope: "Conference attendance, expo zone, networking zone, private Telegram chat and post-event photo/video report.",
+    payment: true,
+  },
+  vip: {
+    name: "VIP + AFTERPARTY",
+    price: "4 000 UAH",
+    scope: "VIP registration, front-row reserved seating, expo access, VIP Lounge, afterparty with premium catering/bar and personal parking.",
+    payment: true,
+  },
+  corporate: {
+    name: "CORPORATE",
+    price: "Invoice",
+    scope: "Legal entity payment, invoice, contract, acts and group participation terms. Corporate tickets are handled by organizer request.",
+    payment: false,
   },
 };
 
@@ -94,6 +108,9 @@ const text = {
     privacy: "Політика конфіденційності",
     returns: "Політика повернення",
     contacts: "Контакти",
+    corporateTitle: "Корпоративні квитки",
+    corporateCopy: "Для оплати від юридичної особи організатор підготує договір, рахунок, акти та умови групового замовлення.",
+    corporateCta: "Запитати корпоративний рахунок",
   },
   en: {
     back: "Back",
@@ -121,6 +138,9 @@ const text = {
     privacy: "Privacy Policy",
     returns: "Refund Policy",
     contacts: "Contacts",
+    corporateTitle: "Corporate tickets",
+    corporateCopy: "For legal entity payment, the organizer prepares the contract, invoice, acts and group order terms.",
+    corporateCta: "Request corporate invoice",
   },
 };
 
@@ -132,7 +152,7 @@ type CreateOrderResponse = {
 
 function getInitialTicketType(): TicketType {
   const type = new URLSearchParams(window.location.search).get("type");
-  return type === "business" || type === "online" || type === "sport" ? type : "sport";
+  return type === "business" || type === "online" || type === "sport" || type === "standard" || type === "vip" || type === "corporate" ? type : "sport";
 }
 
 function getEventSlug(location: string): EventSlug {
@@ -163,11 +183,21 @@ export default function TicketFormPage() {
   const eventSlug = getEventSlug(location);
   const event = events[eventSlug];
   const activeTiers = eventSlug === "e-commerce-conference-2026" ? ecommerceTiers : tiers;
-  const tier = activeTiers[ticketType];
+  const allowedTicketTypes = Object.keys(activeTiers) as TicketType[];
+  const normalizedTicketType = allowedTicketTypes.includes(ticketType) ? ticketType : allowedTicketTypes[0];
+  const tier = activeTiers[normalizedTicketType as keyof typeof activeTiers];
+  const isCorporate = eventSlug === "e-commerce-conference-2026" && normalizedTicketType === "corporate";
 
   useEffect(() => {
     document.title = `${event.title} | Ticket request | RAVE'ERA GROUP`;
   }, [event.title]);
+
+  useEffect(() => {
+    if (ticketType !== normalizedTicketType) {
+      setTicketType(normalizedTicketType);
+      window.history.replaceState(null, "", `${event.formHref}?type=${normalizedTicketType}`);
+    }
+  }, [event.formHref, normalizedTicketType, ticketType]);
 
   function selectTicketType(next: TicketType) {
     setTicketType(next);
@@ -204,7 +234,7 @@ export default function TicketFormPage() {
         },
         body: JSON.stringify({
           eventSlug,
-          ticketType,
+          ticketType: normalizedTicketType,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           email: email.trim(),
@@ -256,7 +286,7 @@ export default function TicketFormPage() {
           <p className="mb-3 text-xs font-mono uppercase tracking-[0.2em] text-[#00FF88]">{event.title}</p>
           <p className="text-sm text-white/45 leading-relaxed mb-8">{t.subtitle}</p>
 
-          <div className="mb-8 border border-[#00FF88]/20 bg-[#00FF88]/[0.03] p-4 sm:p-5">
+          {!isCorporate && <div className="mb-8 border border-[#00FF88]/20 bg-[#00FF88]/[0.03] p-4 sm:p-5">
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" style={{ color: G }} />
               <div>
@@ -266,7 +296,7 @@ export default function TicketFormPage() {
               </div>
             </div>
             <PaymentLogos />
-          </div>
+          </div>}
 
           <form onSubmit={onSubmit} className="space-y-6" noValidate>
             <fieldset>
@@ -276,8 +306,8 @@ export default function TicketFormPage() {
               </legend>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {(Object.keys(activeTiers) as TicketType[]).map((key) => {
-                  const option = activeTiers[key];
-                  const active = ticketType === key;
+                  const option = activeTiers[key as keyof typeof activeTiers];
+                  const active = normalizedTicketType === key;
                   return (
                     <button
                       key={key}
@@ -297,7 +327,17 @@ export default function TicketFormPage() {
               <p className="mt-3 text-xs text-white/35 leading-relaxed">{tier.scope}</p>
             </fieldset>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {isCorporate && (
+              <div className="border border-[#00FF88]/20 bg-[#00FF88]/[0.035] p-4 sm:p-5">
+                <p className="text-sm font-bold uppercase tracking-widest text-white/75">{t.corporateTitle}</p>
+                <p className="mt-3 text-sm leading-relaxed text-white/45">{t.corporateCopy}</p>
+                <a href="mailto:ceo@rave-era.com.ua?subject=E-Commerce%20Conference%202026%20corporate%20tickets" className="mt-5 inline-flex min-h-11 items-center justify-center bg-[#00FF88] px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+                  {t.corporateCta}
+                </a>
+              </div>
+            )}
+
+            {!isCorporate && <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field id="first-name" label={t.firstName} error={errors.firstName} icon={<User className="w-4 h-4" />}>
                 <input id="first-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" aria-invalid={Boolean(errors.firstName)} aria-describedby={errors.firstName ? "first-name-error" : undefined} className="form-input" />
               </Field>
@@ -310,9 +350,9 @@ export default function TicketFormPage() {
               <Field id="phone" label={t.phone} error={errors.phone} icon={<Phone className="w-4 h-4" />}>
                 <input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" placeholder="+380 XX XXX XX XX" aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "phone-error" : undefined} className="form-input" />
               </Field>
-            </div>
+            </div>}
 
-            <label className="flex items-start gap-3 text-xs text-white/40 leading-relaxed border border-white/[0.08] bg-white/[0.02] p-4">
+            {!isCorporate && <label className="flex items-start gap-3 text-xs text-white/40 leading-relaxed border border-white/[0.08] bg-white/[0.02] p-4">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} aria-invalid={Boolean(errors.consent)} aria-describedby={errors.consent ? "legal-consent-error" : undefined} className="mt-0.5 h-4 w-4 accent-[#00FF88]" />
               <span>
                 {t.legalCopy}{" "}
@@ -321,19 +361,19 @@ export default function TicketFormPage() {
                 <Link href="/returns" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>.
                 {errors.consent && <span id="legal-consent-error" className="mt-2 block text-red-400">{errors.consent}</span>}
               </span>
-            </label>
+            </label>}
 
-            <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="w-full min-h-12 py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]" style={{ background: G }}>
+            {!isCorporate && <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="w-full min-h-12 py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]" style={{ background: G }}>
               {isSubmitting ? t.submitting : t.submit}
-            </button>
+            </button>}
 
-            {paymentError && (
+            {!isCorporate && paymentError && (
               <div role="alert" className="border border-red-400/25 bg-red-400/[0.06] p-4 text-xs leading-relaxed text-red-200">
                 {paymentError}
               </div>
             )}
 
-            {submitted && (
+            {!isCorporate && submitted && (
               <div className="border border-[#00FF88]/25 bg-[#00FF88]/[0.04] p-4 text-sm text-white/55">
                 <div className="flex items-center gap-2 font-bold text-white/75 mb-2">
                   <CheckCircle2 className="w-4 h-4" style={{ color: G }} />

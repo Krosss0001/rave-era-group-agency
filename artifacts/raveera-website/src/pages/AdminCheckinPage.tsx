@@ -50,6 +50,8 @@ const ticketTypeLabels: Record<string, string> = {
   sport: "SPORT",
   business: "BUSINESS",
   online: "ONLINE",
+  standard: "STANDARD",
+  vip: "VIP + AFTERPARTY",
 };
 
 const ticketCodePattern = /(?:SBC|ECC)-2026-[A-Z0-9-]+/i;

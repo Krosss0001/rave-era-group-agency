@@ -15,6 +15,8 @@ const ticketTypeLabels: Record<string, string> = {
   sport: "Sport Marketing",
   business: "Business",
   online: "Online",
+  standard: "STANDARD",
+  vip: "VIP + AFTERPARTY",
 };
 
 export default function TicketPage() {

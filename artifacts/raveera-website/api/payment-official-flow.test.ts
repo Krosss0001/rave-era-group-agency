@@ -4,8 +4,24 @@ import {
   ALLIANCEPAY_HPP_CREATE_ORDER_URL,
   buildAlliancePayAuthHeaders,
   buildAlliancePayHppCreateOrderPayload,
+  createOrder,
+  getTicketPrice,
   ticketPrices,
 } from "./_payment.js";
+
+class MockResponse {
+  statusCode = 200;
+  headers = new Map<string, string>();
+  body = "";
+
+  setHeader(name: string, value: string) {
+    this.headers.set(name, value);
+  }
+
+  end(body = "") {
+    this.body = body;
+  }
+}
 
 test("Vercel payment API builds the official AlliancePay HPP create-order payload", () => {
   const merchantRequestId = "137d9304-0368-11ed-b939-0242ac120002";
@@ -43,10 +59,43 @@ test("Vercel payment API uses the official AlliancePay ECOM endpoint and auth he
   });
 });
 
-test("ticket prices preserve SPORT and BUSINESS while ONLINE is one hryvnia", () => {
+test("ticket prices preserve SBC prices while adding E-Commerce formats", () => {
   assert.deepEqual(ticketPrices, {
-    sport: 250000,
-    business: 650000,
-    online: 100,
+    "sbc-summit-ukraine-2026": {
+      sport: 250000,
+      business: 650000,
+      online: 100,
+    },
+    "e-commerce-conference-2026": {
+      online: 150000,
+      standard: 180000,
+      vip: 400000,
+    },
   });
+  assert.equal(getTicketPrice("sbc-summit-ukraine-2026", "online"), 100);
+  assert.equal(getTicketPrice("sbc-summit-ukraine-2026", "sport"), 250000);
+  assert.equal(getTicketPrice("sbc-summit-ukraine-2026", "business"), 650000);
+  assert.equal(getTicketPrice("e-commerce-conference-2026", "online"), 150000);
+  assert.equal(getTicketPrice("e-commerce-conference-2026", "standard"), 180000);
+  assert.equal(getTicketPrice("e-commerce-conference-2026", "vip"), 400000);
+  assert.equal(getTicketPrice("e-commerce-conference-2026", "corporate"), 0);
+});
+
+test("E-Commerce corporate tickets are not accepted as direct payment tickets", async () => {
+  const response = new MockResponse();
+  await createOrder({
+    body: {
+      eventSlug: "e-commerce-conference-2026",
+      ticketType: "corporate",
+      firstName: "Test",
+      lastName: "Buyer",
+      email: "buyer@example.com",
+      phone: "+380934307551",
+    },
+    headers: {},
+    socket: {},
+  } as never, response as never);
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(JSON.parse(response.body).code, "INVALID_REQUEST");
 });

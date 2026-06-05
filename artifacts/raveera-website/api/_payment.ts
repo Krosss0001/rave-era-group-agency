@@ -108,6 +108,7 @@ const CANONICAL_PUBLIC_APP_ORIGIN = "https://www.rave-era.com.ua";
 const EVENT_SLUG = "sbc-summit-ukraine-2026";
 const EVENT_TITLE = "SBC Summit Ukraine 2026";
 type EventSlug = "sbc-summit-ukraine-2026" | "e-commerce-conference-2026";
+type PaymentTicketType = "sport" | "business" | "online" | "standard" | "vip";
 type EventConfig = {
   slug: EventSlug;
   title: string;
@@ -143,15 +144,27 @@ let cachedNotoLatinBoldFontBytes: Uint8Array | null = null;
 let cachedNotoCyrillicFontBytes: Uint8Array | null = null;
 let cachedNotoCyrillicBoldFontBytes: Uint8Array | null = null;
 
-export const ticketPrices: Record<string, number> = {
-  sport: 250000,
-  business: 650000,
-  online: 100,
+export const ticketPrices: Record<EventSlug, Partial<Record<PaymentTicketType, number>>> = {
+  "sbc-summit-ukraine-2026": {
+    sport: 250000,
+    business: 650000,
+    online: 100,
+  },
+  "e-commerce-conference-2026": {
+    online: 150000,
+    standard: 180000,
+    vip: 400000,
+  },
 };
+
+export function getTicketPrice(eventSlug: string | null | undefined, ticketType: string): number {
+  const eventConfig = getEventConfig(eventSlug);
+  return ticketPrices[eventConfig.slug][ticketType as PaymentTicketType] || 0;
+}
 
 const createOrderBodySchema = z.object({
   eventSlug: z.enum(["sbc-summit-ukraine-2026", "e-commerce-conference-2026"]).optional(),
-  ticketType: z.enum(["sport", "business", "online"]),
+  ticketType: z.enum(["sport", "business", "online", "standard", "vip"]),
   firstName: z.string().min(1).max(30),
   lastName: z.string().min(1).max(30),
   email: z.string().email().max(256),
@@ -1093,7 +1106,9 @@ function getTicketTypeLabel(ticketType: string): string {
   return {
     sport: "Sport Marketing",
     business: "Business",
-    online: "Online",
+    online: "ONLINE",
+    standard: "STANDARD",
+    vip: "VIP + AFTERPARTY",
   }[ticketType] || ticketType;
 }
 
@@ -1865,7 +1880,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
 
   const { eventSlug, ticketType, firstName, lastName, email, phone } = parsedBody;
   const eventConfig = getEventConfig(eventSlug);
-  const coinAmount = ticketPrices[ticketType] ?? 0;
+  const coinAmount = getTicketPrice(eventConfig.slug, ticketType);
   if (!coinAmount) {
     sendJson(res, 400, { code: "INVALID_REQUEST", error: "Unknown ticket type" });
     return;

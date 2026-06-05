@@ -27,7 +27,7 @@ const mapUrl = "https://www.google.com/maps?q=Kyiv%20Ukraine&output=embed";
 const mapExternal = "https://www.google.com/maps/search/?api=1&query=Kyiv%20Ukraine";
 
 type Lang = "uk" | "en";
-type TicketKey = "sport" | "business" | "online";
+type TicketKey = "online" | "standard" | "vip" | "corporate";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -39,10 +39,11 @@ const fadeUpChild = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" as const } },
 } as const;
 
-const tickets: Array<{ key: TicketKey; name: string; price: string; popular?: boolean }> = [
-  { key: "sport", name: "STANDARD", price: "2 500" },
-  { key: "business", name: "BUSINESS", price: "6 500", popular: true },
-  { key: "online", name: "ONLINE", price: "1" },
+const tickets: Array<{ key: TicketKey; name: string; price: string; popular?: boolean; premium?: boolean; corporate?: boolean }> = [
+  { key: "online", name: "ONLINE", price: "1 500" },
+  { key: "standard", name: "STANDARD", price: "1 800", popular: true },
+  { key: "vip", name: "VIP + AFTERPARTY", price: "4 000", premium: true },
+  { key: "corporate", name: "КОРПОРАТИВНІ КВИТКИ", price: "INVOICE", corporate: true },
 ];
 
 const content = {
@@ -95,18 +96,22 @@ const content = {
       "Performance marketing: paid media, creatives, attribution, SEO and affiliate",
       "CRM/CDP automation and AI commerce tools",
     ],
-    ticketsTitle: "Три формати участі з прозорою оплатою",
+    ticketsTitle: "Формати участі для команд і гостей eCommerce ринку",
     ticketDescriptions: {
-      sport: "Офлайн-доступ до конференції, expo-зони, нетворкінгу, пакета учасника та фото/відео звіту.",
-      business: "STANDARD-доступ плюс business lounge, пріоритетний вхід, матеріали спікерів, преміальний нетворкінг і запис події.",
-      online: "Дистанційний доступ до онлайн-трансляції та відеозапису події.",
+      online: "Для дистанційної участі, перегляду контенту та доступу до матеріалів після події.",
+      standard: "Базовий офлайн-формат для відвідування конференції, expo-зони та нетворкінгу.",
+      vip: "Преміальний формат для гостей, яким потрібен швидкий вхід, перші ряди, VIP Lounge та afterparty.",
+      corporate: "Для компаній, які оплачують участь команди від юридичної особи за рахунком і договором.",
     },
     ticketFeatures: {
-      sport: ["Конференція та expo-зона", "B2B & B2C нетворкінг", "Пакет учасника", "Фото/відео звіт"],
-      business: ["Business lounge", "Пріоритетний вхід", "Матеріали спікерів", "Преміальний нетворкінг", "Відеозапис події"],
-      online: ["Онлайн-трансляція", "Відеозапис події"],
+      online: ["доступ до онлайн трансляції", "фото та відео звіт після події", "закритий нетворкінг-чат у Telegram", "доступ до відеозаписів спікерів"],
+      standard: ["доступ до нетворкінг зони", "фото та відео звіт після події", "закритий нетворкінг-чат у Telegram", "відвідування конференції та доступ до експозони"],
+      vip: ["окрема VIP-стійка реєстрації для швидкого проходу", "зарезервовані місця в перших рядах біля сцени", "відвідування конференції та доступ до експозони", "доступ до VIP Lounge", "AFTERPARTY з преміум кейтерингом та баром", "особисте паркомісце"],
+      corporate: ["для компаній, які оплачують участь своїх співробітників", "оплата від юридичної особи", "договір, рахунок, акти та супровідні документи", "спеціальні корпоративні знижки при груповому замовленні", "доступ до нетворкінг-зони та експозони", "закритий Telegram-чат учасників", "фото та відеозвіт після конференції"],
     },
     popular: "Популярний",
+    premium: "Преміум",
+    contactOrganizer: "Запитати корпоративний рахунок",
     paymentNote:
       "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
@@ -121,7 +126,7 @@ const content = {
       ["Як проходить оплата?", "Після заповнення форми сайт створює заявку на квиток і відкриває захищену сторінку оплати AlliancePay."],
       ["Коли буде доступний квиток?", "Квиток видається тільки після серверного підтвердження статусу SUCCESS від AlliancePay."],
       ["Який QR-префікс у квитків?", "Квитки цієї події генеруються з префіксом ECC-2026 та працюють у загальній системі admin check-in."],
-      ["Чи буде запис виступів?", "Так, запис події входить до BUSINESS та ONLINE форматів. Для STANDARD доступ залежить від фінального пакета матеріалів."],
+      ["Чи буде запис виступів?", "Так, доступ до відеозаписів спікерів входить до ONLINE та VIP + AFTERPARTY. Для STANDARD доступ залежить від фінального пакета матеріалів."],
       ["Чи можна передати квиток?", "Передача квитка можлива тільки через звернення до організатора до моменту використання QR-коду на вході."],
       ["Де юридичні умови?", "Публічна оферта, політика конфіденційності та політика повернення доступні у футері та на формі квитка."],
     ],
@@ -187,18 +192,22 @@ const content = {
       "Performance marketing: paid media, creatives, attribution, SEO and affiliate",
       "CRM/CDP, automation and AI tools for commerce teams",
     ],
-    ticketsTitle: "Three participation formats with transparent payment",
+    ticketsTitle: "Participation formats for commerce teams and guests",
     ticketDescriptions: {
-      sport: "Offline access to the conference, expo zone, networking, participant package and photo/video report.",
-      business: "STANDARD access plus business lounge, priority entry, speaker materials, premium networking and event recording.",
-      online: "Remote access to the online broadcast and event recording.",
+      online: "Remote participation for watching the content and receiving post-event materials.",
+      standard: "Core offline access for the conference, expo zone and networking.",
+      vip: "Premium access for guests who need fast entry, front-row seats, VIP Lounge and afterparty.",
+      corporate: "For companies paying for team participation as a legal entity by invoice and contract.",
     },
     ticketFeatures: {
-      sport: ["Conference and expo zone", "B2B & B2C networking", "Participant package", "Photo/video report"],
-      business: ["Business lounge", "Priority entry", "Speaker materials", "Premium networking", "Event recording"],
-      online: ["Online stream", "Event recording"],
+      online: ["access to the online stream", "photo and video report after the event", "private Telegram networking chat", "access to speaker recordings"],
+      standard: ["access to the networking zone", "photo and video report after the event", "private Telegram networking chat", "conference attendance and expo zone access"],
+      vip: ["separate VIP registration desk for fast entry", "reserved front-row seats near the stage", "conference attendance and expo zone access", "access to VIP Lounge", "AFTERPARTY with premium catering and bar", "personal parking space"],
+      corporate: ["for companies paying for employee participation", "legal entity payment", "contract, invoice, acts and supporting documents", "special corporate discounts for group orders", "networking zone and expo zone access", "private Telegram participant chat", "photo and video report after the conference"],
     },
     popular: "Popular",
+    premium: "Premium",
+    contactOrganizer: "Request corporate invoice",
     paymentNote:
       "Payment is processed through the secure AlliancePay hosted payment page. Card data is not entered, processed or stored on this site.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
@@ -213,7 +222,7 @@ const content = {
       ["How does payment work?", "After the form is submitted, the site creates a ticket request and opens the secure AlliancePay payment page."],
       ["When is the ticket available?", "The ticket is issued only after server-side SUCCESS confirmation from AlliancePay."],
       ["What QR prefix is used?", "Tickets for this event are generated with the ECC-2026 prefix and work in the shared admin check-in system."],
-      ["Will session recordings be available?", "Yes, the event recording is included in BUSINESS and ONLINE formats. STANDARD access depends on the final materials package."],
+      ["Will session recordings be available?", "Yes, access to speaker recordings is included in ONLINE and VIP + AFTERPARTY. STANDARD access depends on the final materials package."],
       ["Can I transfer my ticket?", "A ticket can be transferred only through the organizer before the QR code is used at entry."],
       ["Where are the legal terms?", "The Public Offer, Privacy Policy and Refund Policy are available in the footer and on the ticket form."],
     ],
@@ -259,7 +268,7 @@ export default function ECommerceEventPage() {
             {t.back}
           </Link>
           <div className="flex items-center gap-3">
-            <Link href={`/event/${slug}/ticket-form?type=business`} className="hidden min-h-10 items-center bg-[#00FF88] px-4 text-[10px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88] sm:inline-flex">
+            <Link href={`/event/${slug}/ticket-form?type=standard`} className="hidden min-h-10 items-center bg-[#00FF88] px-4 text-[10px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88] sm:inline-flex">
               {t.buyTicket}
             </Link>
             <button
@@ -313,7 +322,7 @@ export default function ECommerceEventPage() {
               {t.heroDesc}
             </motion.p>
             <motion.div variants={fadeUpChild} className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href={`/event/${slug}/ticket-form?type=business`} className="group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden bg-[#00FF88] px-6 py-3 text-xs font-bold uppercase tracking-widest text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+              <Link href={`/event/${slug}/ticket-form?type=standard`} className="group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden bg-[#00FF88] px-6 py-3 text-xs font-bold uppercase tracking-widest text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
                 <span className="relative z-10">{t.buyTicket}</span>
                 <ArrowRight className="relative z-10 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                 <motion.span className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
@@ -403,14 +412,15 @@ export default function ECommerceEventPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
             <SectionBadge icon={<Ticket className="h-3.5 w-3.5" />} label="04 / Tickets" />
             <motion.h2 variants={fadeUpChild} className="mb-10 text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.ticketsTitle}</motion.h2>
-            <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
               {tickets.map((tier) => (
-                <motion.div key={tier.key} variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 md:p-8 ${tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04] md:-translate-y-2" : "border-white/[0.08] bg-white/[0.02]"}`}>
+                <motion.div key={tier.key} variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
                   {tier.popular ? <span className="absolute -top-3 left-5 bg-[#00FF88] px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.popular}</span> : null}
+                  {tier.premium ? <span className="absolute -top-3 left-5 bg-white px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.premium}</span> : null}
                   <p className="text-xs font-mono uppercase tracking-widest text-white/30">{tier.name}</p>
                   <div className="mt-3 flex items-baseline gap-2">
                     <p className="text-4xl font-black tracking-tight sm:text-5xl" style={{ color: tier.popular ? G : "white" }}>{tier.price}</p>
-                    <span className="text-sm font-mono text-white/30">UAH</span>
+                    {!tier.corporate && <span className="text-sm font-mono text-white/30">UAH</span>}
                   </div>
                   <p className="mt-5 text-sm leading-relaxed text-white/45">{t.ticketDescriptions[tier.key]}</p>
                   <ul className="mt-6 flex-1 space-y-2.5">
@@ -421,9 +431,15 @@ export default function ECommerceEventPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link href={`/event/${slug}/ticket-form?type=${tier.key}`} className={`mt-7 inline-flex min-h-11 items-center justify-center px-4 py-3 text-xs font-bold uppercase tracking-widest transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88] ${tier.popular ? "bg-[#00FF88] text-black hover:bg-white" : "border border-white/15 text-white/70 hover:border-[#00FF88]/45 hover:text-[#00FF88]"}`}>
-                    {t.buyTicket}
-                  </Link>
+                  {tier.corporate ? (
+                    <a href={`/event/${slug}/ticket-form?type=corporate`} className="mt-7 inline-flex min-h-11 items-center justify-center border border-[#00FF88]/35 px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#00FF88] transition-colors hover:border-white/35 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+                      {t.contactOrganizer}
+                    </a>
+                  ) : (
+                    <Link href={`/event/${slug}/ticket-form?type=${tier.key}`} className={`mt-7 inline-flex min-h-11 items-center justify-center px-4 py-3 text-xs font-bold uppercase tracking-widest transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88] ${tier.popular ? "bg-[#00FF88] text-black hover:bg-white" : tier.premium ? "bg-white text-black hover:bg-[#00FF88]" : "border border-white/15 text-white/70 hover:border-[#00FF88]/45 hover:text-[#00FF88]"}`}>
+                      {t.buyTicket}
+                    </Link>
+                  )}
                 </motion.div>
               ))}
             </div>
@@ -511,7 +527,7 @@ export default function ECommerceEventPage() {
                 <span key={line} className="block">{line}</span>
               ))}
             </h2>
-            <Link href={`/event/${slug}/ticket-form?type=business`} className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 bg-[#00FF88] px-8 py-4 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
+            <Link href={`/event/${slug}/ticket-form?type=vip`} className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 bg-[#00FF88] px-8 py-4 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
               {t.buyTicket}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
