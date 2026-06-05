@@ -45,24 +45,13 @@ const tickets: Array<{ key: TicketKey; name: string; price: string; popular?: bo
   { key: "online", name: "ONLINE", price: "1" },
 ];
 
-const leaders = [
-  "Online retail",
-  "Marketplaces",
-  "Logistics",
-  "Fintech & payments",
-  "Performance marketing",
-  "CRM/CDP",
-  "AI commerce tools",
-  "Brands & founders",
-];
-
 const content = {
   uk: {
     back: "Назад",
     buyTicket: "Купити квиток",
     viewProgram: "Програма",
     badge: "RAVE'ERA GROUP · EVENT LANDING",
-    heroTitle: "E-Commerce Conference 2026",
+    heroTitle: "E-COMMERCE CONFERENCE 2026",
     heroSub: "Головна подія року для eCommerce, маркетплейсів, логістики, фінтеху та digital commerce в Україні.",
     heroDesc:
       "Велика українська eCommerce конференція для онлайн-ритейлу, маркетплейсів, логістики, фінтеху, платежів, performance marketing, CRM/CDP, автоматизації, AI commerce tools, фаундерів і брендів.",
@@ -73,7 +62,7 @@ const content = {
       ["B2B & B2C", "продажі"],
       ["Практичні", "кейси та інсайти"],
     ],
-    aboutTitle: "Конференція для команд, які продають, масштабують і керують commerce-бізнесом.",
+    aboutTitle: "КОНФЕРЕНЦІЯ ДЛЯ КОМАНД, ЯКІ ПРОДАЮТЬ, МАСШТАБУЮТЬ І БУДУЮТЬ COMMERCE-БІЗНЕС.",
     aboutCopy: [
       "E-Commerce Conference 2026 об'єднує власників, C-level команди, маркетологів, операційних директорів, технологічних партнерів, банки, платіжні сервіси, логістичні компанії та бренди.",
       "Фокус події - практичні кейси, ринкові інсайти, партнерства та інструменти, які впливають на продажі, маржу, повторні покупки і клієнтський досвід.",
@@ -84,17 +73,27 @@ const content = {
       "fulfillment, last mile, повернення і сервіс",
       "performance, CRM/CDP, автоматизація та AI commerce tools",
     ],
-    leadersTitle: "Маркет-лідери та практики, які будують commerce 2026 року.",
+    leadersTitle: "Екосистема ринку, яка рухає український commerce вперед.",
     leadersText:
-      "Сцена і expo створені для діалогу між тими, хто приймає рішення: ритейлерами, маркетплейсами, логістичними операторами, платіжними компаніями, SaaS-платформами, агенціями та брендами.",
+      "Ми не анонсуємо непідтверджених партнерів. Секція показує ролі та категорії бізнесу, для яких створюється конференція: від ритейлу і маркетплейсів до AI-інструментів та брендів.",
+    leaderCards: [
+      ["Online Retail", "Власники інтернет-магазинів, D2C-команди та операційні керівники товарного бізнесу."],
+      ["Marketplaces", "Платформи, seller teams, категорійні менеджери, інтегратори та команди growth."],
+      ["Logistics & Fulfillment", "Склади, last mile, повернення, SLA, сервіс і операційна надійність."],
+      ["Fintech & Payments", "Банки, PSP, checkout, Apple Pay, Google Pay, antifraud та BNPL-рішення."],
+      ["Performance Marketing", "Paid media, креативи, SEO, affiliate, attribution і команди зростання."],
+      ["CRM / CDP", "Retention, сегментація, lifecycle-комунікації, дані клієнтів і повторні покупки."],
+      ["AI Commerce Tools", "Автоматизація контенту, підтримки, аналітики, продажів і операційних процесів."],
+      ["Brands & Founders", "Фаундери, product-команди, бренди, інвестори, медіа та B2B-партнери."],
+    ],
     programTitle: "День для рішень, контактів і нової оптики ринку.",
     program: [
-      "eCommerce growth: unit economics, retention, LTV і повторні покупки",
-      "Marketplaces: seller growth, категорії, комісії, контент і ціноутворення",
+      "eCommerce growth: unit economics, retention, LTV, repeat purchases",
+      "Marketplaces: seller growth, commissions, content and pricing",
       "Payments & fintech: checkout conversion, Apple Pay, Google Pay, antifraud",
-      "Logistics & fulfillment: склад, last mile, повернення, SLA і клієнтський сервіс",
-      "Performance marketing: paid media, creatives, attribution, SEO та affiliate",
-      "CRM/CDP, автоматизація і AI tools для commerce-команд",
+      "Logistics & fulfillment: warehouse, last mile, returns, SLA and client service",
+      "Performance marketing: paid media, creatives, attribution, SEO and affiliate",
+      "CRM/CDP automation and AI commerce tools",
     ],
     ticketsTitle: "Три формати участі з прозорою оплатою",
     ticketDescriptions: {
@@ -111,22 +110,23 @@ const content = {
     paymentNote:
       "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
-    locationTitle: "Kyiv, Ukraine",
+    locationTitle: "КИЇВ, УКРАЇНА",
     locationText:
-      "Фінальна дата, майданчик і таймінг будуть опубліковані після підтвердження локації. Квитковий flow вже працює на production-інфраструктурі RAVE'ERA GROUP.",
-    venue: "Kyiv venue TBA",
-    duration: "Full day program",
+      "Фінальна локація та таймінг будуть опубліковані після підтвердження майданчика. Команда RAVEERA GROUP вже працює над production-інфраструктурою події.",
+    venue: "Анонс локації незабаром",
+    duration: "Production у роботі",
     mapOpen: "Відкрити на Google Maps",
     faqTitle: "Питання перед реєстрацією",
     faqs: [
       ["Як проходить оплата?", "Після заповнення форми сайт створює заявку на квиток і відкриває захищену сторінку оплати AlliancePay."],
       ["Коли буде доступний квиток?", "Квиток видається тільки після серверного підтвердження статусу SUCCESS від AlliancePay."],
       ["Який QR-префікс у квитків?", "Квитки цієї події генеруються з префіксом ECC-2026 та працюють у загальній системі admin check-in."],
-      ["Які формати квитків доступні?", "STANDARD за 2 500 грн, BUSINESS за 6 500 грн та ONLINE за 1 грн для тестового онлайн-формату."],
+      ["Чи буде запис виступів?", "Так, запис події входить до BUSINESS та ONLINE форматів. Для STANDARD доступ залежить від фінального пакета матеріалів."],
+      ["Чи можна передати квиток?", "Передача квитка можлива тільки через звернення до організатора до моменту використання QR-коду на вході."],
       ["Де юридичні умови?", "Публічна оферта, політика конфіденційності та політика повернення доступні у футері та на формі квитка."],
     ],
-    ctaTitle: "Будьте серед команд, які формують український eCommerce 2026 року.",
-    footerBrand: "E-Commerce Conference 2026. Production event by RAVE'ERA GROUP.",
+    ctaLines: ["БУДЬТЕ В ЗАЛІ,", "ДЕ ФОРМУЮТЬСЯ", "НАСТУПНІ ЛІДЕРИ", "УКРАЇНСЬКОГО ECOMMERCE."],
+    footerBrand: "Найбільша конференція для eCommerce, маркетплейсів, логістики та digital commerce в Україні.",
     footerOrgLabel: "Організатор",
     footerContactsLabel: "Контакти",
     footerDocsLabel: "Документи",
@@ -143,7 +143,7 @@ const content = {
     buyTicket: "Buy Ticket",
     viewProgram: "Program",
     badge: "RAVE'ERA GROUP · EVENT LANDING",
-    heroTitle: "E-Commerce Conference 2026",
+    heroTitle: "E-COMMERCE CONFERENCE 2026",
     heroSub: "The flagship Ukrainian conference for eCommerce, marketplaces, logistics, fintech and digital commerce.",
     heroDesc:
       "A large Ukrainian eCommerce conference for online retail, marketplaces, logistics, fintech, payments, performance marketing, CRM/CDP, automation, AI commerce tools, founders and brands.",
@@ -154,7 +154,7 @@ const content = {
       ["B2B & B2C", "sales"],
       ["Practical", "cases and insights"],
     ],
-    aboutTitle: "A conference for teams that sell, scale and operate commerce businesses.",
+    aboutTitle: "A CONFERENCE FOR TEAMS THAT SELL, SCALE AND BUILD COMMERCE BUSINESSES.",
     aboutCopy: [
       "E-Commerce Conference 2026 brings together owners, C-level teams, marketers, operations leaders, technology partners, banks, payment providers, logistics companies and brands.",
       "The event focuses on practical cases, market insights, partnerships and tools that affect sales, margin, repeat purchases and customer experience.",
@@ -165,9 +165,19 @@ const content = {
       "fulfillment, last mile, returns and service",
       "performance, CRM/CDP, automation and AI commerce tools",
     ],
-    leadersTitle: "Market leaders and operators building commerce in 2026.",
+    leadersTitle: "The business ecosystem moving Ukrainian commerce forward.",
     leadersText:
-      "The stage and expo are designed for decision-makers: retailers, marketplaces, logistics operators, payment companies, SaaS platforms, agencies and brands.",
+      "This section does not imply unconfirmed partnerships. It frames the roles and business categories the conference is built for: from retail and marketplaces to AI tools and brands.",
+    leaderCards: [
+      ["Online Retail", "Online store owners, D2C teams and operations leaders in product businesses."],
+      ["Marketplaces", "Platforms, seller teams, category managers, integrators and growth teams."],
+      ["Logistics & Fulfillment", "Warehouses, last mile, returns, SLA, service and operational reliability."],
+      ["Fintech & Payments", "Banks, PSPs, checkout, Apple Pay, Google Pay, antifraud and BNPL products."],
+      ["Performance Marketing", "Paid media, creatives, SEO, affiliate, attribution and growth teams."],
+      ["CRM / CDP", "Retention, segmentation, lifecycle communications, customer data and repeat purchases."],
+      ["AI Commerce Tools", "Automation for content, support, analytics, sales and operations."],
+      ["Brands & Founders", "Founders, product teams, brands, investors, media and B2B partners."],
+    ],
     programTitle: "A day for decisions, contacts and a sharper view of the market.",
     program: [
       "eCommerce growth: unit economics, retention, LTV and repeat purchases",
@@ -192,22 +202,23 @@ const content = {
     paymentNote:
       "Payment is processed through the secure AlliancePay hosted payment page. Card data is not entered, processed or stored on this site.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
-    locationTitle: "Kyiv, Ukraine",
+    locationTitle: "KYIV, UKRAINE",
     locationText:
-      "The final date, venue and schedule will be published after venue confirmation. The ticket flow already runs on RAVE'ERA GROUP production infrastructure.",
-    venue: "Kyiv venue TBA",
-    duration: "Full day program",
+      "The final venue and timing will be announced after production confirmation. RAVEERA GROUP is already preparing the event infrastructure.",
+    venue: "Venue announcement soon",
+    duration: "Production in progress",
     mapOpen: "Open in Google Maps",
     faqTitle: "Questions before registration",
     faqs: [
       ["How does payment work?", "After the form is submitted, the site creates a ticket request and opens the secure AlliancePay payment page."],
       ["When is the ticket available?", "The ticket is issued only after server-side SUCCESS confirmation from AlliancePay."],
       ["What QR prefix is used?", "Tickets for this event are generated with the ECC-2026 prefix and work in the shared admin check-in system."],
-      ["What ticket formats are available?", "STANDARD for 2,500 UAH, BUSINESS for 6,500 UAH and ONLINE for 1 UAH for the test online format."],
+      ["Will session recordings be available?", "Yes, the event recording is included in BUSINESS and ONLINE formats. STANDARD access depends on the final materials package."],
+      ["Can I transfer my ticket?", "A ticket can be transferred only through the organizer before the QR code is used at entry."],
       ["Where are the legal terms?", "The Public Offer, Privacy Policy and Refund Policy are available in the footer and on the ticket form."],
     ],
-    ctaTitle: "Join the teams shaping Ukrainian eCommerce in 2026.",
-    footerBrand: "E-Commerce Conference 2026. Production event by RAVE'ERA GROUP.",
+    ctaLines: ["BE IN THE ROOM", "WHERE THE NEXT LEADERS", "OF UKRAINIAN ECOMMERCE", "ARE FORMED."],
+    footerBrand: "A flagship conference for eCommerce, marketplaces, logistics and digital commerce in Ukraine.",
     footerOrgLabel: "Organizer",
     footerContactsLabel: "Contacts",
     footerDocsLabel: "Documents",
@@ -268,25 +279,22 @@ export default function ECommerceEventPage() {
 
       <header className="relative flex min-h-screen items-end overflow-hidden px-4 pb-14 pt-28 sm:px-6 md:px-12 md:pb-20">
         <div className="absolute inset-0">
-          <img src="/images/case-smart-commerce.jpg" alt="E-Commerce Conference expo and stage atmosphere" className="h-full w-full object-cover opacity-52 grayscale" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/88 to-black/45" />
+          <div className="absolute inset-0 bg-[#050508]" />
+          <div className="absolute inset-0 opacity-[0.045]">
+            <img src="/images/case-smart-commerce.jpg" alt="E-Commerce Conference visual identity" className="h-full w-full object-cover grayscale" />
+          </div>
+          <div className="absolute right-[-8vw] top-[18vh] hidden max-w-[900px] select-none text-right text-[7rem] font-black uppercase leading-[0.78] tracking-tight text-white/[0.035] lg:block">
+            Digital<br />Commerce<br />Ukraine
+          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,#050508_0%,rgba(5,5,8,0.96)_46%,rgba(5,5,8,0.82)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#050508] to-transparent" />
         </div>
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 lg:grid-cols-[1.04fr_0.96fr] lg:items-end">
+        <div className="relative z-10 mx-auto w-full max-w-7xl">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-5xl">
             <motion.div variants={fadeUpChild} className="mb-6 inline-flex items-center gap-2 border border-[#00FF88]/25 bg-[#00FF88]/[0.07] px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.22em] text-[#00FF88]">
               <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
               {t.badge}
             </motion.div>
-            <motion.h1 variants={fadeUpChild} className="max-w-5xl break-words text-4xl font-black uppercase leading-[0.88] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
-              {t.heroTitle}
-            </motion.h1>
-            <motion.p variants={fadeUpChild} className="mt-6 max-w-3xl text-base font-semibold leading-relaxed text-white/76 sm:text-xl">
-              {t.heroSub}
-            </motion.p>
-            <motion.p variants={fadeUpChild} className="mt-4 max-w-2xl text-sm leading-relaxed text-white/52 sm:text-base">
-              {t.heroDesc}
-            </motion.p>
             <motion.div variants={fadeUpChild} className="mt-7 flex flex-wrap gap-2">
               {t.meta.map((item) => (
                 <span key={item} className="inline-flex min-h-10 items-center gap-2 border border-white/[0.1] bg-black/35 px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-white/48 backdrop-blur-sm">
@@ -295,6 +303,15 @@ export default function ECommerceEventPage() {
                 </span>
               ))}
             </motion.div>
+            <motion.h1 variants={fadeUpChild} className="mt-6 max-w-5xl break-words text-4xl font-black uppercase leading-[0.88] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
+              {t.heroTitle}
+            </motion.h1>
+            <motion.p variants={fadeUpChild} className="mt-6 max-w-3xl text-base font-semibold leading-relaxed text-white/76 sm:text-xl">
+              {t.heroSub}
+            </motion.p>
+            <motion.p variants={fadeUpChild} className="mt-4 max-w-2xl text-sm leading-relaxed text-white/52 sm:text-base">
+              {t.heroDesc}
+            </motion.p>
             <motion.div variants={fadeUpChild} className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href={`/event/${slug}/ticket-form?type=business`} className="group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden bg-[#00FF88] px-6 py-3 text-xs font-bold uppercase tracking-widest text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
                 <span className="relative z-10">{t.buyTicket}</span>
@@ -307,7 +324,7 @@ export default function ECommerceEventPage() {
             </motion.div>
           </motion.div>
 
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="grid grid-cols-2 gap-3">
+          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-4">
             {t.stats.map(([value, label]) => (
               <motion.div key={`${value}-${label}`} variants={fadeUpChild} className="border border-white/[0.08] bg-black/50 p-5 backdrop-blur-sm">
                 <p className="break-words text-2xl font-black tracking-tight text-white sm:text-3xl">{value}</p>
@@ -331,11 +348,11 @@ export default function ECommerceEventPage() {
                   <motion.p key={paragraph} variants={fadeUpChild} className="text-sm leading-relaxed text-white/56 sm:text-base">{paragraph}</motion.p>
                 ))}
               </div>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="mt-8 space-y-3">
                 {t.aboutPoints.map((point) => (
-                  <motion.div key={point} variants={fadeUpChild} className="border border-white/[0.08] bg-white/[0.02] p-4 text-sm text-white/50">
-                    <CheckCircle2 className="mb-3 h-4 w-4 text-[#00FF88]" aria-hidden="true" />
-                    {point}
+                  <motion.div key={point} variants={fadeUpChild} className="flex items-start gap-3 text-sm leading-relaxed text-white/52">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#00FF88]" />
+                    <span>{point}</span>
                   </motion.div>
                 ))}
               </div>
@@ -350,11 +367,15 @@ export default function ECommerceEventPage() {
               <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.leadersTitle}</h2>
               <p className="text-sm leading-relaxed text-white/50 sm:text-base">{t.leadersText}</p>
             </motion.div>
-            <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {leaders.map((leader) => (
-                <motion.div key={leader} variants={fadeUpChild} className="group border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-[#00FF88]/35">
-                  <Users className="mb-5 h-5 w-5 text-[#00FF88]" aria-hidden="true" />
-                  <p className="text-sm font-black uppercase tracking-tight text-white/76">{leader}</p>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {t.leaderCards.map(([heading, copy], index) => (
+                <motion.div key={heading} variants={fadeUpChild} className="group flex min-h-[190px] flex-col border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-[#00FF88]/35 hover:bg-[#00FF88]/[0.025]">
+                  <div className="mb-5 flex items-center justify-between gap-4">
+                    <Users className="h-5 w-5 text-[#00FF88]" aria-hidden="true" />
+                    <span className="text-[10px] font-mono text-white/20">{String(index + 1).padStart(2, "0")}</span>
+                  </div>
+                  <p className="text-sm font-black uppercase tracking-tight text-white/82">{heading}</p>
+                  <p className="mt-4 text-sm leading-relaxed text-white/42">{copy}</p>
                 </motion.div>
               ))}
             </div>
@@ -369,9 +390,9 @@ export default function ECommerceEventPage() {
             </div>
             <div className="space-y-4">
               {t.program.map((item, index) => (
-                <motion.div key={item} variants={fadeUpChild} className="flex items-start gap-4 border-b border-white/[0.06] pb-4">
-                  <span className="mt-0.5 shrink-0 text-xs font-mono font-bold text-[#00FF88]">{String(index + 1).padStart(2, "0")}</span>
-                  <p className="text-sm leading-relaxed text-white/56 sm:text-base">{item}</p>
+                <motion.div key={item} variants={fadeUpChild} className="flex items-start gap-5 border-b border-white/[0.06] pb-4 sm:pb-5">
+                  <span className="mt-0.5 shrink-0 text-base font-mono font-black text-[#00FF88] sm:text-lg">{String(index + 1).padStart(2, "0")}</span>
+                  <p className="text-sm leading-relaxed text-white/58 sm:text-base">{item}</p>
                 </motion.div>
               ))}
             </div>
@@ -382,13 +403,13 @@ export default function ECommerceEventPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
             <SectionBadge icon={<Ticket className="h-3.5 w-3.5" />} label="04 / Tickets" />
             <motion.h2 variants={fadeUpChild} className="mb-10 text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.ticketsTitle}</motion.h2>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
               {tickets.map((tier) => (
-                <motion.div key={tier.key} variants={fadeUpChild} className={`relative flex flex-col border p-6 ${tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
-                  {tier.popular ? <span className="absolute -top-3 left-5 bg-[#00FF88] px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-black">{t.popular}</span> : null}
-                  <p className="text-xs font-mono uppercase tracking-widest text-white/35">{tier.name}</p>
+                <motion.div key={tier.key} variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 md:p-8 ${tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04] md:-translate-y-2" : "border-white/[0.08] bg-white/[0.02]"}`}>
+                  {tier.popular ? <span className="absolute -top-3 left-5 bg-[#00FF88] px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.popular}</span> : null}
+                  <p className="text-xs font-mono uppercase tracking-widest text-white/30">{tier.name}</p>
                   <div className="mt-3 flex items-baseline gap-2">
-                    <p className="text-5xl font-black tracking-tight" style={{ color: tier.popular ? G : "white" }}>{tier.price}</p>
+                    <p className="text-4xl font-black tracking-tight sm:text-5xl" style={{ color: tier.popular ? G : "white" }}>{tier.price}</p>
                     <span className="text-sm font-mono text-white/30">UAH</span>
                   </div>
                   <p className="mt-5 text-sm leading-relaxed text-white/45">{t.ticketDescriptions[tier.key]}</p>
@@ -424,11 +445,11 @@ export default function ECommerceEventPage() {
               <motion.h2 variants={fadeUpChild} className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.locationTitle}</motion.h2>
               <motion.p variants={fadeUpChild} className="mt-5 text-sm leading-relaxed text-white/50 sm:text-base">{t.locationText}</motion.p>
               <motion.div variants={fadeUpChild} className="mt-6 flex flex-wrap gap-3">
-                <span className="inline-flex min-h-10 items-center gap-2 border border-white/[0.08] bg-white/[0.04] px-3 text-xs font-mono text-white/52">
+                <span className="inline-flex min-h-10 items-center gap-2 border border-[#00FF88]/18 bg-[#00FF88]/[0.035] px-3 text-xs font-mono text-white/52">
                   <MapPin className="h-3.5 w-3.5 text-[#00FF88]" aria-hidden="true" />
                   {t.venue}
                 </span>
-                <span className="inline-flex min-h-10 items-center gap-2 border border-white/[0.08] bg-white/[0.04] px-3 text-xs font-mono text-white/52">
+                <span className="inline-flex min-h-10 items-center gap-2 border border-white/[0.08] bg-white/[0.035] px-3 text-xs font-mono text-white/52">
                   <Clock className="h-3.5 w-3.5 text-[#00FF88]" aria-hidden="true" />
                   {t.duration}
                 </span>
@@ -485,7 +506,11 @@ export default function ECommerceEventPage() {
         <section className="relative overflow-hidden border-t border-white/[0.05] px-4 py-20 text-center sm:px-6 md:px-12 md:py-32">
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(0,255,136,0.09),transparent_48%)]" />
           <div className="relative mx-auto max-w-4xl">
-            <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl md:text-6xl">{t.ctaTitle}</h2>
+            <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl md:text-6xl">
+              {t.ctaLines.map((line) => (
+                <span key={line} className="block">{line}</span>
+              ))}
+            </h2>
             <Link href={`/event/${slug}/ticket-form?type=business`} className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 bg-[#00FF88] px-8 py-4 text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88]">
               {t.buyTicket}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
