@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AlertCircle, ArrowLeft, Clock3, Download, Mail, Printer, RefreshCw, Ticket } from "lucide-react";
 import { TicketCard, type IssuedTicket } from "../components/TicketCard";
 
@@ -18,6 +18,7 @@ type PaymentStatusResponse = {
 
 export default function PaymentSuccessPage() {
   const merchantRequestId = new URLSearchParams(window.location.search).get("merchantRequestId") || "";
+  const [location] = useLocation();
   const [data, setData] = useState<PaymentStatusResponse | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -52,9 +53,13 @@ export default function PaymentSuccessPage() {
     };
   }, [loadStatus]);
 
+  const eventHref = location.startsWith("/event/e-commerce-conference-2026")
+    ? "/event/e-commerce-conference-2026"
+    : "/event/sbc-summit-ukraine-2026";
+
   useEffect(() => {
     if (data?.ticket) {
-      document.title = `${data.ticket.ticketCode} | SBC Summit Ukraine 2026`;
+      document.title = `${data.ticket.ticketCode} | ${data.ticket.eventTitle}`;
     }
   }, [data?.ticket]);
 
@@ -62,7 +67,7 @@ export default function PaymentSuccessPage() {
     <div className="min-h-screen bg-[#07070b] text-white">
       <nav className="border-b border-white/[0.08] bg-black/80 backdrop-blur-md print:hidden">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 md:px-12">
-          <Link href="/event/sbc-summit-ukraine-2026" className="flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/60 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <Link href={eventHref} className="flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/60 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             До події
           </Link>
@@ -91,7 +96,7 @@ export default function PaymentSuccessPage() {
                 <Printer className="h-4 w-4" aria-hidden="true" />
                 Друкувати
               </button>
-              <Link href="/event/sbc-summit-ukraine-2026" className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 px-5 py-3 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+              <Link href={eventHref} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 px-5 py-3 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                 <Ticket className="h-4 w-4" aria-hidden="true" />
                 Назад до події
               </Link>

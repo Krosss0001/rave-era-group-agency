@@ -26,7 +26,9 @@ class MockResponse {
 test("ticket codes use a non-sequential public-safe identifier", () => {
   const first = createTicketCode();
   const second = createTicketCode();
+  const ecc = createTicketCode("e-commerce-conference-2026");
   assert.match(first, /^SBC-2026-[A-F0-9]{12}$/);
+  assert.match(ecc, /^ECC-2026-[A-F0-9]{12}$/);
   assert.notEqual(first, second);
 });
 
@@ -59,6 +61,8 @@ test("migration enforces idempotent one-ticket-per-order issuance", () => {
   assert.match(migration, /order_id integer not null unique references ticket_orders\(id\)/);
   assert.match(migration, /create table if not exists tickets/);
   assert.match(migration, /add column if not exists email_status/);
+  assert.match(migration, /add column if not exists event_slug/);
+  assert.match(migration, /add column if not exists event_title/);
 });
 
 test("PDF ticket generation returns a valid PDF document", async () => {

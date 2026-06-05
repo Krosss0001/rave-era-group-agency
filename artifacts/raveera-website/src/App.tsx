@@ -13,6 +13,8 @@ import {
 import { Link, Switch, Route, useLocation } from "wouter";
 
 const SBCEventPage = lazy(() => import("./pages/SBCEventPage"));
+const ECommerceEventPage = lazy(() => import("./pages/ECommerceEventPage"));
+const ECommercePortfolioPage = lazy(() => import("./pages/ECommercePortfolioPage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
 const ContactsPage = lazy(() => import("./pages/ContactsPage"));
 const PublicOfferPage = lazy(() => import("./pages/PublicOfferPage"));
@@ -68,6 +70,21 @@ const T = {
       desc: "Real events. Real results. Here's what we've built.",
       viewAll: "View All Cases",
       items: [
+        {
+          title: "E-Commerce Conference 2026",
+          category: "Conference · E-Commerce",
+          date: "2026",
+          meta: "2,000+ attendees · 70+ expo companies",
+          img: "/images/case-2.png",
+          fit: "cover" as const,
+          desc: "Production business conference for eCommerce, retail, marketplaces, payments, logistics and performance commerce.",
+          bullets: [
+            "Full-cycle event production and ticketing",
+            "Expo and sponsor participation architecture",
+            "AlliancePay, PDF, email, QR and check-in infrastructure",
+          ],
+          eventUrl: "/portfolio/e-commerce-conference-2026",
+        },
         {
           title: "SBC Summit Ukraine 2026",
           category: "Conference · Sports Marketing",
@@ -341,6 +358,21 @@ const T = {
       desc: "Реальні події. Реальні результати. Ось що ми побудували.",
       viewAll: "Усі Кейси",
       items: [
+        {
+          title: "E-Commerce Conference 2026",
+          category: "Конференція · E-Commerce",
+          date: "2026",
+          meta: "2 000+ учасників · 70+ компаній на expo",
+          img: "/images/case-2.png",
+          fit: "cover" as const,
+          desc: "Продакшн бізнес-конференції для eCommerce, рітейлу, маркетплейсів, платежів, логістики та performance-команд.",
+          bullets: [
+            "Повний цикл продакшну події та квиткової системи",
+            "Архітектура expo-зони, партнерів і спонсорів",
+            "AlliancePay, PDF, email, QR та check-in інфраструктура",
+          ],
+          eventUrl: "/portfolio/e-commerce-conference-2026",
+        },
         {
           title: "SBC Summit Ukraine 2026",
           category: "Конференція · Спортивний маркетинг",
@@ -1283,10 +1315,15 @@ export default function App() {
           <Route path="/admin/checkin" component={AdminCheckinPage} />
           <Route path="/admin/checkin/" component={AdminCheckinPage} />
           <Route path="/" component={HomePage} />
+          <Route path="/portfolio/e-commerce-conference-2026" component={ECommercePortfolioPage} />
           <Route path="/event/sbc-summit-ukraine-2026" component={SBCEventPage} />
           <Route path="/event/sbc-summit-ukraine-2026/ticket-form" component={TicketFormPage} />
           <Route path="/event/sbc-summit-ukraine-2026/payment/success" component={PaymentSuccessPage} />
           <Route path="/event/sbc-summit-ukraine-2026/payment/fail" component={PaymentFailPage} />
+          <Route path="/event/e-commerce-conference-2026" component={ECommerceEventPage} />
+          <Route path="/event/e-commerce-conference-2026/ticket-form" component={TicketFormPage} />
+          <Route path="/event/e-commerce-conference-2026/payment/success" component={PaymentSuccessPage} />
+          <Route path="/event/e-commerce-conference-2026/payment/fail" component={PaymentFailPage} />
           <Route path="/payment/success" component={PaymentSuccessPage} />
           <Route path="/payment/fail" component={PaymentFailPage} />
           <Route path="/ticket/:ticketCode" component={TicketPage} />
@@ -1323,6 +1360,8 @@ function CookieBanner() {
   const isTransactionalRoute =
     location.startsWith("/event/sbc-summit-ukraine-2026/ticket-form") ||
     location.startsWith("/event/sbc-summit-ukraine-2026/payment/") ||
+    location.startsWith("/event/e-commerce-conference-2026/ticket-form") ||
+    location.startsWith("/event/e-commerce-conference-2026/payment/") ||
     location.startsWith("/payment/") ||
     location.startsWith("/ticket/") ||
     location.startsWith("/admin/checkin");

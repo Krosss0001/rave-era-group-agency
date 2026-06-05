@@ -10,7 +10,11 @@ export default function PaymentFailPage() {
   const [lang, setLang] = useState<Lang>("uk");
   const [location] = useLocation();
   const type = new URLSearchParams(location.split("?")[1] || "").get("type");
-  const retryHref = type ? `/event/sbc-summit-ukraine-2026/ticket-form?type=${encodeURIComponent(type)}` : "/event/sbc-summit-ukraine-2026/ticket-form";
+  const eventHref = location.startsWith("/event/e-commerce-conference-2026")
+    ? "/event/e-commerce-conference-2026"
+    : "/event/sbc-summit-ukraine-2026";
+  const ticketFormHref = `${eventHref}/ticket-form`;
+  const retryHref = type ? `${ticketFormHref}?type=${encodeURIComponent(type)}` : ticketFormHref;
   const t = lang === "uk"
     ? {
         back: "Назад",
@@ -37,7 +41,7 @@ export default function PaymentFailPage() {
     <div className="min-h-screen bg-[#0A0A0F] text-white flex flex-col">
       <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-14 flex items-center justify-between">
-          <Link href="/event/sbc-summit-ukraine-2026" className="flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <Link href={eventHref} className="flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="w-3.5 h-3.5" />
             {t.back}
           </Link>
@@ -74,7 +78,7 @@ export default function PaymentFailPage() {
               {t.contact}
             </a>
           </div>
-          <Link href="/event/sbc-summit-ukraine-2026" className="inline-flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#00FF88] hover:text-white border border-[#00FF88]/30 hover:border-white/30 px-5 py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <Link href={eventHref} className="inline-flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#00FF88] hover:text-white border border-[#00FF88]/30 hover:border-white/30 px-5 py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <Ticket className="w-3.5 h-3.5" />
             {t.backToEvent}
           </Link>

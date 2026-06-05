@@ -9,6 +9,8 @@ create table if not exists ticket_orders (
   customer_first_name text not null,
   customer_last_name text not null,
   customer_phone text,
+  event_slug text not null default 'sbc-summit-ukraine-2026',
+  event_title text not null default 'SBC Summit Ukraine 2026',
   hpp_order_id text,
   redirect_url text,
   created_at timestamptz not null default now(),
@@ -22,6 +24,8 @@ alter table ticket_orders add column if not exists paid_at timestamptz;
 alter table ticket_orders add column if not exists email_status text not null default 'PENDING';
 alter table ticket_orders add column if not exists email_sent_at timestamptz;
 alter table ticket_orders add column if not exists email_error_safe text;
+alter table ticket_orders add column if not exists event_slug text not null default 'sbc-summit-ukraine-2026';
+alter table ticket_orders add column if not exists event_title text not null default 'SBC Summit Ukraine 2026';
 
 create table if not exists tickets (
   id serial primary key,

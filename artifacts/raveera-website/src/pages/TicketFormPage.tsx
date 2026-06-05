@@ -16,6 +16,20 @@ const G = "#00FF88";
 
 type Lang = "en" | "uk";
 type TicketType = "sport" | "business" | "online";
+type EventSlug = "sbc-summit-ukraine-2026" | "e-commerce-conference-2026";
+
+const events: Record<EventSlug, { title: string; eventHref: string; formHref: string }> = {
+  "sbc-summit-ukraine-2026": {
+    title: "SBC Summit Ukraine 2026",
+    eventHref: "/event/sbc-summit-ukraine-2026",
+    formHref: "/event/sbc-summit-ukraine-2026/ticket-form",
+  },
+  "e-commerce-conference-2026": {
+    title: "E-Commerce Conference 2026",
+    eventHref: "/event/e-commerce-conference-2026",
+    formHref: "/event/e-commerce-conference-2026/ticket-form",
+  },
+};
 
 const tiers: Record<TicketType, { name: string; price: string; scope: string }> = {
   sport: {
@@ -27,6 +41,24 @@ const tiers: Record<TicketType, { name: string; price: string; scope: string }> 
     name: "BUSINESS",
     price: "6 500 UAH",
     scope: "SPORT access plus business lounge, speaker zone, priority entry, front-row seating, speaker materials, event recording and parking.",
+  },
+  online: {
+    name: "ONLINE",
+    price: "1 UAH",
+    scope: "Remote access to the online broadcast and event recording.",
+  },
+};
+
+const ecommerceTiers: Record<TicketType, { name: string; price: string; scope: string }> = {
+  sport: {
+    name: "STANDARD",
+    price: "2 500 UAH",
+    scope: "Offline access to the conference, expo zone, networking, participant package and photo/video report.",
+  },
+  business: {
+    name: "BUSINESS",
+    price: "6 500 UAH",
+    scope: "STANDARD access plus business lounge, priority entry, speaker materials, premium networking and event recording.",
   },
   online: {
     name: "ONLINE",
@@ -101,6 +133,12 @@ function getInitialTicketType(): TicketType {
   return type === "business" || type === "online" || type === "sport" ? type : "sport";
 }
 
+function getEventSlug(location: string): EventSlug {
+  return location.startsWith("/event/e-commerce-conference-2026")
+    ? "e-commerce-conference-2026"
+    : "sbc-summit-ukraine-2026";
+}
+
 export default function TicketFormPage() {
   const [lang, setLang] = useState<Lang>("uk");
   const [location] = useLocation();
@@ -120,13 +158,20 @@ export default function TicketFormPage() {
   }, [location]);
 
   const t = text[lang];
-  const tier = tiers[ticketType];
+  const eventSlug = getEventSlug(location);
+  const event = events[eventSlug];
+  const activeTiers = eventSlug === "e-commerce-conference-2026" ? ecommerceTiers : tiers;
+  const tier = activeTiers[ticketType];
+
+  useEffect(() => {
+    document.title = `${event.title} | Ticket request | RAVE'ERA GROUP`;
+  }, [event.title]);
 
   function selectTicketType(next: TicketType) {
     setTicketType(next);
     setSubmitted(false);
     setPaymentError("");
-    window.history.replaceState(null, "", `/event/sbc-summit-ukraine-2026/ticket-form?type=${next}`);
+    window.history.replaceState(null, "", `${event.formHref}?type=${next}`);
   }
 
   function validate() {
@@ -156,6 +201,7 @@ export default function TicketFormPage() {
           Accept: "application/json",
         },
         body: JSON.stringify({
+          eventSlug,
           ticketType,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
@@ -181,7 +227,7 @@ export default function TicketFormPage() {
     <div className="min-h-screen bg-[#0A0A0F] text-white">
       <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-14 flex items-center justify-between">
-          <Link href="/event/sbc-summit-ukraine-2026" className="flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <Link href={event.eventHref} className="flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="w-3.5 h-3.5" />
             {t.back}
           </Link>
@@ -205,6 +251,7 @@ export default function TicketFormPage() {
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[0.9] mb-3">{t.title}</h1>
+          <p className="mb-3 text-xs font-mono uppercase tracking-[0.2em] text-[#00FF88]">{event.title}</p>
           <p className="text-sm text-white/45 leading-relaxed mb-8">{t.subtitle}</p>
 
           <div className="mb-8 border border-[#00FF88]/20 bg-[#00FF88]/[0.03] p-4 sm:p-5">
@@ -225,8 +272,8 @@ export default function TicketFormPage() {
                 {t.ticketLabel}
               </legend>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {(Object.keys(tiers) as TicketType[]).map((key) => {
-                  const option = tiers[key];
+                {(Object.keys(activeTiers) as TicketType[]).map((key) => {
+                  const option = activeTiers[key];
                   const active = ticketType === key;
                   return (
                     <button

@@ -44,6 +44,8 @@ type TicketOrder = {
   id: number;
   merchant_request_id: string;
   hpp_order_id: string | null;
+  event_slug?: string | null;
+  event_title?: string | null;
   ticket_type: string;
   amount_kopiykas: number;
   currency: string;
@@ -105,6 +107,34 @@ const CALLBACK_PATH = "/api/payment/callback";
 const CANONICAL_PUBLIC_APP_ORIGIN = "https://www.rave-era.com.ua";
 const EVENT_SLUG = "sbc-summit-ukraine-2026";
 const EVENT_TITLE = "SBC Summit Ukraine 2026";
+type EventSlug = "sbc-summit-ukraine-2026" | "e-commerce-conference-2026";
+type EventConfig = {
+  slug: EventSlug;
+  title: string;
+  codePrefix: "SBC-2026" | "ECC-2026";
+  paymentPath: string;
+  pdfDate: string;
+  pdfVenue: string;
+};
+
+const eventConfigs: Record<EventSlug, EventConfig> = {
+  "sbc-summit-ukraine-2026": {
+    slug: "sbc-summit-ukraine-2026",
+    title: EVENT_TITLE,
+    codePrefix: "SBC-2026",
+    paymentPath: EVENT_PAYMENT_PATH,
+    pdfDate: "27 травня 2026",
+    pdfVenue: "КВЦ Парковий, Київ",
+  },
+  "e-commerce-conference-2026": {
+    slug: "e-commerce-conference-2026",
+    title: "E-Commerce Conference 2026",
+    codePrefix: "ECC-2026",
+    paymentPath: "/event/e-commerce-conference-2026/payment",
+    pdfDate: "2026",
+    pdfVenue: "Київ, Україна",
+  },
+};
 const require = createRequire(import.meta.url);
 let cachedAlliancePaySession: AlliancePaySession | null = null;
 let cachedDbModule: DbModule | null = null;
@@ -120,6 +150,7 @@ export const ticketPrices: Record<string, number> = {
 };
 
 const createOrderBodySchema = z.object({
+  eventSlug: z.enum(["sbc-summit-ukraine-2026", "e-commerce-conference-2026"]).optional(),
   ticketType: z.enum(["sport", "business", "online"]),
   firstName: z.string().min(1).max(30),
   lastName: z.string().min(1).max(30),
@@ -190,12 +221,16 @@ async function readJsonBody(req: VercelApiRequest): Promise<unknown> {
   return JSON.parse(rawBody);
 }
 
-function buildPaymentUrls(merchantRequestId: string, ticketType: string): PaymentUrls {
+function getEventConfig(eventSlug: string | null | undefined): EventConfig {
+  return eventConfigs[eventSlug as EventSlug] || eventConfigs[EVENT_SLUG];
+}
+
+function buildPaymentUrls(merchantRequestId: string, ticketType: string, eventConfig = getEventConfig(EVENT_SLUG)): PaymentUrls {
   const origin = CANONICAL_PUBLIC_APP_ORIGIN;
 
   return {
-    successUrl: `${origin}${EVENT_PAYMENT_PATH}/success?merchantRequestId=${encodeURIComponent(merchantRequestId)}`,
-    failUrl: `${origin}${EVENT_PAYMENT_PATH}/fail?type=${encodeURIComponent(ticketType)}`,
+    successUrl: `${origin}${eventConfig.paymentPath}/success?merchantRequestId=${encodeURIComponent(merchantRequestId)}`,
+    failUrl: `${origin}${eventConfig.paymentPath}/fail?type=${encodeURIComponent(ticketType)}`,
     notificationUrl: `${origin}${CALLBACK_PATH}`,
   };
 }
@@ -762,6 +797,8 @@ async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
       customer_first_name text not null,
       customer_last_name text not null,
       customer_phone text,
+      event_slug text not null default 'sbc-summit-ukraine-2026',
+      event_title text not null default 'SBC Summit Ukraine 2026',
       hpp_order_id text,
       redirect_url text,
       payment_status text not null default 'PENDING',
@@ -784,6 +821,8 @@ async function ensurePaymentOrdersTable(dbModule: DbModule): Promise<void> {
     alter table ticket_orders add column if not exists email_status text not null default 'PENDING';
     alter table ticket_orders add column if not exists email_sent_at timestamptz;
     alter table ticket_orders add column if not exists email_error_safe text;
+    alter table ticket_orders add column if not exists event_slug text not null default 'sbc-summit-ukraine-2026';
+    alter table ticket_orders add column if not exists event_title text not null default 'SBC Summit Ukraine 2026';
   `);
 
   await dbModule.pool.query(`
@@ -944,8 +983,9 @@ async function verifyAlliancePayHppOrder(order: TicketOrder): Promise<Record<str
   return data;
 }
 
-export function createTicketCode(): string {
-  return `SBC-2026-${randomBytes(6).toString("hex").toUpperCase()}`;
+export function createTicketCode(eventSlug = EVENT_SLUG): string {
+  const eventConfig = getEventConfig(eventSlug);
+  return `${eventConfig.codePrefix}-${randomBytes(6).toString("hex").toUpperCase()}`;
 }
 
 async function getTicketByOrderId(dbModule: DbModule, orderId: number): Promise<TicketRecord | null> {
@@ -971,7 +1011,8 @@ async function issueTicket(dbModule: DbModule, order: TicketOrder): Promise<Tick
   }
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const ticketCode = createTicketCode();
+    const eventConfig = getEventConfig(order.event_slug);
+    const ticketCode = createTicketCode(eventConfig.slug);
     const qrPayload = `${getPublicAppOrigin()}/ticket/${encodeURIComponent(ticketCode)}`;
     const qrTokenHash = createHash("sha256").update(qrPayload).digest("hex");
     try {
@@ -989,8 +1030,8 @@ async function issueTicket(dbModule: DbModule, order: TicketOrder): Promise<Tick
           order.id,
           order.merchant_request_id,
           order.hpp_order_id,
-          EVENT_SLUG,
-          EVENT_TITLE,
+          eventConfig.slug,
+          order.event_title || eventConfig.title,
           order.ticket_type,
           order.customer_email,
           order.customer_first_name,
@@ -1123,9 +1164,10 @@ export async function buildTicketPdf(ticket: TicketRecord): Promise<Buffer> {
   page.drawLine({ start: { x: 581, y: 38 }, end: { x: 581, y: 362 }, color: green, thickness: 1 });
 
   drawText("RAVE'ERA GROUP", 60, 326, { size: 18, color: green, bold: true });
-  drawText(EVENT_TITLE, 60, 281, { size: 28, bold: true });
-  drawText("27 травня 2026", 60, 233, { size: 16 });
-  drawText("КВЦ Парковий, Київ", 60, 204, { size: 16 });
+  const eventConfig = getEventConfig(ticket.event_slug);
+  drawText(ticket.event_title || eventConfig.title, 60, 281, { size: 28, bold: true });
+  drawText(eventConfig.pdfDate, 60, 233, { size: 16 });
+  drawText(eventConfig.pdfVenue, 60, 204, { size: 16 });
 
   drawText("ТИП КВИТКА", 60, 148, { size: 10, color: muted });
   drawText(getTicketTypeLabel(ticket.ticket_type), 60, 126, { size: 15, bold: true });
@@ -1256,11 +1298,11 @@ async function deliverTicketEmail(
     const info = await transporter.sendMail({
       from: smtpConfig.from,
       to: ticket.customer_email,
-      subject: "Ваш квиток на SBC Summit Ukraine 2026",
+      subject: `Ваш квиток на ${ticket.event_title || getEventConfig(ticket.event_slug).title}`,
       text: [
         `Вітаємо, ${customerName}!`,
         "",
-        `Ваш квиток на ${EVENT_TITLE} готовий.`,
+        `Ваш квиток на ${ticket.event_title || getEventConfig(ticket.event_slug).title} готовий.`,
         `Тип квитка: ${ticket.ticket_type}`,
         `Код квитка: ${ticket.ticket_code}`,
         `Відкрити квиток: ${ticket.qr_payload}`,
@@ -1269,7 +1311,7 @@ async function deliverTicketEmail(
         "Підтримка: ceo@rave-era.com.ua",
       ].join("\n"),
       html: `<p>Вітаємо, ${escapeHtml(customerName)}!</p>
-        <p>Ваш квиток на <strong>${EVENT_TITLE}</strong> готовий.</p>
+        <p>Ваш квиток на <strong>${escapeHtml(ticket.event_title || getEventConfig(ticket.event_slug).title)}</strong> готовий.</p>
         <p>Тип квитка: <strong>${escapeHtml(ticket.ticket_type)}</strong><br>
         Код квитка: <strong>${escapeHtml(ticket.ticket_code)}</strong></p>
         <p><a href="${escapeHtml(ticket.qr_payload)}">Відкрити квиток</a></p>
@@ -1511,12 +1553,12 @@ export function extractTicketCodeFromCheckinInput(input: string): string | null 
     // Plain ticket code input is handled below.
   }
 
-  const match = trimmed.match(/SBC-2026-[A-Z0-9]{6,24}/i);
+  const match = trimmed.match(/(?:SBC|ECC)-2026-[A-Z0-9]{6,24}/i);
   return match?.[0] ? match[0].toUpperCase() : null;
 }
 
 function isSafeCheckinTicketCode(ticketCode: string): boolean {
-  return /^SBC-2026-[A-Z0-9]{6,24}$/.test(ticketCode);
+  return /^(?:SBC|ECC)-2026-[A-Z0-9]{6,24}$/.test(ticketCode);
 }
 
 function toSafeCheckinTicketResponse(ticket: TicketRecord): Record<string, unknown> {
@@ -1821,7 +1863,8 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     return;
   }
 
-  const { ticketType, firstName, lastName, email, phone } = parsedBody;
+  const { eventSlug, ticketType, firstName, lastName, email, phone } = parsedBody;
+  const eventConfig = getEventConfig(eventSlug);
   const coinAmount = ticketPrices[ticketType] ?? 0;
   if (!coinAmount) {
     sendJson(res, 400, { code: "INVALID_REQUEST", error: "Unknown ticket type" });
@@ -1831,7 +1874,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
   const merchantRequestId = crypto.randomUUID();
   let urls: ReturnType<typeof buildPaymentUrls>;
   try {
-    urls = buildPaymentUrls(merchantRequestId, ticketType);
+    urls = buildPaymentUrls(merchantRequestId, ticketType, eventConfig);
   } catch (err) {
     console.error("Payment URL configuration invalid", {
       error: err instanceof Error ? err.message : "Unknown error",
@@ -1853,10 +1896,12 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
         customer_email,
         customer_first_name,
         customer_last_name,
-        customer_phone
-      ) values ($1, $2, $3, 'UAH', 'PENDING', $4, $5, $6, $7)
+        customer_phone,
+        event_slug,
+        event_title
+      ) values ($1, $2, $3, 'UAH', 'PENDING', $4, $5, $6, $7, $8, $9)
       returning id`,
-      [merchantRequestId, ticketType, coinAmount, email, firstName, lastName, phone || null],
+      [merchantRequestId, ticketType, coinAmount, email, firstName, lastName, phone || null, eventConfig.slug, eventConfig.title],
     );
     orderId = result.rows[0]?.id;
   } catch (err) {
@@ -1873,7 +1918,7 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     merchantId: process.env["ALLIANCEPAY_MERCHANT_ID"],
     coinAmount,
     language: "uk",
-    purpose: "SBC Summit Ukraine 2026",
+    purpose: eventConfig.title,
     urls,
   });
 
@@ -2140,7 +2185,7 @@ function maskCustomerName(firstName: string, lastName: string): string {
 }
 
 function isValidTicketCode(ticketCode: string): boolean {
-  return /^SBC-2026-[A-F0-9]{12}$/.test(ticketCode);
+  return /^(?:SBC|ECC)-2026-[A-F0-9]{12}$/.test(ticketCode);
 }
 
 export async function getPublicTicket(ticketCode: string, res: ServerResponse): Promise<void> {

@@ -287,6 +287,11 @@ test("check-in extracts ticket code from public QR URL", () => {
     "SBC-2026-ABCDEF123456",
   );
   assert.equal(extractTicketCodeFromCheckinInput("sbc-2026-abcdef123456"), "SBC-2026-ABCDEF123456");
+  assert.equal(
+    extractTicketCodeFromCheckinInput("https://www.rave-era.com.ua/ticket/ECC-2026-ABCDEF123456"),
+    "ECC-2026-ABCDEF123456",
+  );
+  assert.equal(extractTicketCodeFromCheckinInput("ecc-2026-abcdef123456"), "ECC-2026-ABCDEF123456");
 });
 
 test("check-in verify returns ACTIVE ticket info without payment details", async () => {

@@ -52,7 +52,7 @@ const ticketTypeLabels: Record<string, string> = {
   online: "ONLINE",
 };
 
-const ticketCodePattern = /SBC-2026-[A-Z0-9-]+/i;
+const ticketCodePattern = /(?:SBC|ECC)-2026-[A-Z0-9-]+/i;
 
 export default function AdminCheckinPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
@@ -280,7 +280,7 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
               id="ticket-code"
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="SBC-2026-ABCDEF123456"
+              placeholder="SBC-2026-ABCDEF123456 або ECC-2026-ABCDEF123456"
               autoCapitalize="characters"
               className="min-h-12 flex-1 border border-white/10 bg-black/40 px-4 text-base font-semibold text-white outline-none transition-colors placeholder:text-white/20 focus:border-[#00FF88]"
             />
@@ -851,7 +851,7 @@ function extractTicketCodeFromScan(value: string): string {
 
   try {
     const url = new URL(trimmed);
-    const ticketPathMatch = safeDecode(trimmed, url.pathname).match(/\/ticket\/(SBC-2026-[A-Z0-9-]+)/i);
+    const ticketPathMatch = safeDecode(trimmed, url.pathname).match(/\/ticket\/((?:SBC|ECC)-2026-[A-Z0-9-]+)/i);
     if (ticketPathMatch?.[1]) {
       return ticketPathMatch[1].toUpperCase();
     }
