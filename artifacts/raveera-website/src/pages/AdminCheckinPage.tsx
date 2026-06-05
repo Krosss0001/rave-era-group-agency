@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type FormEvent, type ReactNode, type SetStateAction } from "react";
-import type { CameraDevice, Html5Qrcode } from "html5-qrcode";
+import type { CameraDevice, Html5Qrcode, Html5QrcodeCameraScanConfig } from "html5-qrcode";
 import {
   AlertTriangle,
   Camera,
@@ -304,11 +304,13 @@ function CheckinDashboard({ onLogout }: { onLogout: () => void }) {
 function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; disabled: boolean }) {
   const scannerIdRef = useRef(`checkin-qr-reader-${Math.random().toString(36).slice(2)}`);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const startingRef = useRef(false);
   const scanHandledRef = useRef(false);
   const mountedRef = useRef(false);
   const [status, setStatus] = useState<"idle" | "starting" | "scanning" | "stopping">("idle");
   const [message, setMessage] = useState("Натисніть «Увімкнути камеру», щоб сканувати QR.");
   const [error, setError] = useState("");
+  const [diagnostic, setDiagnostic] = useState("");
   const canUseCamera = typeof window !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
   const isRunning = status === "starting" || status === "scanning" || status === "stopping";
 
@@ -334,26 +336,52 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       // The browser may already have stopped the stream after permission changes.
     } finally {
       scannerRef.current = null;
+      startingRef.current = false;
       scanHandledRef.current = false;
       if (mountedRef.current) {
         setStatus("idle");
         setMessage("Сканер зупинено. Ручний ввід доступний завжди.");
+        setDiagnostic("");
       }
     }
   }, []);
 
   const startScanner = useCallback(async () => {
+    if (startingRef.current || scannerRef.current?.isScanning) {
+      return;
+    }
+
+    startingRef.current = true;
+
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      startingRef.current = false;
+      setError(getCameraErrorMessage(new Error("Insecure context")));
+      setDiagnostic("Перевірка: сторінка відкрита не в захищеному контексті.");
+      return;
+    }
+
     if (!canUseCamera) {
+      startingRef.current = false;
       setError("Браузер не надає доступ до камери. Скористайтеся ручним вводом.");
+      setDiagnostic("Перевірка: navigator.mediaDevices.getUserMedia недоступний.");
       return;
     }
 
     setStatus("starting");
     setError("");
+    setDiagnostic("Перевірка: запитуємо дозвіл камери Safari.");
     setMessage("Запитуємо доступ до камери...");
     scanHandledRef.current = false;
 
     try {
+      const permissionStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      permissionStream.getTracks().forEach((track) => track.stop());
+
+      await waitForScannerContainer(scannerIdRef.current);
+
       const { Html5Qrcode: Html5QrcodeScanner, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
       const scanner = new Html5QrcodeScanner(scannerIdRef.current, {
         formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
@@ -386,31 +414,63 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
         void stopScanner().finally(() => onScan(ticketCode));
       };
 
-      await scanner.start(
-        { facingMode: { ideal: "environment" } },
-        scanConfig,
-        handleSuccess,
-        () => undefined,
-      ).catch(async (firstError: unknown) => {
-        const cameras = await Html5QrcodeScanner.getCameras();
-        const cameraId = selectCameraId(cameras);
-        if (!cameraId) {
-          throw firstError;
+      type ScannerCameraInput = Parameters<Html5Qrcode["start"]>[0];
+      const exactEnvironmentCamera = { facingMode: { exact: "environment" } } as unknown as ScannerCameraInput;
+      const environmentCamera = { facingMode: "environment" } as unknown as ScannerCameraInput;
+
+      try {
+        await scanner.start(
+          exactEnvironmentCamera,
+          scanConfig,
+          handleSuccess,
+          () => undefined,
+        );
+        setDiagnostic("Камера: задня камера через exact environment.");
+      } catch (firstError) {
+        try {
+          setDiagnostic("Камера: fallback через facingMode environment.");
+          await resetScanner(scanner);
+          await scanner.start(environmentCamera, scanConfig, handleSuccess, () => undefined);
+        } catch {
+          try {
+            setDiagnostic("Камера: fallback через стандартний доступ { video: true }.");
+            await resetScanner(scanner);
+            await scanner.start(
+              environmentCamera,
+              { ...scanConfig, videoConstraints: {} } as unknown as Html5QrcodeCameraScanConfig,
+              handleSuccess,
+              () => undefined,
+            );
+          } catch {
+            setDiagnostic("Камера: fallback через список камер пристрою.");
+            await resetScanner(scanner);
+            const cameras = await Html5QrcodeScanner.getCameras();
+            const cameraIds = selectCameraIds(cameras);
+            if (cameraIds.length === 0) {
+              throw firstError;
+            }
+            await startWithCameraIds(scanner, cameraIds, scanConfig, handleSuccess);
+          }
         }
-        await scanner.start(cameraId, scanConfig, handleSuccess, () => undefined);
-      });
+      }
 
       if (mountedRef.current) {
         setStatus("scanning");
         setMessage("Наведіть камеру на QR-код квитка.");
       }
     } catch (err) {
+      const scanner = scannerRef.current;
+      if (scanner) {
+        await resetScanner(scanner);
+      }
       scannerRef.current = null;
       if (mountedRef.current) {
         setStatus("idle");
         setError(getCameraErrorMessage(err));
         setMessage("Сканер не запущено. Ручний ввід доступний.");
       }
+    } finally {
+      startingRef.current = false;
     }
   }, [canUseCamera, onScan, stopScanner]);
 
@@ -423,6 +483,7 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       if (scanner?.isScanning) {
         void scanner.stop().catch(() => undefined);
       }
+      startingRef.current = false;
     };
   }, []);
 
@@ -458,9 +519,21 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
         </div>
       </div>
       {error ? (
-        <p className="mb-3 flex items-start gap-2 border border-red-400/30 bg-red-400/10 p-3 text-sm leading-relaxed text-red-200">
+        <div className="mb-3 border border-red-400/30 bg-red-400/10 p-3 text-sm leading-relaxed text-red-200">
+          <p className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {error}
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-6 text-red-100/90">
+            <li>Перевірте дозвіл камери: iPhone Settings Safari Camera Allow.</li>
+            <li>Відкрийте сайт саме через https://www.rave-era.com.ua.</li>
+            <li>Закрийте інші застосунки, які можуть використовувати камеру.</li>
+          </ul>
+        </div>
+      ) : null}
+      {diagnostic ? (
+        <p className="mb-3 border border-white/10 bg-white/[0.04] p-3 text-xs leading-relaxed text-white/50">
+          {diagnostic}
         </p>
       ) : null}
       <div className="relative aspect-[4/3] min-h-64 w-full overflow-hidden border border-white/10 bg-black">
@@ -485,9 +558,59 @@ function extractTicketCodeFromScan(value: string): string {
   return (match?.[0] || trimmed).toUpperCase();
 }
 
-function selectCameraId(cameras: CameraDevice[]): string | null {
+async function waitForScannerContainer(elementId: string) {
+  await animationFrame();
+  await animationFrame();
+  const element = document.getElementById(elementId);
+  if (!element) {
+    throw new Error("Scanner container is not ready");
+  }
+}
+
+function animationFrame() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
+async function resetScanner(scanner: Html5Qrcode) {
+  try {
+    if (scanner.isScanning) {
+      await scanner.stop();
+    }
+    scanner.clear();
+  } catch {
+    // Safari can release the stream while html5-qrcode is still cleaning up.
+  }
+}
+
+async function startWithCameraIds(
+  scanner: Html5Qrcode,
+  cameraIds: string[],
+  scanConfig: Html5QrcodeCameraScanConfig,
+  handleSuccess: (decodedText: string) => void,
+) {
+  let lastError: unknown = null;
+  for (const cameraId of cameraIds) {
+    try {
+      await resetScanner(scanner);
+      await scanner.start(cameraId, scanConfig, handleSuccess, () => undefined);
+      return;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("No available camera started");
+}
+
+function selectCameraIds(cameras: CameraDevice[]): string[] {
   const rearCamera = cameras.find((camera) => /back|rear|environment|зад|основ/i.test(camera.label));
-  return rearCamera?.id || cameras[0]?.id || null;
+  const ids = [
+    rearCamera?.id,
+    cameras[cameras.length - 1]?.id,
+    cameras[0]?.id,
+  ].filter((id): id is string => Boolean(id));
+  return Array.from(new Set(ids));
 }
 
 function getCameraErrorMessage(err: unknown): string {
