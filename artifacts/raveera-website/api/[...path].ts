@@ -94,21 +94,6 @@ function uniquePaths(paths: string[]): string[] {
   return [...new Set(paths.map(normalizeLoosePath).filter(Boolean))];
 }
 
-function logRequest({
-  method,
-  pathname,
-  normalizedPath,
-}: {
-  method: string | undefined;
-  pathname: string;
-  normalizedPath: string;
-}): void {
-  console.info("Vercel API request", {
-    method,
-    pathname,
-    normalizedPath,
-  });
-}
 function matchesPath(pathname: string, ...paths: string[]): boolean {
   return paths.includes(pathname);
 }
@@ -203,11 +188,6 @@ export default async function handler(req: VercelCatchAllRequest, res: ServerRes
   const originalUrl = new URL(req.url || "/", "http://vercel.local");
   const normalizedUrl = normalizeApiUrl(req);
   const candidatePaths = getCandidatePaths(req, originalUrl, normalizedUrl);
-  logRequest({
-    method: req.method,
-    pathname: originalUrl.pathname,
-    normalizedPath: normalizedUrl.pathname,
-  });
 
   if (req.method === "POST" && candidatePaths.some(isCreateOrderPath)) {
     await createOrder(req, res);

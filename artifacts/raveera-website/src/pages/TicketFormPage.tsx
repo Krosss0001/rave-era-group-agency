@@ -170,8 +170,7 @@ export default function TicketFormPage() {
 
       setSubmitted(true);
       window.location.assign(data.redirectUrl);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setPaymentError(t.paymentError);
     } finally {
       setIsSubmitting(false);

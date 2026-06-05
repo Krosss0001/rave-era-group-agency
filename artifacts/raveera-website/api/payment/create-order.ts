@@ -10,11 +10,6 @@ export default async function handler(req: VercelApiRequest, res: ServerResponse
     return;
   }
 
-  console.info("Vercel create-order API request", {
-    method: req.method,
-    pathname: new URL(req.url || "/api/payment/create-order", "http://vercel.local").pathname,
-  });
-
   if (req.method !== "POST") {
     sendJson(res, 405, {
       code: "METHOD_NOT_ALLOWED",

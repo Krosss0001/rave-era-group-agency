@@ -331,6 +331,8 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
   const [diagnostic, setDiagnostic] = useState("");
   const [photoBusy, setPhotoBusy] = useState(false);
   const [showCompatibilityPrompt, setShowCompatibilityPrompt] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<CameraDevice[]>([]);
+  const preferredCameraIdRef = useRef<string | null>(null);
   const canUseCamera = typeof window !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
   const isRunning = status === "starting" || status === "scanning" || status === "stopping";
 
@@ -461,6 +463,13 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       await waitForScannerContainer(scannerIdRef.current);
 
       const { Html5Qrcode: Html5QrcodeScanner, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+      const cameras = await Html5QrcodeScanner.getCameras().catch(() => [] as CameraDevice[]);
+      if (mountedRef.current) {
+        setAvailableCameras(cameras);
+      }
+      if (!preferredCameraIdRef.current && cameras.length > 0) {
+        preferredCameraIdRef.current = selectCameraIds(cameras)[0] || null;
+      }
       const scanner = new Html5QrcodeScanner(scannerIdRef.current, {
         formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
         useBarCodeDetectorIfSupported: true,
@@ -487,13 +496,18 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       const environmentCamera = { facingMode: "environment" } as unknown as ScannerCameraInput;
 
       try {
-        await scanner.start(
-          exactEnvironmentCamera,
-          scanConfig,
-          handleSuccess,
-          () => undefined,
-        );
-        setDiagnostic("Камера: задня камера через exact environment.");
+        if (preferredCameraIdRef.current) {
+          await scanner.start(preferredCameraIdRef.current, scanConfig, handleSuccess, () => undefined);
+          setDiagnostic("Камера: вибрана камера пристрою.");
+        } else {
+          await scanner.start(
+            exactEnvironmentCamera,
+            scanConfig,
+            handleSuccess,
+            () => undefined,
+          );
+          setDiagnostic("Камера: задня камера через exact environment.");
+        }
       } catch (firstError) {
         try {
           setDiagnostic("Камера: fallback через facingMode environment.");
@@ -512,7 +526,6 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
           } catch {
             setDiagnostic("Камера: fallback через список камер пристрою.");
             await resetScanner(scanner);
-            const cameras = await Html5QrcodeScanner.getCameras();
             const cameraIds = selectCameraIds(cameras);
             if (cameraIds.length === 0) {
               throw firstError;
@@ -566,7 +579,7 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       const { BrowserQRCodeReader } = await import("@zxing/browser");
       const reader = new BrowserQRCodeReader();
       const devices = await BrowserQRCodeReader.listVideoInputDevices();
-      const cameraId = selectZxingCameraId(devices);
+      const cameraId = preferredCameraIdRef.current || selectZxingCameraId(devices);
       const controls = await reader.decodeFromVideoDevice(
         cameraId,
         zxingVideoRef.current || zxingVideoIdRef.current,
@@ -595,6 +608,22 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
       startingRef.current = false;
     }
   }, [clearCompatibilityTimer, disabled, handleDecodedText, stopHtml5Scanner, stopZxingScanner]);
+
+  const switchCamera = useCallback(async () => {
+    if (availableCameras.length < 2 || startingRef.current) {
+      return;
+    }
+    const ids = availableCameras.map((camera) => camera.id);
+    const currentIndex = Math.max(0, ids.indexOf(preferredCameraIdRef.current || ""));
+    preferredCameraIdRef.current = ids[(currentIndex + 1) % ids.length] || null;
+    const mode = scannerMode;
+    await stopScanner();
+    if (mode === "zxing") {
+      await startCompatibilityMode();
+      return;
+    }
+    await startScanner();
+  }, [availableCameras, scannerMode, startCompatibilityMode, startScanner, stopScanner]);
 
   const scanPhoto = useCallback(async (file: File) => {
     if (photoBusy || startingRef.current || disabled) {
@@ -715,6 +744,24 @@ function ScannerPanel({ onScan, disabled }: { onScan: (value: string) => void; d
                 Режим сумісності
               </button>
             </div>
+          ) : null}
+          {scannerMode === "html5" && isRunning && !showCompatibilityPrompt ? (
+            <button
+              type="button"
+              onClick={() => void startCompatibilityMode()}
+              className="inline-flex min-h-11 w-full items-center justify-center border border-amber-200/40 px-4 py-3 text-xs font-black uppercase tracking-widest text-amber-100 transition-colors hover:bg-amber-200 hover:text-black"
+            >
+              Режим сумісності
+            </button>
+          ) : null}
+          {isRunning && availableCameras.length > 1 ? (
+            <button
+              type="button"
+              onClick={() => void switchCamera()}
+              className="inline-flex min-h-11 w-full items-center justify-center border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-widest text-white/70 transition-colors hover:border-[#00FF88]/60 hover:text-[#00FF88]"
+            >
+              Змінити камеру
+            </button>
           ) : null}
           <input
             ref={fileInputRef}
