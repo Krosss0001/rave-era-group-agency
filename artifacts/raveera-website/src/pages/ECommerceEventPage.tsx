@@ -478,18 +478,18 @@ export default function ECommerceEventPage() {
             <motion.h2 variants={fadeUpChild} className="mb-10 text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.ticketsTitle}</motion.h2>
             <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
               {tickets.map((tier) => (
-                <motion.div key={tier.key} variants={fadeUpChild} className={`relative flex min-h-[520px] flex-col border p-5 sm:p-6 ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
+                <motion.div key={tier.key} data-qa="ecc-ticket-card" variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 md:min-h-[520px] ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
                   {tier.popular ? <span className="absolute -top-3 left-5 bg-[#00FF88] px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.popular}</span> : null}
                   {tier.premium ? <span className="absolute -top-3 left-5 bg-white px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.premium}</span> : null}
-                  <p className="text-xs font-mono uppercase tracking-widest text-white/30">{tier.corporate && lang === "en" ? "CORPORATE" : tier.name}</p>
+                  <p className="text-xs font-mono uppercase tracking-widest text-white/40">{tier.corporate && lang === "en" ? "CORPORATE" : tier.name}</p>
                   <div className="mt-3 flex items-baseline gap-2">
                     <p className="break-words text-4xl font-black tracking-tighter sm:text-5xl" style={{ color: tier.popular ? G : "white" }}>{tier.price}</p>
-                    {!tier.corporate && <span className="text-sm font-mono text-white/30">UAH</span>}
+                    {!tier.corporate && <span className="text-sm font-mono text-white/40">UAH</span>}
                   </div>
-                  <p className="mt-5 text-sm leading-relaxed text-white/45">{t.ticketDescriptions[tier.key]}</p>
+                  <p className="mt-5 text-sm leading-relaxed text-white/55">{t.ticketDescriptions[tier.key]}</p>
                   <ul className="mt-6 flex-1 space-y-2.5">
                     {t.ticketFeatures[tier.key].map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm text-white/50">
+                      <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
                         <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#00FF88]" aria-hidden="true" />
                         {feature}
                       </li>

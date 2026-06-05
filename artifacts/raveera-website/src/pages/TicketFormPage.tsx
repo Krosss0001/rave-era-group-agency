@@ -356,9 +356,9 @@ export default function TicketFormPage() {
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} aria-invalid={Boolean(errors.consent)} aria-describedby={errors.consent ? "legal-consent-error" : undefined} className="mt-0.5 h-4 w-4 accent-[#00FF88]" />
               <span>
                 {t.legalCopy}{" "}
-                <Link href="/public-offer" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>,{" "}
-                <Link href="/privacy" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.privacy}</Link>,{" "}
-                <Link href="/returns" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>.
+                <Link href="/public-offer" className="inline-flex min-h-10 items-center px-1 align-middle text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>,{" "}
+                <Link href="/privacy" className="inline-flex min-h-10 items-center px-1 align-middle text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.privacy}</Link>,{" "}
+                <Link href="/returns" className="inline-flex min-h-10 items-center px-1 align-middle text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>.
                 {errors.consent && <span id="legal-consent-error" className="mt-2 block text-red-400">{errors.consent}</span>}
               </span>
             </label>}
@@ -384,10 +384,10 @@ export default function TicketFormPage() {
             )}
           </form>
           <div className="mt-8 flex flex-wrap justify-center gap-3 border-t border-white/[0.06] pt-5 text-xs">
-            <Link href="/contacts" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.contacts}</Link>
-            <Link href="/public-offer" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>
-            <Link href="/privacy" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.privacy}</Link>
-            <Link href="/returns" className="text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>
+            <Link href="/contacts" className="inline-flex min-h-10 items-center text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.contacts}</Link>
+            <Link href="/public-offer" className="inline-flex min-h-10 items-center text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>
+            <Link href="/privacy" className="inline-flex min-h-10 items-center text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.privacy}</Link>
+            <Link href="/returns" className="inline-flex min-h-10 items-center text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.returns}</Link>
           </div>
         </motion.div>
       </main>
