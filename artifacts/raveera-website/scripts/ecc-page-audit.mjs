@@ -4,7 +4,7 @@ const baseUrl = process.env.BASE_URL || "http://127.0.0.1:4173";
 const executablePath =
   process.env.BROWSER_PATH ||
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
-const widths = [320, 375, 390, 430, 768, 1280, 1440];
+const widths = [320, 360, 375, 390, 430, 768, 1024, 1280, 1440];
 const eccPath = "/event/e-commerce-conference-2026";
 const expectedTicketTypes = ["online", "standard", "vip", "corporate"];
 
@@ -50,7 +50,11 @@ async function assertVisibleContent(page, width, language) {
       faqItems: document.querySelectorAll('button[aria-controls^="ecc-faq-answer-"]').length,
       faq: visibleText('button[aria-controls^="ecc-faq-answer-"]'),
       footer: visibleText("footer"),
+      location: visibleText("iframe[title]") || document.querySelector('iframe[title]')?.getAttribute("title") || "",
+      mapSrc: document.querySelector("iframe")?.getAttribute("src") || "",
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      mapHref: document.querySelector('a[href="https://maps.app.goo.gl/bih3ZUsmSrxpcbjW6"]')?.getAttribute("href") || "",
+      legalHrefs: [...document.querySelectorAll("footer a")].map((link) => link.getAttribute("href")).filter(Boolean),
       ticketLinks: [...document.querySelectorAll('a[href*="/event/e-commerce-conference-2026/ticket-form?type="]')]
         .map((link) => link.getAttribute("href"))
         .filter(Boolean),
@@ -66,7 +70,13 @@ async function assertVisibleContent(page, width, language) {
   assert(result.ticketsTitle.length > 20, `${width}px ${language}: ticket text missing (${JSON.stringify(result.ticketsTitle)})`);
   assert(result.faq.length > 5, `${width}px ${language}: FAQ text missing`);
   assert(result.footer.includes("RAVE'ERA"), `${width}px ${language}: footer text missing`);
+  assert(result.location.length > 5, `${width}px ${language}: location title missing`);
   assert(result.overflow <= 1, `${width}px ${language}: horizontal overflow is ${result.overflow}px`);
+  assert(result.mapHref === "https://maps.app.goo.gl/bih3ZUsmSrxpcbjW6", `${width}px ${language}: map link mismatch`);
+  assert(result.mapSrc.includes("Parkovyi%20ECC"), `${width}px ${language}: embedded map location mismatch`);
+  for (const href of ["/contacts", "/public-offer", "/privacy", "/returns"]) {
+    assert(result.legalHrefs.includes(href), `${width}px ${language}: missing legal link ${href}`);
+  }
 
   for (const type of expectedTicketTypes) {
     assert(
@@ -103,6 +113,22 @@ try {
     await page.evaluate(() => localStorage.setItem("raveera-cookie-consent", "accepted"));
     await revealPage(page);
     await assertVisibleContent(page, width, "UA");
+    const seo = await page.evaluate(() => ({
+      title: document.title,
+      canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href"),
+      ogImage: document.querySelector('meta[property="og:image"]')?.getAttribute("content"),
+      twitterCard: document.querySelector('meta[name="twitter:card"]')?.getAttribute("content"),
+      twitterImage: document.querySelector('meta[name="twitter:image"]')?.getAttribute("content"),
+      jsonLd: document.querySelector("#ecc-event-jsonld")?.textContent || "",
+    }));
+    assert(seo.title === "E-Commerce Conference 2026 | RAVE'ERA GROUP", `${width}px: document title mismatch`);
+    assert(seo.canonical === `${baseUrl.startsWith("http://127.0.0.1") ? "https://www.rave-era.com.ua" : baseUrl}${eccPath}`, `${width}px: canonical mismatch`);
+    assert(seo.ogImage?.endsWith("/images/ecommerce-conference-2026-poster.png"), `${width}px: OG image mismatch`);
+    assert(seo.twitterCard === "summary_large_image", `${width}px: Twitter card mismatch`);
+    assert(seo.twitterImage?.endsWith("/images/ecommerce-conference-2026-poster.png"), `${width}px: Twitter image mismatch`);
+    const eventJsonLd = JSON.parse(seo.jsonLd);
+    assert(eventJsonLd.startDate === "2026-10-06", `${width}px: JSON-LD date mismatch`);
+    assert(eventJsonLd.location?.name?.includes("Parkovyi"), `${width}px: JSON-LD location mismatch`);
 
     const languageButton = page.getByRole("button", { name: "Switch language" });
     for (const language of ["EN", "UA", "EN", "UA"]) {
@@ -131,13 +157,66 @@ try {
     assert(activeName.startsWith(expectedName), `ECC ticket form did not retain type=${type}`);
   }
 
+  for (const href of ["/contacts", "/public-offer", "/privacy", "/returns"]) {
+    const response = await routePage.goto(`${baseUrl}${href}`, { waitUntil: "domcontentloaded" });
+    assert(response?.ok(), `Legal route failed: ${href}`);
+  }
+
   await routePage.goto(`${baseUrl}/event/sbc-summit-ukraine-2026`, { waitUntil: "networkidle" });
   const sbcHeading = (await routePage.locator("h1").textContent())?.trim() || "";
   assert(
     sbcHeading.toLowerCase().replace(/\s+/g, "").includes("sbcsummitukraine2026"),
     `SBC page smoke check failed (${JSON.stringify(sbcHeading)})`,
   );
+  assert((await routePage.locator("#ecc-event-jsonld").count()) === 0, "ECC JSON-LD leaked onto SBC page");
   await routePage.close();
+
+  for (const width of widths) {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
+    for (const type of expectedTicketTypes) {
+      await page.goto(`${baseUrl}${eccPath}/ticket-form?type=${type}`, { waitUntil: "domcontentloaded" });
+      await page.locator('button[aria-pressed="true"]').waitFor();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      assert(overflow <= 1, `${width}px type=${type}: ticket form overflow is ${overflow}px`);
+    }
+
+    await page.route("**/api/ticket/ECC-2026-ABCDEF123456", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ticket: {
+            ticketCode: "ECC-2026-ABCDEF123456",
+            eventTitle: "E-Commerce Conference 2026",
+            eventSlug: "e-commerce-conference-2026",
+            eventDateTime: "6 жовтня 2026",
+            eventVenue: "КВЦ «Парковий», Київ",
+            eventHref: "/event/e-commerce-conference-2026",
+            ticketType: "vip",
+            customerName: "Test Buyer",
+            status: "ACTIVE",
+            qrPayload: "https://www.rave-era.com.ua/ticket/ECC-2026-ABCDEF123456",
+            issuedAt: "2026-10-01T10:00:00.000Z",
+          },
+        }),
+      });
+    });
+    await page.goto(`${baseUrl}/ticket/ECC-2026-ABCDEF123456`, { waitUntil: "domcontentloaded" });
+    await page.getByText("6 жовтня 2026").waitFor();
+    assert(await page.getByText("КВЦ «Парковий», Київ").isVisible(), `${width}px: ECC ticket venue missing`);
+    assert(
+      (await page.locator("nav a").first().getAttribute("href")) === eccPath,
+      `${width}px: ECC ticket back link mismatch`,
+    );
+    const ticketOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    assert(ticketOverflow <= 1, `${width}px: public ECC ticket overflow is ${ticketOverflow}px`);
+
+    await page.goto(`${baseUrl}/admin/checkin`, { waitUntil: "domcontentloaded" });
+    await page.locator("main").waitFor();
+    const adminOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    assert(adminOverflow <= 1, `${width}px: admin check-in overflow is ${adminOverflow}px`);
+    await page.close();
+  }
 
   console.log(`ECC page audit passed at widths: ${widths.join(", ")}`);
 } finally {

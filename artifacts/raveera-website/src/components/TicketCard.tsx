@@ -4,6 +4,10 @@ import { QRCodeSVG } from "qrcode.react";
 export type IssuedTicket = {
   ticketCode: string;
   eventTitle: string;
+  eventSlug: string;
+  eventDateTime: string;
+  eventVenue: string;
+  eventHref: string;
   ticketType: string;
   customerName: string;
   status: string;
@@ -33,8 +37,8 @@ export function TicketCard({ ticket }: { ticket: IssuedTicket }) {
           </div>
 
           <div className="grid gap-4 text-sm sm:grid-cols-2">
-            <TicketDetail icon={<CalendarDays />} label="Дата і час" value="27 травня 2026, 09:30-23:00" />
-            <TicketDetail icon={<MapPin />} label="Локація" value="КВЦ «Парковий», Київ" />
+            <TicketDetail icon={<CalendarDays />} label="Дата і час" value={ticket.eventDateTime} />
+            <TicketDetail icon={<MapPin />} label="Локація" value={ticket.eventVenue} />
             <TicketDetail icon={<UserRound />} label="Власник квитка" value={ticket.customerName} />
             <TicketDetail icon={<ShieldCheck />} label="Тип квитка" value={ticketTypeLabels[ticket.ticketType] || ticket.ticketType} />
           </div>

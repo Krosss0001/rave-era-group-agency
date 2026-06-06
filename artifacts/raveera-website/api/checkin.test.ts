@@ -340,3 +340,31 @@ test("check-in invalid ticket returns 404", async () => {
   assert.equal(result.statusCode, 404);
   assert.equal(result.body["code"], "TICKET_NOT_FOUND");
 });
+
+test("E-Commerce check-in verifies, uses, and safely rejects tickets", async () => {
+  const ticketCode = "ECC-2026-ABCDEF123456";
+  const eccTicket = makeTicket({
+    ticket_code: ticketCode,
+    event_slug: "e-commerce-conference-2026",
+    event_title: "E-Commerce Conference 2026",
+    ticket_type: "standard",
+    qr_payload: `https://www.rave-era.com.ua/ticket/${ticketCode}`,
+  });
+
+  const verified = await verifyCheckinTicketWithDb(mockDb(eccTicket), ticketCode);
+  assert.equal(verified.statusCode, 200);
+  assert.equal((verified.body["ticket"] as Record<string, unknown>)["status"], "ACTIVE");
+
+  const used = await markCheckinTicketUsedWithDb(mockDb(eccTicket, { updateSucceeds: true }), ticketCode);
+  assert.equal(used.body["result"], "CHECKED_IN");
+
+  const duplicate = await markCheckinTicketUsedWithDb(
+    mockDb({ ...eccTicket, status: "USED", checked_in_at: new Date("2026-10-06T09:00:00Z") }),
+    ticketCode,
+  );
+  assert.equal(duplicate.body["result"], "ALREADY_USED");
+
+  const missing = await verifyCheckinTicketWithDb(mockDb(null), "ECC-2026-FFFFFFFFFFFF");
+  assert.equal(missing.statusCode, 404);
+  assert.equal(missing.body["code"], "TICKET_NOT_FOUND");
+});

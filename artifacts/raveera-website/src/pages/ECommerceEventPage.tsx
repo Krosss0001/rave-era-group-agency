@@ -23,8 +23,9 @@ import {
 const G = "#00FF88";
 const slug = "e-commerce-conference-2026";
 const canonical = "https://www.rave-era.com.ua/event/e-commerce-conference-2026";
-const mapUrl = "https://www.google.com/maps?q=Kyiv%20Ukraine&output=embed";
-const mapExternal = "https://www.google.com/maps/search/?api=1&query=Kyiv%20Ukraine";
+const socialImage = "https://www.rave-era.com.ua/images/ecommerce-conference-2026-poster.png";
+const mapUrl = "https://www.google.com/maps?q=Parkovyi%20ECC%20Kyiv%20Parkova%20Road%2016A&output=embed";
+const mapExternal = "https://maps.app.goo.gl/bih3ZUsmSrxpcbjW6";
 
 type Lang = "uk" | "en";
 type TicketKey = "online" | "standard" | "vip" | "corporate";
@@ -82,7 +83,7 @@ const contentData = {
     heroDesc:
       "Велика українська eCommerce конференція для онлайн-ритейлу, маркетплейсів, логістики, фінтеху, платежів, performance marketing, CRM/CDP, автоматизації, AI commerce tools, фаундерів і брендів.",
     heroVisualLine: "Digital commerce для команд, які масштабуються",
-    meta: ["2026", "Kyiv, Ukraine", "ECC-2026 tickets", "B2B & B2C sales"],
+    meta: ["6 жовтня 2026", "КВЦ Парковий, Київ", "ECC-2026 tickets", "B2B & B2C sales"],
     stats: [
       ["2 000+", "учасників"],
       ["70+", "expo-компаній"],
@@ -141,11 +142,11 @@ const contentData = {
     paymentNote:
       "Оплата проходить через захищену платіжну сторінку AlliancePay. Дані платіжної картки не вводяться, не обробляються та не зберігаються на цьому сайті.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
-    locationTitle: "КИЇВ, УКРАЇНА",
+    locationTitle: "КВЦ ПАРКОВИЙ, КИЇВ",
     locationText:
-      "Фінальна локація та таймінг будуть опубліковані після підтвердження майданчика. Команда RAVEERA GROUP вже працює над production-інфраструктурою події.",
-    venue: "Анонс локації незабаром",
-    duration: "Production у роботі",
+      "E-Commerce Conference 2026 відбудеться у КВЦ «Парковий» за адресою: м. Київ, Паркова дорога, 16А.",
+    venue: "м. Київ, Паркова дорога, 16А",
+    duration: "6 жовтня 2026",
     mapOpen: "Відкрити на Google Maps",
     faqTitle: "Питання перед реєстрацією",
     faqs: [
@@ -198,7 +199,7 @@ const contentData = {
     heroDesc:
       "A large Ukrainian eCommerce conference for online retail, marketplaces, logistics, fintech, payments, performance marketing, CRM/CDP, automation, AI commerce tools, founders and brands.",
     heroVisualLine: "Digital commerce for teams that scale",
-    meta: ["2026", "Kyiv, Ukraine", "ECC-2026 tickets", "B2B & B2C sales"],
+    meta: ["October 6, 2026", "Parkovyi ECC, Kyiv", "ECC-2026 tickets", "B2B & B2C sales"],
     stats: [
       ["2,000+", "attendees"],
       ["70+", "expo companies"],
@@ -257,11 +258,11 @@ const contentData = {
     paymentNote:
       "Payment is processed through the secure AlliancePay hosted payment page. Card data is not entered, processed or stored on this site.",
     secureBadges: "SSL Secure · AlliancePay HPP · Visa · Mastercard · Apple Pay · Google Pay",
-    locationTitle: "KYIV, UKRAINE",
+    locationTitle: "PARKOVYI ECC, KYIV",
     locationText:
-      "The final venue and timing will be announced after production confirmation. RAVEERA GROUP is already preparing the event infrastructure.",
-    venue: "Venue announcement soon",
-    duration: "Production in progress",
+      "E-Commerce Conference 2026 takes place at Parkovyi ECC, 16A Parkova Road, Kyiv.",
+    venue: "16A Parkova Road, Kyiv",
+    duration: "October 6, 2026",
     mapOpen: "Open in Google Maps",
     faqTitle: "Questions before registration",
     faqs: [
@@ -315,7 +316,9 @@ export default function ECommerceEventPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    setSeo("E-Commerce Conference 2026", content[lang].seoDescription, canonical);
+    setSeo("E-Commerce Conference 2026", content[lang].seoDescription, canonical, socialImage);
+    setEventJsonLd(content[lang].seoDescription);
+    return () => document.querySelector("#ecc-event-jsonld")?.remove();
   }, [lang]);
 
   useEffect(() => {
@@ -742,16 +745,83 @@ function PaymentLogos() {
   );
 }
 
-function setSeo(pageTitle: string, pageDescription: string, canonicalUrl: string) {
+function setSeo(pageTitle: string, pageDescription: string, canonicalUrl: string, imageUrl: string) {
   document.title = `${pageTitle} | RAVE'ERA GROUP`;
   setMeta("description", pageDescription);
   setMeta("og:title", pageTitle, "property");
   setMeta("og:description", pageDescription, "property");
+  setMeta("og:type", "event", "property");
   setMeta("og:url", canonicalUrl, "property");
+  setMeta("og:image", imageUrl, "property");
   setMeta("twitter:title", pageTitle);
   setMeta("twitter:description", pageDescription);
+  setMeta("twitter:card", "summary_large_image");
+  setMeta("twitter:image", imageUrl);
   const canonicalElement = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
   if (canonicalElement) canonicalElement.href = canonicalUrl;
+}
+
+function setEventJsonLd(description: string) {
+  const id = "ecc-event-jsonld";
+  let element = document.querySelector<HTMLScriptElement>(`#${id}`);
+  if (!element) {
+    element = document.createElement("script");
+    element.id = id;
+    element.type = "application/ld+json";
+    document.head.appendChild(element);
+  }
+  element.textContent = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: "E-Commerce Conference 2026",
+    description,
+    startDate: "2026-10-06",
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/MixedEventAttendanceMode",
+    url: canonical,
+    image: [socialImage],
+    location: {
+      "@type": "Place",
+      name: "КВЦ Парковий / Parkovyi ECC",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Паркова дорога, 16А",
+        addressLocality: "Київ",
+        addressCountry: "UA",
+      },
+    },
+    organizer: {
+      "@type": "Organization",
+      name: "RAVE'ERA GROUP",
+      url: "https://www.rave-era.com.ua/",
+    },
+    offers: [
+      {
+        "@type": "Offer",
+        name: "ONLINE",
+        price: "1500",
+        priceCurrency: "UAH",
+        availability: "https://schema.org/InStock",
+        url: `${canonical}/ticket-form?type=online`,
+      },
+      {
+        "@type": "Offer",
+        name: "STANDARD",
+        price: "1800",
+        priceCurrency: "UAH",
+        availability: "https://schema.org/InStock",
+        url: `${canonical}/ticket-form?type=standard`,
+      },
+      {
+        "@type": "Offer",
+        name: "VIP + AFTERPARTY",
+        price: "4000",
+        priceCurrency: "UAH",
+        availability: "https://schema.org/InStock",
+        url: `${canonical}/ticket-form?type=vip`,
+      },
+    ],
+  });
 }
 
 function setMeta(name: string, metaContent: string, attr: "name" | "property" = "name") {

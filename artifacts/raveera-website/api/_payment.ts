@@ -116,6 +116,8 @@ type EventConfig = {
   paymentPath: string;
   pdfDate: string;
   pdfVenue: string;
+  publicDateTime: string;
+  publicVenue: string;
 };
 
 const eventConfigs: Record<EventSlug, EventConfig> = {
@@ -126,14 +128,18 @@ const eventConfigs: Record<EventSlug, EventConfig> = {
     paymentPath: EVENT_PAYMENT_PATH,
     pdfDate: "27 травня 2026",
     pdfVenue: "КВЦ Парковий, Київ",
+    publicDateTime: "27 травня 2026, 09:30-23:00",
+    publicVenue: "КВЦ «Парковий», Київ",
   },
   "e-commerce-conference-2026": {
     slug: "e-commerce-conference-2026",
     title: "E-Commerce Conference 2026",
     codePrefix: "ECC-2026",
     paymentPath: "/event/e-commerce-conference-2026/payment",
-    pdfDate: "2026",
-    pdfVenue: "Київ, Україна",
+    pdfDate: "6 жовтня 2026",
+    pdfVenue: "КВЦ Парковий, Київ",
+    publicDateTime: "6 жовтня 2026",
+    publicVenue: "КВЦ «Парковий», Київ",
   },
 };
 const require = createRequire(import.meta.url);
@@ -234,11 +240,11 @@ async function readJsonBody(req: VercelApiRequest): Promise<unknown> {
   return JSON.parse(rawBody);
 }
 
-function getEventConfig(eventSlug: string | null | undefined): EventConfig {
+export function getEventConfig(eventSlug: string | null | undefined): EventConfig {
   return eventConfigs[eventSlug as EventSlug] || eventConfigs[EVENT_SLUG];
 }
 
-function buildPaymentUrls(merchantRequestId: string, ticketType: string, eventConfig = getEventConfig(EVENT_SLUG)): PaymentUrls {
+export function buildPaymentUrls(merchantRequestId: string, ticketType: string, eventConfig = getEventConfig(EVENT_SLUG)): PaymentUrls {
   const origin = CANONICAL_PUBLIC_APP_ORIGIN;
 
   return {
@@ -1112,6 +1118,42 @@ function getTicketTypeLabel(ticketType: string): string {
   }[ticketType] || ticketType;
 }
 
+export function buildTicketEmailContent(ticket: TicketRecord): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const eventConfig = getEventConfig(ticket.event_slug);
+  const eventTitle = ticket.event_title || eventConfig.title;
+  const customerName = `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim();
+  const ticketType = getTicketTypeLabel(ticket.ticket_type);
+  return {
+    subject: `Ваш квиток на ${eventTitle}`,
+    text: [
+      `Вітаємо, ${customerName}!`,
+      "",
+      `Ваш квиток на ${eventTitle} готовий.`,
+      `Дата: ${eventConfig.pdfDate}`,
+      `Локація: ${eventConfig.pdfVenue}`,
+      `Тип квитка: ${ticketType}`,
+      `Код квитка: ${ticket.ticket_code}`,
+      `Відкрити квиток: ${ticket.qr_payload}`,
+      "",
+      "Квиток дійсний лише після успішної оплати та може бути перевірений організатором.",
+      "Підтримка: ceo@rave-era.com.ua",
+    ].join("\n"),
+    html: `<p>Вітаємо, ${escapeHtml(customerName)}!</p>
+      <p>Ваш квиток на <strong>${escapeHtml(eventTitle)}</strong> готовий.</p>
+      <p>Дата: <strong>${escapeHtml(eventConfig.pdfDate)}</strong><br>
+      Локація: <strong>${escapeHtml(eventConfig.pdfVenue)}</strong><br>
+      Тип квитка: <strong>${escapeHtml(ticketType)}</strong><br>
+      Код квитка: <strong>${escapeHtml(ticket.ticket_code)}</strong></p>
+      <p><a href="${escapeHtml(ticket.qr_payload)}">Відкрити квиток</a></p>
+      <p>Квиток дійсний лише після успішної оплати та може бути перевірений організатором.</p>
+      <p>Підтримка: <a href="mailto:ceo@rave-era.com.ua">ceo@rave-era.com.ua</a></p>`,
+  };
+}
+
 export async function buildTicketPdf(ticket: TicketRecord): Promise<Buffer> {
   const pdfDocument = await PDFDocument.create();
   pdfDocument.registerFontkit(fontkit);
@@ -1308,30 +1350,14 @@ async function deliverTicketEmail(
       secure: smtpConfig.port === 465,
       auth: { user: smtpConfig.user, pass: smtpConfig.pass },
     });
-    const customerName = `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim();
     const ticketPdf = await buildTicketPdf(ticket);
+    const emailContent = buildTicketEmailContent(ticket);
     const info = await transporter.sendMail({
       from: smtpConfig.from,
       to: ticket.customer_email,
-      subject: `Ваш квиток на ${ticket.event_title || getEventConfig(ticket.event_slug).title}`,
-      text: [
-        `Вітаємо, ${customerName}!`,
-        "",
-        `Ваш квиток на ${ticket.event_title || getEventConfig(ticket.event_slug).title} готовий.`,
-        `Тип квитка: ${ticket.ticket_type}`,
-        `Код квитка: ${ticket.ticket_code}`,
-        `Відкрити квиток: ${ticket.qr_payload}`,
-        "",
-        "Квиток дійсний лише після успішної оплати та може бути перевірений організатором.",
-        "Підтримка: ceo@rave-era.com.ua",
-      ].join("\n"),
-      html: `<p>Вітаємо, ${escapeHtml(customerName)}!</p>
-        <p>Ваш квиток на <strong>${escapeHtml(ticket.event_title || getEventConfig(ticket.event_slug).title)}</strong> готовий.</p>
-        <p>Тип квитка: <strong>${escapeHtml(ticket.ticket_type)}</strong><br>
-        Код квитка: <strong>${escapeHtml(ticket.ticket_code)}</strong></p>
-        <p><a href="${escapeHtml(ticket.qr_payload)}">Відкрити квиток</a></p>
-        <p>Квиток дійсний лише після успішної оплати та може бути перевірений організатором.</p>
-        <p>Підтримка: <a href="mailto:ceo@rave-era.com.ua">ceo@rave-era.com.ua</a></p>`,
+      subject: emailContent.subject,
+      text: emailContent.text,
+      html: emailContent.html,
       attachments: [
         {
           filename: `${ticket.ticket_code}.pdf`,
@@ -1371,7 +1397,7 @@ async function deliverTicketEmail(
   }
 }
 
-async function applyVerifiedPaymentStatus(
+export async function applyVerifiedPaymentStatus(
   dbModule: DbModule,
   order: TicketOrder,
   providerData: Record<string, unknown>,
@@ -1424,9 +1450,14 @@ function toSafeOrderResponse(order: TicketOrder): Record<string, unknown> {
 }
 
 function toSafeTicketResponse(ticket: TicketRecord): Record<string, unknown> {
+  const eventConfig = getEventConfig(ticket.event_slug);
   return {
     ticketCode: ticket.ticket_code,
     eventTitle: ticket.event_title,
+    eventSlug: eventConfig.slug,
+    eventDateTime: eventConfig.publicDateTime,
+    eventVenue: eventConfig.publicVenue,
+    eventHref: `/event/${eventConfig.slug}`,
     ticketType: ticket.ticket_type,
     customerName: `${ticket.customer_first_name} ${ticket.customer_last_name}`.trim(),
     status: ticket.status,

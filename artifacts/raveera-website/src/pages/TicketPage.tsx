@@ -5,6 +5,10 @@ import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, Download, MapPin, R
 type PublicTicket = {
   ticketCode: string;
   eventTitle: string;
+  eventSlug: string;
+  eventDateTime: string;
+  eventVenue: string;
+  eventHref: string;
   ticketType: string;
   customerName: string;
   status: "ACTIVE" | "USED" | "CANCELLED";
@@ -25,6 +29,9 @@ export default function TicketPage() {
   const [ticket, setTicket] = useState<PublicTicket | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const eventHref = ticket?.eventHref || (ticketCode.startsWith("ECC-2026-")
+    ? "/event/e-commerce-conference-2026"
+    : "/event/sbc-summit-ukraine-2026");
 
   const loadTicket = useCallback(async () => {
     setIsLoading(true);
@@ -51,7 +58,7 @@ export default function TicketPage() {
     <div className="min-h-screen bg-[#07070b] text-white">
       <nav className="border-b border-white/[0.08] bg-black/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
-          <Link href="/event/sbc-summit-ukraine-2026" className="flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/60 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
+          <Link href={eventHref} className="flex min-h-10 items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/60 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> До події
           </Link>
           <span className="text-xs font-mono uppercase tracking-widest text-[#00FF88]">Ticket verification</span>
@@ -91,8 +98,8 @@ function VerifiedTicket({ ticket }: { ticket: PublicTicket }) {
       <div className="mt-8 grid gap-5 text-sm sm:grid-cols-2">
         <Detail icon={<ShieldCheck />} label="Статус" value={ticket.status} accent={isActive} />
         <Detail icon={<TicketCheck />} label="Код квитка" value={ticket.ticketCode} />
-        <Detail icon={<CalendarDays />} label="Дата і час" value="27 травня 2026, 09:30-23:00" />
-        <Detail icon={<MapPin />} label="Локація" value="КВЦ «Парковий», Київ" />
+        <Detail icon={<CalendarDays />} label="Дата і час" value={ticket.eventDateTime} />
+        <Detail icon={<MapPin />} label="Локація" value={ticket.eventVenue} />
         <Detail icon={<TicketCheck />} label="Тип квитка" value={ticketTypeLabels[ticket.ticketType] || ticket.ticketType} />
         <Detail icon={<ShieldCheck />} label="Власник" value={ticket.customerName} />
       </div>

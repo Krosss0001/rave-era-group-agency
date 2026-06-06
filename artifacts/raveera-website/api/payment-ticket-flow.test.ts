@@ -3,7 +3,9 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import {
   buildTicketPdf,
+  buildTicketEmailContent,
   createTicketCode,
+  getEventConfig,
   getEmailConfigCheck,
   getPublicTicket,
   getSafeCallbackSummary,
@@ -114,6 +116,43 @@ test("PDF ticket embeds bundled Noto fonts for Ukrainian ticket text", async () 
   assert.match(pdfText, /FontFile2|FontFile3/);
   assert.match(pdfText, /NotoSans/);
   assert.doesNotMatch(pdfText, /Helvetica|ZapfDingbats|Symbol/);
+});
+
+test("E-Commerce PDF and email use ECC production labels without SBC content", async () => {
+  const ticketCode = "ECC-2026-ABCDEF123456";
+  const ticket = {
+    id: 2,
+    ticket_code: ticketCode,
+    order_id: 2,
+    merchant_request_id: "merchant-ecc",
+    hpp_order_id: "hpp-ecc",
+    event_slug: "e-commerce-conference-2026",
+    event_title: "E-Commerce Conference 2026",
+    ticket_type: "vip",
+    customer_email: "customer@example.com",
+    customer_first_name: "Олена",
+    customer_last_name: "Київська",
+    status: "ACTIVE" as const,
+    qr_payload: `https://www.rave-era.com.ua/ticket/${ticketCode}`,
+    issued_at: new Date("2026-10-01T10:00:00Z"),
+  };
+  const pdf = await buildTicketPdf(ticket);
+  const email = buildTicketEmailContent(ticket);
+  const config = getEventConfig(ticket.event_slug);
+
+  assert.equal(pdf.subarray(0, 5).toString("ascii"), "%PDF-");
+  assert.equal(config.pdfDate, "6 жовтня 2026");
+  assert.equal(config.pdfVenue, "КВЦ Парковий, Київ");
+  assert.match(email.subject, /E-Commerce Conference 2026/);
+  assert.match(email.text, /6 жовтня 2026/);
+  assert.match(email.text, /КВЦ Парковий, Київ/);
+  assert.match(email.text, /VIP \+ AFTERPARTY/);
+  assert.match(email.text, /ECC-2026-ABCDEF123456/);
+  assert.match(email.text, /https:\/\/www\.rave-era\.com\.ua\/ticket\/ECC-2026-ABCDEF123456/);
+  assert.equal(ticket.qr_payload, "https://www.rave-era.com.ua/ticket/ECC-2026-ABCDEF123456");
+  assert.doesNotMatch(ticket.qr_payload, /customer|@|Олена|Київська/i);
+  assert.doesNotMatch(email.text, /SBC Summit/);
+  assert.doesNotMatch(email.html, /SBC Summit/);
 });
 
 test("email config check exposes SMTP booleans only", () => {
