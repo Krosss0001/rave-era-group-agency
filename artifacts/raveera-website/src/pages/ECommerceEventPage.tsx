@@ -408,16 +408,16 @@ export default function ECommerceEventPage() {
               </motion.div>
             </div>
             <motion.div variants={fadeUpChild} className="order-first w-full lg:order-last">
-              <div className="relative overflow-hidden border border-white/[0.06] bg-white/[0.02]">
-                <img src="/images/case-smart-commerce.jpg" alt="E-Commerce Conference 2026 visual" className="aspect-[16/11] w-full object-cover grayscale lg:aspect-[4/5]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-                <div className="absolute inset-0 border border-[#00FF88]/10" />
-                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-[#00FF88]">ECC-2026</p>
-                  <p className="mt-2 max-w-sm text-2xl font-black uppercase leading-[0.9] tracking-tighter text-white sm:text-3xl">
-                    {t.heroVisualLine}
-                  </p>
-                </div>
+              <div className="overflow-hidden rounded-sm border border-white/[0.08] bg-white/[0.02] shadow-[0_0_60px_rgba(0,255,136,0.12)]">
+                <img
+                  src="/images/ecommerce-conference-2026-poster.png"
+                  alt="E-Commerce Conference 2026 event poster"
+                  width="1672"
+                  height="941"
+                  className="aspect-video w-full object-cover"
+                  loading="eager"
+                  fetchPriority="high"
+                />
               </div>
             </motion.div>
           </motion.div>
