@@ -28,6 +28,20 @@ const mapExternal = "https://www.google.com/maps/search/?api=1&query=Kyiv%20Ukra
 
 type Lang = "uk" | "en";
 type TicketKey = "online" | "standard" | "vip" | "corporate";
+type LocalizedText = Partial<Record<Lang | "ua", string>>;
+
+type Widen<T> =
+  T extends string ? string :
+  T extends number ? number :
+  T extends boolean ? boolean :
+  T extends readonly (infer Item)[] ? readonly Widen<Item>[] :
+  T extends object ? { readonly [Key in keyof T]: Widen<T[Key]> } :
+  T;
+
+function getText(value: LocalizedText | string | null | undefined, lang: Lang): string {
+  if (typeof value === "string") return value;
+  return value?.[lang] || value?.ua || value?.uk || value?.en || "";
+}
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -39,14 +53,25 @@ const fadeUpChild = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" as const } },
 } as const;
 
-const tickets: Array<{ key: TicketKey; name: string; price: string; popular?: boolean; premium?: boolean; corporate?: boolean }> = [
-  { key: "online", name: "ONLINE", price: "1 500" },
-  { key: "standard", name: "STANDARD", price: "1 800", popular: true },
-  { key: "vip", name: "VIP + AFTERPARTY", price: "4 000", premium: true },
-  { key: "corporate", name: "КОРПОРАТИВНІ КВИТКИ", price: "INVOICE", corporate: true },
+const tickets: Array<{ key: TicketKey; name: LocalizedText; price: string; popular?: boolean; premium?: boolean; corporate?: boolean }> = [
+  { key: "online", name: { uk: "ONLINE", en: "ONLINE" }, price: "1 500" },
+  { key: "standard", name: { uk: "STANDARD", en: "STANDARD" }, price: "1 800", popular: true },
+  { key: "vip", name: { uk: "VIP + AFTERPARTY", en: "VIP + AFTERPARTY" }, price: "4 000", premium: true },
+  { key: "corporate", name: { uk: "КОРПОРАТИВНІ КВИТКИ", en: "CORPORATE" }, price: "INVOICE", corporate: true },
 ];
 
-const content = {
+const sectionLabels = {
+  event: { uk: "01 / Подія", en: "01 / Event" },
+  leaders: { uk: "02 / Лідери ринку", en: "02 / Market Leaders" },
+  program: { uk: "03 / Програма", en: "03 / Program" },
+  tickets: { uk: "04 / Квитки", en: "04 / Tickets" },
+  location: { uk: "05 / Локація", en: "05 / Location" },
+  faq: { uk: "06 / FAQ", en: "06 / FAQ" },
+  phone: { uk: "Телефон:", en: "Phone:" },
+  support: { uk: "Підтримка:", en: "Support:" },
+} satisfies Record<string, Record<Lang, string>>;
+
+const contentData = {
   uk: {
     back: "Назад",
     buyTicket: "Купити квиток",
@@ -281,6 +306,9 @@ const content = {
   },
 } as const;
 
+type EventContent = Widen<(typeof contentData)["uk"]>;
+const content: Record<Lang, EventContent> = contentData;
+
 export default function ECommerceEventPage() {
   const [lang, setLang] = useState<Lang>("uk");
   const [scrolled, setScrolled] = useState(false);
@@ -321,7 +349,7 @@ export default function ECommerceEventPage() {
               aria-label="Switch language"
             >
               <Globe className="h-3.5 w-3.5" aria-hidden="true" />
-              {lang === "uk" ? "UA" : "EN"}
+              {lang === "uk" ? "EN" : "UA"}
             </button>
           </div>
         </div>
@@ -344,7 +372,7 @@ export default function ECommerceEventPage() {
                 {t.meta.map((item, index) => {
                   const Icon = index === 0 ? Calendar : index === 1 ? MapPin : index === 2 ? Ticket : Clock;
                   return (
-                    <span key={item} className="inline-flex min-h-10 items-center gap-2 border border-white/[0.1] bg-white/[0.025] px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-white/45 backdrop-blur-sm">
+                    <span key={`meta-${index}`} className="inline-flex min-h-10 items-center gap-2 border border-white/[0.1] bg-white/[0.025] px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-white/45 backdrop-blur-sm">
                       <Icon className="h-3.5 w-3.5 text-[#00FF88]" aria-hidden="true" />
                       {item}
                     </span>
@@ -371,8 +399,8 @@ export default function ECommerceEventPage() {
                 </a>
               </motion.div>
               <motion.div variants={fadeUpChild} className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
-                {t.stats.map(([value, label]) => (
-                  <div key={`${value}-${label}`} className="border border-white/[0.08] bg-white/[0.025] p-4 backdrop-blur-sm sm:p-5">
+                {t.stats.map(([value, label], index) => (
+                  <div key={`stat-${index}`} className="border border-white/[0.08] bg-white/[0.025] p-4 backdrop-blur-sm sm:p-5">
                     <p className="break-words text-2xl font-black tracking-tight text-white sm:text-3xl">{value}</p>
                     <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-white/32">{label}</p>
                   </div>
@@ -400,18 +428,18 @@ export default function ECommerceEventPage() {
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer} className="grid gap-10 lg:grid-cols-2 lg:gap-20">
             <div className="lg:sticky lg:top-28 lg:self-start">
-              <SectionBadge icon={<Zap className="h-3.5 w-3.5" />} label="01 / Event" />
+              <SectionBadge icon={<Zap className="h-3.5 w-3.5" />} label={getText(sectionLabels.event, lang)} />
               <motion.h2 variants={fadeUpChild} className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.aboutTitle}</motion.h2>
             </div>
             <div className="space-y-8">
               <div className="space-y-5 border-l border-white/[0.08] pl-5 sm:pl-7">
-                {t.aboutCopy.map((paragraph) => (
-                  <motion.p key={paragraph} variants={fadeUpChild} className="text-sm leading-relaxed text-white/56 sm:text-base">{paragraph}</motion.p>
+                {t.aboutCopy.map((paragraph, index) => (
+                  <motion.p key={`about-copy-${index}`} variants={fadeUpChild} className="text-sm leading-relaxed text-white/56 sm:text-base">{paragraph}</motion.p>
                 ))}
               </div>
               <div className="mt-8 space-y-3">
-                {t.aboutPoints.map((point) => (
-                  <motion.div key={point} variants={fadeUpChild} className="flex items-start gap-3 text-sm leading-relaxed text-white/52">
+                {t.aboutPoints.map((point, index) => (
+                  <motion.div key={`about-point-${index}`} variants={fadeUpChild} className="flex items-start gap-3 text-sm leading-relaxed text-white/52">
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#00FF88]" />
                     <span>{point}</span>
                   </motion.div>
@@ -435,14 +463,14 @@ export default function ECommerceEventPage() {
 
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
-            <SectionBadge icon={<Mic2 className="h-3.5 w-3.5" />} label="02 / Market Leaders" />
+            <SectionBadge icon={<Mic2 className="h-3.5 w-3.5" />} label={getText(sectionLabels.leaders, lang)} />
             <motion.div variants={fadeUpChild} className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
               <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.leadersTitle}</h2>
               <p className="text-sm leading-relaxed text-white/50 sm:text-base">{t.leadersText}</p>
             </motion.div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {t.leaderCards.map(([heading, copy], index) => (
-                <motion.div key={heading} variants={fadeUpChild} className="group flex min-h-[190px] flex-col border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-[#00FF88]/35 hover:bg-[#00FF88]/[0.025]">
+                <motion.div key={`leader-${index}`} data-qa="ecc-leader-card" variants={fadeUpChild} className="group flex min-h-[190px] flex-col border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-[#00FF88]/35 hover:bg-[#00FF88]/[0.025]">
                   <div className="mb-5 flex items-center justify-between gap-4">
                     <Users className="h-5 w-5 text-[#00FF88]" aria-hidden="true" />
                     <span className="text-[10px] font-mono text-white/20">{String(index + 1).padStart(2, "0")}</span>
@@ -458,12 +486,12 @@ export default function ECommerceEventPage() {
         <Section id="program">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer} className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr]">
             <div>
-              <SectionBadge icon={<Calendar className="h-3.5 w-3.5" />} label="03 / Program" />
+              <SectionBadge icon={<Calendar className="h-3.5 w-3.5" />} label={getText(sectionLabels.program, lang)} />
               <motion.h2 variants={fadeUpChild} className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.programTitle}</motion.h2>
             </div>
             <div className="space-y-4">
               {t.program.map((item, index) => (
-                <motion.div key={item} variants={fadeUpChild} className="flex items-start gap-5 border-b border-white/[0.06] pb-4 sm:pb-5">
+                <motion.div key={`program-${index}`} data-qa="ecc-program-item" variants={fadeUpChild} className="flex items-start gap-5 border-b border-white/[0.06] pb-4 sm:pb-5">
                   <span className="mt-0.5 shrink-0 text-base font-mono font-black text-[#00FF88] sm:text-lg">{String(index + 1).padStart(2, "0")}</span>
                   <p className="text-sm leading-relaxed text-white/58 sm:text-base">{item}</p>
                 </motion.div>
@@ -474,22 +502,22 @@ export default function ECommerceEventPage() {
 
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
-            <SectionBadge icon={<Ticket className="h-3.5 w-3.5" />} label="04 / Tickets" />
+            <SectionBadge icon={<Ticket className="h-3.5 w-3.5" />} label={getText(sectionLabels.tickets, lang)} />
             <motion.h2 variants={fadeUpChild} className="mb-10 text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.ticketsTitle}</motion.h2>
             <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
               {tickets.map((tier) => (
                 <motion.div key={tier.key} data-qa="ecc-ticket-card" variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 md:min-h-[520px] ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
                   {tier.popular ? <span className="absolute -top-3 left-5 bg-[#00FF88] px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.popular}</span> : null}
                   {tier.premium ? <span className="absolute -top-3 left-5 bg-white px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.premium}</span> : null}
-                  <p className="text-xs font-mono uppercase tracking-widest text-white/40">{tier.corporate && lang === "en" ? "CORPORATE" : tier.name}</p>
+                  <p className="min-h-8 text-xs font-mono uppercase tracking-widest text-white/40">{getText(tier.name, lang)}</p>
                   <div className="mt-3 flex items-baseline gap-2">
                     <p className="break-words text-4xl font-black tracking-tighter sm:text-5xl" style={{ color: tier.popular ? G : "white" }}>{tier.price}</p>
                     {!tier.corporate && <span className="text-sm font-mono text-white/40">UAH</span>}
                   </div>
                   <p className="mt-5 text-sm leading-relaxed text-white/55">{t.ticketDescriptions[tier.key]}</p>
                   <ul className="mt-6 flex-1 space-y-2.5">
-                    {t.ticketFeatures[tier.key].map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
+                    {t.ticketFeatures[tier.key].map((feature, index) => (
+                      <li key={`${tier.key}-feature-${index}`} data-qa="ecc-ticket-feature" className="flex items-start gap-2 text-sm text-white/60">
                         <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#00FF88]" aria-hidden="true" />
                         {feature}
                       </li>
@@ -521,7 +549,7 @@ export default function ECommerceEventPage() {
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer} className="grid gap-10 lg:grid-cols-2">
             <div>
-              <SectionBadge icon={<MapPin className="h-3.5 w-3.5" />} label="05 / Location" />
+              <SectionBadge icon={<MapPin className="h-3.5 w-3.5" />} label={getText(sectionLabels.location, lang)} />
               <motion.h2 variants={fadeUpChild} className="text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.locationTitle}</motion.h2>
               <motion.p variants={fadeUpChild} className="mt-5 text-sm leading-relaxed text-white/50 sm:text-base">{t.locationText}</motion.p>
               <motion.div variants={fadeUpChild} className="mt-6 flex flex-wrap gap-3">
@@ -557,14 +585,16 @@ export default function ECommerceEventPage() {
 
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer} className="mx-auto max-w-3xl">
-            <SectionBadge icon={<PackageCheck className="h-3.5 w-3.5" />} label="06 / FAQ" />
+            <SectionBadge icon={<PackageCheck className="h-3.5 w-3.5" />} label={getText(sectionLabels.faq, lang)} />
             <motion.h2 variants={fadeUpChild} className="mb-8 text-3xl font-black uppercase leading-[0.9] tracking-tight sm:text-5xl">{t.faqTitle}</motion.h2>
             <div className="space-y-3">
               {t.faqs.map(([question, answer], index) => (
-                <motion.div key={question} variants={fadeUpChild} className="border border-white/[0.08] bg-white/[0.02]">
+                <motion.div key={`faq-${index}`} variants={fadeUpChild} className="border border-white/[0.08] bg-white/[0.02]">
                   <button
                     type="button"
                     onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                    aria-expanded={openFaq === index}
+                    aria-controls={`ecc-faq-answer-${index}`}
                     className="flex min-h-12 w-full items-center justify-between gap-4 p-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]"
                   >
                     <span className="text-sm font-bold text-white/72">{question}</span>
@@ -572,7 +602,7 @@ export default function ECommerceEventPage() {
                   </button>
                   <AnimatePresence>
                     {openFaq === index ? (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} className="overflow-hidden">
+                      <motion.div id={`ecc-faq-answer-${index}`} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} className="overflow-hidden">
                         <p className="px-4 pb-4 text-sm leading-relaxed text-white/45">{answer}</p>
                       </motion.div>
                     ) : null}
@@ -589,8 +619,8 @@ export default function ECommerceEventPage() {
           </div>
           <div className="relative mx-auto max-w-4xl">
             <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl md:text-6xl">
-              {t.ctaLines.map((line) => (
-                <span key={line} className="block">{line}</span>
+              {t.ctaLines.map((line, index) => (
+                <span key={`cta-line-${index}`} className="block break-words">{line}</span>
               ))}
             </h2>
             <Link href={`/event/${slug}/ticket-form?type=vip`} className="group relative mt-8 inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden bg-[#00FF88] px-8 py-4 text-xs font-bold uppercase tracking-widest text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00FF88] sm:px-10 sm:py-5">
@@ -617,8 +647,8 @@ export default function ECommerceEventPage() {
                 <p className="font-bold text-white/50">{t.footerOrgName}</p>
                 <p>{t.footerOrgFull}</p>
                 <p className="font-mono text-white/30">{t.footerIpn}</p>
-                {t.footerKveds.map((item) => (
-                  <p key={item} className="font-mono text-white/30">{item}</p>
+                {t.footerKveds.map((item, index) => (
+                  <p key={`footer-kved-${index}`} className="font-mono text-white/30">{item}</p>
                 ))}
                 <p className="font-mono leading-relaxed text-white/30">{t.footerAddress}</p>
                 <p className="font-mono text-white/25">{t.footerBank}</p>
@@ -633,9 +663,9 @@ export default function ECommerceEventPage() {
               <FooterLabel>{t.footerContactsLabel}</FooterLabel>
               <div className="space-y-2 text-xs leading-relaxed text-white/35">
                 <p><span className="font-mono text-white/25">Email:</span> <a href={`mailto:${t.footerEmail}`} className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerEmail}</a></p>
-                <p><span className="font-mono text-white/25">{lang === "uk" ? "Телефон:" : "Phone:"}</span> <a href={`tel:+${t.footerPhone.replace(/\D/g, "")}`} className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerPhone}</a></p>
+                <p><span className="font-mono text-white/25">{getText(sectionLabels.phone, lang)}</span> <a href={`tel:+${t.footerPhone.replace(/\D/g, "")}`} className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.footerPhone}</a></p>
                 <p><span className="font-mono text-white/25">Telegram:</span> <a href={`https://t.me/${t.footerTelegram}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">@{t.footerTelegram}</a></p>
-                <p><span className="font-mono text-white/25">{lang === "uk" ? "Підтримка:" : "Support:"}</span> {t.footerSupport}</p>
+                <p><span className="font-mono text-white/25">{getText(sectionLabels.support, lang)}</span> {t.footerSupport}</p>
               </div>
             </div>
 
