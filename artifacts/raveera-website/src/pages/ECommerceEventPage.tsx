@@ -216,6 +216,16 @@ const contentData = {
     topicsText:
       "Практичний фокус на каналах, технологіях і бізнес-моделях, які вже змінюють залучення клієнтів, операції та масштабування.",
     topicsMarquee: ["Аудиторія проекту", "Теми події", "Що очікувати?", "Про що поговоримо"],
+    partnerTitle: "Як стати партнером конференції?",
+    partnerDescription:
+      "Зв’яжіться з нашим менеджером та дізнайтесь умови участі для партнерів, експонентів, брендів, SaaS-платформ, логістичних і фінтех-компаній.",
+    partnerButton: "Написати менеджеру",
+    partnerBenefits: [
+      { id: "expo-zone", label: "Експо-зона" },
+      { id: "branding", label: "Брендинг" },
+      { id: "lead-generation", label: "Лідогенерація" },
+      { id: "networking", label: "Нетворкінг" },
+    ],
     leadersTitle: "Екосистема ринку, яка рухає український commerce вперед.",
     leadersText:
       "Ми не анонсуємо непідтверджених партнерів. Секція показує ролі та категорії бізнесу, для яких створюється конференція: від ритейлу і маркетплейсів до AI-інструментів та брендів.",
@@ -336,6 +346,16 @@ const contentData = {
     topicsText:
       "A practical focus on the channels, technologies and business models already changing customer acquisition, operations and scale.",
     topicsMarquee: ["Project audience", "Event topics", "What to expect", "What well discuss"],
+    partnerTitle: "How to become a conference partner?",
+    partnerDescription:
+      "Contact our manager to learn the participation terms for partners, exhibitors, brands, SaaS platforms, logistics providers and fintech companies.",
+    partnerButton: "Contact manager",
+    partnerBenefits: [
+      { id: "expo-zone", label: "Expo zone" },
+      { id: "branding", label: "Branding" },
+      { id: "lead-generation", label: "Lead generation" },
+      { id: "networking", label: "Networking" },
+    ],
     leadersTitle: "The business ecosystem moving Ukrainian commerce forward.",
     leadersText:
       "This section does not imply unconfirmed partnerships. It frames the roles and business categories the conference is built for: from retail and marketplaces to AI tools and brands.",
@@ -698,6 +718,74 @@ export default function ECommerceEventPage() {
             </div>
           </motion.div>
         </section>
+
+        <Section>
+          <motion.div
+            data-qa="ecc-partner-cta"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={staggerContainer}
+            className="grid gap-5 lg:grid-cols-[1.18fr_0.82fr] lg:items-stretch"
+          >
+            <motion.div
+              variants={fadeUpChild}
+              className="group relative min-h-[280px] overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.02] shadow-[0_0_60px_rgba(0,255,136,0.055)] sm:min-h-[380px] lg:min-h-[440px]"
+            >
+              <img
+                src="/images/ecommerce-conference-2026-poster.png"
+                alt="E-Commerce Conference 2026 partner and expo presentation"
+                className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 ease-out motion-reduce:transition-none group-hover:scale-[1.02]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/5" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#00FF88]/[0.08] via-transparent to-transparent" />
+              <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4 sm:bottom-7 sm:left-7 sm:right-7">
+                <div>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-[#00FF88] sm:text-xs">RAVE'ERA PARTNERSHIP</p>
+                  <p className="mt-2 max-w-md text-lg font-black uppercase leading-tight text-white sm:text-2xl">E-COMMERCE CONFERENCE 2026</p>
+                </div>
+                <span className="hidden h-10 w-10 shrink-0 rotate-45 border border-[#00FF88]/45 bg-[#00FF88]/10 shadow-[0_0_24px_rgba(0,255,136,0.18)] sm:block" aria-hidden="true" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              variants={fadeUpChild}
+              className="relative flex flex-col overflow-hidden rounded-2xl border border-[#00FF88]/15 bg-white/[0.035] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_50px_rgba(0,255,136,0.035)] backdrop-blur-xl sm:p-8 lg:p-10"
+            >
+              <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#00FF88]/[0.07] blur-[90px]" />
+              <div className="relative">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-[#00FF88] sm:text-xs">PARTNER / EXHIBITOR</p>
+                <h2 className="mt-5 text-3xl font-black uppercase leading-[0.92] tracking-tighter text-white sm:text-4xl lg:text-5xl">
+                  {t.partnerTitle}
+                </h2>
+                <p className="mt-6 text-sm leading-relaxed text-white/60 sm:text-base">{t.partnerDescription}</p>
+                <div className="mt-7 flex flex-wrap gap-2">
+                  {t.partnerBenefits.map((benefit) => (
+                    <span
+                      key={benefit.id}
+                      data-qa="ecc-partner-benefit"
+                      className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.11] bg-black/25 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-white/70 sm:text-xs"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#00FF88] shadow-[0_0_8px_rgba(0,255,136,0.8)]" aria-hidden="true" />
+                      {benefit.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <a
+                href="https://t.me/ravepassbot?start=event_ecommers-conference-2026"
+                target="_blank"
+                rel="noreferrer"
+                data-qa="ecc-partner-link"
+                className="group relative mt-9 inline-flex min-h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-xl bg-[#00FF88] px-5 py-3.5 text-center text-xs font-black uppercase tracking-[0.14em] text-black shadow-[0_0_28px_rgba(0,255,136,0.16)] transition-[background-color,box-shadow] duration-150 ease-out hover:bg-white hover:shadow-[0_0_36px_rgba(0,255,136,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00FF88] lg:mt-auto"
+              >
+                <span>{t.partnerButton}</span>
+                <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+              </a>
+            </motion.div>
+          </motion.div>
+        </Section>
 
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>

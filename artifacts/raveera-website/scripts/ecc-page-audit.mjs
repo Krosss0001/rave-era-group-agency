@@ -138,6 +138,14 @@ async function assertVisibleContent(page, width, language) {
       marqueeTracks: document.querySelectorAll('[data-qa="ecc-topics-marquee-track"]').length,
       marqueeSegments: document.querySelectorAll('[data-qa="ecc-topics-marquee-segment"]').length,
       marqueeReducedMotion: document.querySelector('[data-qa="ecc-topics-marquee"]')?.getAttribute("data-reduced-motion") || "",
+      partnerTitle: visibleText('[data-qa="ecc-partner-cta"] h2'),
+      partnerBenefits: [...document.querySelectorAll('[data-qa="ecc-partner-benefit"]')].map((benefit) => benefit.textContent?.trim() || ""),
+      partnerHref: document.querySelector('[data-qa="ecc-partner-link"]')?.getAttribute("href") || "",
+      partnerBeforeTickets: Boolean(
+        document.querySelector('[data-qa="ecc-partner-cta"]')?.compareDocumentPosition(
+          document.querySelector('[data-qa="ecc-ticket-card"]'),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
       programItems: document.querySelectorAll('[data-qa="ecc-program-item"]').length,
       faqItems: document.querySelectorAll('button[aria-controls^="ecc-faq-answer-"]').length,
       faq: visibleText('button[aria-controls^="ecc-faq-answer-"]'),
@@ -167,6 +175,24 @@ async function assertVisibleContent(page, width, language) {
   assert(result.marqueeTracks === 2, `${width}px ${language}: expected two marquee tracks, found ${result.marqueeTracks}`);
   assert(result.marqueeSegments === 8, `${width}px ${language}: expected eight marquee segments, found ${result.marqueeSegments}`);
   assert(result.marqueeReducedMotion === "false", `${width}px ${language}: animated marquee unexpectedly disabled`);
+  assert(
+    result.partnerTitle === (language === "UA" ? "Як стати партнером конференції?" : "How to become a conference partner?"),
+    `${width}px ${language}: partner CTA title mismatch (${JSON.stringify(result.partnerTitle)})`,
+  );
+  assert(result.partnerBenefits.length === 4, `${width}px ${language}: expected four partner benefits`);
+  assert(
+    JSON.stringify(result.partnerBenefits) === JSON.stringify(
+      language === "UA"
+        ? ["Експо-зона", "Брендинг", "Лідогенерація", "Нетворкінг"]
+        : ["Expo zone", "Branding", "Lead generation", "Networking"],
+    ),
+    `${width}px ${language}: partner benefits mismatch`,
+  );
+  assert(
+    result.partnerHref === "https://t.me/ravepassbot?start=event_ecommers-conference-2026",
+    `${width}px ${language}: partner CTA link mismatch`,
+  );
+  assert(result.partnerBeforeTickets, `${width}px ${language}: partner CTA must appear before tickets`);
   assert(result.programItems === 6, `${width}px ${language}: expected 6 program items, found ${result.programItems}`);
   assert(result.faqItems === 6, `${width}px ${language}: expected 6 FAQ items, found ${result.faqItems}`);
   assert(result.ticketsTitle.length > 20, `${width}px ${language}: ticket text missing (${JSON.stringify(result.ticketsTitle)})`);
