@@ -220,6 +220,8 @@ const contentData = {
     partnerDescription:
       "Зв’яжіться з нашим менеджером та дізнайтесь умови участі для партнерів, експонентів, брендів, SaaS-платформ, логістичних і фінтех-компаній.",
     partnerButton: "Написати менеджеру",
+    partnerExpoBadge: "70+ EXPO КОМПАНІЙ",
+    partnerZoneBadge: "ПАРТНЕРСЬКА ЗОНА",
     partnerBenefits: [
       { id: "expo-zone", label: "Експо-зона" },
       { id: "branding", label: "Брендинг" },
@@ -350,6 +352,8 @@ const contentData = {
     partnerDescription:
       "Contact our manager to learn the participation terms for partners, exhibitors, brands, SaaS platforms, logistics providers and fintech companies.",
     partnerButton: "Contact manager",
+    partnerExpoBadge: "70+ EXPO COMPANIES",
+    partnerZoneBadge: "PARTNER ZONE",
     partnerBenefits: [
       { id: "expo-zone", label: "Expo zone" },
       { id: "branding", label: "Branding" },
@@ -736,16 +740,30 @@ export default function ECommerceEventPage() {
             >
               <img
                 data-qa="ecc-partner-image"
-                src="/images/ecommerce-conference-2026-poster.png"
+                src="/images/ecommerce-partnership-expo-2026.png"
                 alt="E-Commerce Conference 2026 partner and expo presentation"
-                width="1672"
-                height="941"
+                width="1536"
+                height="1024"
                 loading="lazy"
                 decoding="async"
-                className="absolute inset-0 h-full w-full object-cover object-center"
+                className="absolute inset-0 h-full w-full rounded-2xl object-cover object-center"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/5" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#00FF88]/[0.08] via-transparent to-transparent" />
+              <div className="absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] flex-wrap gap-2 sm:left-6 sm:top-6">
+                <span
+                  data-qa="ecc-partner-expo-badge"
+                  className="rounded-full border border-[#00FF88]/55 bg-black/65 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[#B8FFD8] shadow-[0_0_18px_rgba(0,255,136,0.12)] backdrop-blur-md sm:text-[10px]"
+                >
+                  {t.partnerExpoBadge}
+                </span>
+                <span
+                  data-qa="ecc-partner-zone-badge"
+                  className="rounded-full border border-[#00FF88]/35 bg-black/65 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-white/78 shadow-[0_0_18px_rgba(0,255,136,0.08)] backdrop-blur-md sm:text-[10px]"
+                >
+                  {t.partnerZoneBadge}
+                </span>
+              </div>
               <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4 sm:bottom-7 sm:left-7 sm:right-7">
                 <div>
                   <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-[#00FF88] sm:text-xs">RAVE'ERA PARTNERSHIP</p>

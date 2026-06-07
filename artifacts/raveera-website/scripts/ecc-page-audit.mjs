@@ -147,9 +147,14 @@ async function assertVisibleContent(page, width, language) {
         fetchPriority: document.querySelector('[data-qa="ecc-hero-image"]')?.getAttribute("fetchpriority") || "",
       },
       partnerImage: {
+        src: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("src") || "",
         loading: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("loading") || "",
         decoding: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("decoding") || "",
       },
+      partnerBadges: [
+        visibleText('[data-qa="ecc-partner-expo-badge"]'),
+        visibleText('[data-qa="ecc-partner-zone-badge"]'),
+      ],
       ticketCardPositions: [...document.querySelectorAll('[data-qa="ecc-ticket-card"]')].map((card) => {
         const rect = card.getBoundingClientRect();
         return { left: Math.round(rect.left), top: Math.round(rect.top) };
@@ -210,6 +215,16 @@ async function assertVisibleContent(page, width, language) {
   assert(result.heroImage.fetchPriority === "high", `${width}px ${language}: hero image fetch priority mismatch`);
   assert(result.partnerImage.loading === "lazy", `${width}px ${language}: partner image must lazy load`);
   assert(result.partnerImage.decoding === "async", `${width}px ${language}: partner image must decode asynchronously`);
+  assert(
+    result.partnerImage.src === "/images/ecommerce-partnership-expo-2026.png",
+    `${width}px ${language}: partnership image source mismatch`,
+  );
+  assert(
+    JSON.stringify(result.partnerBadges) === JSON.stringify(
+      language === "UA" ? ["70+ EXPO КОМПАНІЙ", "ПАРТНЕРСЬКА ЗОНА"] : ["70+ EXPO COMPANIES", "PARTNER ZONE"],
+    ),
+    `${width}px ${language}: partnership image badges mismatch`,
+  );
   const ticketColumns = new Set(result.ticketCardPositions.map(({ left }) => left)).size;
   const expectedTicketColumns = width >= 1280 ? 4 : width >= 768 ? 2 : 1;
   assert(
