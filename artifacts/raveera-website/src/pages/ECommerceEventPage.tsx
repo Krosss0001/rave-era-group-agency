@@ -781,7 +781,7 @@ export default function ECommerceEventPage() {
               </div>
 
               <a
-                href="https://t.me/ravepassbot?start=event_ecommers-conference-2026"
+                href="https://t.me/bogdan_chekan"
                 target="_blank"
                 rel="noreferrer"
                 data-qa="ecc-partner-link"

@@ -202,7 +202,7 @@ async function assertVisibleContent(page, width, language) {
     `${width}px ${language}: partner benefits mismatch`,
   );
   assert(
-    result.partnerHref === "https://t.me/ravepassbot?start=event_ecommers-conference-2026",
+    result.partnerHref === "https://t.me/bogdan_chekan",
     `${width}px ${language}: partner CTA link mismatch`,
   );
   assert(result.heroImage.loading === "eager", `${width}px ${language}: hero image must load eagerly`);
