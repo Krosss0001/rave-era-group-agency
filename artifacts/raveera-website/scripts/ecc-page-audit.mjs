@@ -7,6 +7,90 @@ const executablePath =
 const widths = [320, 360, 375, 390, 430, 768, 1024, 1280, 1440];
 const eccPath = "/event/e-commerce-conference-2026";
 const expectedTicketTypes = ["online", "standard", "vip", "corporate"];
+const expectedTopics = {
+  UA: [
+    ["ai", "AI"],
+    ["automation", "Автоматизація"],
+    ["google-ads", "Google Ads"],
+    ["google-shopping", "Google Shopping"],
+    ["facebook-ads", "Facebook Ads"],
+    ["meta", "Meta"],
+    ["tiktok", "TikTok"],
+    ["product-business", "Товарний бізнес"],
+    ["arbitrage", "Арбітраж"],
+    ["marketplaces", "Маркетплейси"],
+    ["amazon", "Amazon"],
+    ["dropshipping", "Дропшипінг"],
+    ["prom", "Prom"],
+    ["shopify", "Shopify"],
+    ["online-stores", "Інтернет-магазини"],
+    ["woocommerce", "WooCommerce"],
+    ["cross-border-sales", "Продажі за кордон"],
+    ["dollar-revenue", "Заробіток у доларах"],
+    ["export", "Експорт"],
+    ["ugc-content", "UGC-контент"],
+    ["influencers", "Інфлюенсери"],
+    ["creatives", "Креативи"],
+    ["reels", "Reels"],
+    ["sales-funnels", "Воронки продажів"],
+    ["lead-generation", "Лідогенерація"],
+    ["crm", "CRM"],
+    ["legal", "Юристи"],
+    ["accounting", "Бухгалтерія"],
+    ["systematization", "Систематизація"],
+    ["ltv", "LTV"],
+    ["experts", "Експерти"],
+    ["networking", "Нетворкінг"],
+    ["scaling", "Масштабування"],
+    ["retention", "Retention"],
+    ["call-center", "Call-центр"],
+    ["logistics", "Логістика"],
+    ["china-sourcing", "Замовлення з Китаю"],
+    ["warehouse", "Склад"],
+    ["margin", "Маржинальність"],
+  ],
+  EN: [
+    ["ai", "AI"],
+    ["automation", "Automation"],
+    ["google-ads", "Google Ads"],
+    ["google-shopping", "Google Shopping"],
+    ["facebook-ads", "Facebook Ads"],
+    ["meta", "Meta"],
+    ["tiktok", "TikTok"],
+    ["product-business", "Product Business"],
+    ["arbitrage", "Arbitrage"],
+    ["marketplaces", "Marketplaces"],
+    ["amazon", "Amazon"],
+    ["dropshipping", "Dropshipping"],
+    ["prom", "Prom"],
+    ["shopify", "Shopify"],
+    ["online-stores", "Online Stores"],
+    ["woocommerce", "WooCommerce"],
+    ["cross-border-sales", "Cross-border Sales"],
+    ["dollar-revenue", "Dollar Revenue"],
+    ["export", "Export"],
+    ["ugc-content", "UGC Content"],
+    ["influencers", "Influencers"],
+    ["creatives", "Creatives"],
+    ["reels", "Reels"],
+    ["sales-funnels", "Sales Funnels"],
+    ["lead-generation", "Lead Generation"],
+    ["crm", "CRM"],
+    ["legal", "Legal"],
+    ["accounting", "Accounting"],
+    ["systematization", "Systematization"],
+    ["ltv", "LTV"],
+    ["experts", "Experts"],
+    ["networking", "Networking"],
+    ["scaling", "Scaling"],
+    ["retention", "Retention"],
+    ["call-center", "Call Center"],
+    ["logistics", "Logistics"],
+    ["china-sourcing", "China Sourcing"],
+    ["warehouse", "Warehouse"],
+    ["margin", "Margin"],
+  ],
+};
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -46,6 +130,11 @@ async function assertVisibleContent(page, width, language) {
       ticketCards: document.querySelectorAll('[data-qa="ecc-ticket-card"]').length,
       ticketFeatures: document.querySelectorAll('[data-qa="ecc-ticket-feature"]').length,
       leaderCards: document.querySelectorAll('[data-qa="ecc-leader-card"]').length,
+      topicChips: [...document.querySelectorAll('[data-qa="ecc-topic-chip"]')].map((chip) => ({
+        id: chip.getAttribute("data-topic-id") || "",
+        label: chip.textContent?.trim() || "",
+        tagName: chip.tagName,
+      })),
       programItems: document.querySelectorAll('[data-qa="ecc-program-item"]').length,
       faqItems: document.querySelectorAll('button[aria-controls^="ecc-faq-answer-"]').length,
       faq: visibleText('button[aria-controls^="ecc-faq-answer-"]'),
@@ -65,6 +154,13 @@ async function assertVisibleContent(page, width, language) {
   assert(result.ticketCards === 4, `${width}px ${language}: expected 4 ticket cards, found ${result.ticketCards}`);
   assert(result.ticketFeatures === 21, `${width}px ${language}: expected 21 ticket benefits, found ${result.ticketFeatures}`);
   assert(result.leaderCards === 8, `${width}px ${language}: expected 8 market leader cards, found ${result.leaderCards}`);
+  assert(result.topicChips.length === 39, `${width}px ${language}: expected 39 topic chips, found ${result.topicChips.length}`);
+  assert(
+    JSON.stringify(result.topicChips.map(({ id, label }) => [id, label])) === JSON.stringify(expectedTopics[language]),
+    `${width}px ${language}: topic IDs, labels, or order mismatch`,
+  );
+  assert(result.topicChips.every(({ tagName }) => tagName === "SPAN"), `${width}px ${language}: topic chips must render as spans`);
+  assert(result.topicChips.every(({ label }) => label.length > 0), `${width}px ${language}: topic text disappeared`);
   assert(result.programItems === 6, `${width}px ${language}: expected 6 program items, found ${result.programItems}`);
   assert(result.faqItems === 6, `${width}px ${language}: expected 6 FAQ items, found ${result.faqItems}`);
   assert(result.ticketsTitle.length > 20, `${width}px ${language}: ticket text missing (${JSON.stringify(result.ticketsTitle)})`);
@@ -169,6 +265,8 @@ try {
     `SBC page smoke check failed (${JSON.stringify(sbcHeading)})`,
   );
   assert((await routePage.locator("#ecc-event-jsonld").count()) === 0, "ECC JSON-LD leaked onto SBC page");
+  const sbcOverflow = await routePage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  assert(sbcOverflow <= 1, `SBC page overflow is ${sbcOverflow}px`);
   await routePage.close();
 
   for (const width of widths) {

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Link } from "wouter";
 import {
   ArrowLeft,
@@ -30,6 +30,7 @@ const mapExternal = "https://maps.app.goo.gl/bih3ZUsmSrxpcbjW6";
 type Lang = "uk" | "en";
 type TicketKey = "online" | "standard" | "vip" | "corporate";
 type LocalizedText = Partial<Record<Lang | "ua", string>>;
+type TopicChip = { id: string; label: string };
 
 type Widen<T> =
   T extends string ? string :
@@ -63,14 +64,102 @@ const tickets: Array<{ key: TicketKey; name: LocalizedText; price: string; popul
 
 const sectionLabels = {
   event: { uk: "01 / Подія", en: "01 / Event" },
-  leaders: { uk: "02 / Лідери ринку", en: "02 / Market Leaders" },
-  program: { uk: "03 / Програма", en: "03 / Program" },
-  tickets: { uk: "04 / Квитки", en: "04 / Tickets" },
-  location: { uk: "05 / Локація", en: "05 / Location" },
-  faq: { uk: "06 / FAQ", en: "06 / FAQ" },
+  topics: { uk: "02 / Фокус події", en: "02 / Event Focus" },
+  leaders: { uk: "03 / Лідери ринку", en: "03 / Market Leaders" },
+  program: { uk: "04 / Програма", en: "04 / Program" },
+  tickets: { uk: "05 / Квитки", en: "05 / Tickets" },
+  location: { uk: "06 / Локація", en: "06 / Location" },
+  faq: { uk: "07 / FAQ", en: "07 / FAQ" },
   phone: { uk: "Телефон:", en: "Phone:" },
   support: { uk: "Підтримка:", en: "Support:" },
 } satisfies Record<string, Record<Lang, string>>;
+
+const topicChips = {
+  uk: [
+    { id: "ai", label: "AI" },
+    { id: "automation", label: "Автоматизація" },
+    { id: "google-ads", label: "Google Ads" },
+    { id: "google-shopping", label: "Google Shopping" },
+    { id: "facebook-ads", label: "Facebook Ads" },
+    { id: "meta", label: "Meta" },
+    { id: "tiktok", label: "TikTok" },
+    { id: "product-business", label: "Товарний бізнес" },
+    { id: "arbitrage", label: "Арбітраж" },
+    { id: "marketplaces", label: "Маркетплейси" },
+    { id: "amazon", label: "Amazon" },
+    { id: "dropshipping", label: "Дропшипінг" },
+    { id: "prom", label: "Prom" },
+    { id: "shopify", label: "Shopify" },
+    { id: "online-stores", label: "Інтернет-магазини" },
+    { id: "woocommerce", label: "WooCommerce" },
+    { id: "cross-border-sales", label: "Продажі за кордон" },
+    { id: "dollar-revenue", label: "Заробіток у доларах" },
+    { id: "export", label: "Експорт" },
+    { id: "ugc-content", label: "UGC-контент" },
+    { id: "influencers", label: "Інфлюенсери" },
+    { id: "creatives", label: "Креативи" },
+    { id: "reels", label: "Reels" },
+    { id: "sales-funnels", label: "Воронки продажів" },
+    { id: "lead-generation", label: "Лідогенерація" },
+    { id: "crm", label: "CRM" },
+    { id: "legal", label: "Юристи" },
+    { id: "accounting", label: "Бухгалтерія" },
+    { id: "systematization", label: "Систематизація" },
+    { id: "ltv", label: "LTV" },
+    { id: "experts", label: "Експерти" },
+    { id: "networking", label: "Нетворкінг" },
+    { id: "scaling", label: "Масштабування" },
+    { id: "retention", label: "Retention" },
+    { id: "call-center", label: "Call-центр" },
+    { id: "logistics", label: "Логістика" },
+    { id: "china-sourcing", label: "Замовлення з Китаю" },
+    { id: "warehouse", label: "Склад" },
+    { id: "margin", label: "Маржинальність" },
+  ],
+  en: [
+    { id: "ai", label: "AI" },
+    { id: "automation", label: "Automation" },
+    { id: "google-ads", label: "Google Ads" },
+    { id: "google-shopping", label: "Google Shopping" },
+    { id: "facebook-ads", label: "Facebook Ads" },
+    { id: "meta", label: "Meta" },
+    { id: "tiktok", label: "TikTok" },
+    { id: "product-business", label: "Product Business" },
+    { id: "arbitrage", label: "Arbitrage" },
+    { id: "marketplaces", label: "Marketplaces" },
+    { id: "amazon", label: "Amazon" },
+    { id: "dropshipping", label: "Dropshipping" },
+    { id: "prom", label: "Prom" },
+    { id: "shopify", label: "Shopify" },
+    { id: "online-stores", label: "Online Stores" },
+    { id: "woocommerce", label: "WooCommerce" },
+    { id: "cross-border-sales", label: "Cross-border Sales" },
+    { id: "dollar-revenue", label: "Dollar Revenue" },
+    { id: "export", label: "Export" },
+    { id: "ugc-content", label: "UGC Content" },
+    { id: "influencers", label: "Influencers" },
+    { id: "creatives", label: "Creatives" },
+    { id: "reels", label: "Reels" },
+    { id: "sales-funnels", label: "Sales Funnels" },
+    { id: "lead-generation", label: "Lead Generation" },
+    { id: "crm", label: "CRM" },
+    { id: "legal", label: "Legal" },
+    { id: "accounting", label: "Accounting" },
+    { id: "systematization", label: "Systematization" },
+    { id: "ltv", label: "LTV" },
+    { id: "experts", label: "Experts" },
+    { id: "networking", label: "Networking" },
+    { id: "scaling", label: "Scaling" },
+    { id: "retention", label: "Retention" },
+    { id: "call-center", label: "Call Center" },
+    { id: "logistics", label: "Logistics" },
+    { id: "china-sourcing", label: "China Sourcing" },
+    { id: "warehouse", label: "Warehouse" },
+    { id: "margin", label: "Margin" },
+  ],
+} satisfies Record<Lang, readonly TopicChip[]>;
+
+const featuredTopicIds = new Set(["ai", "google-shopping", "product-business"]);
 
 const contentData = {
   uk: {
@@ -101,6 +190,10 @@ const contentData = {
       "fulfillment, last mile, повернення і сервіс",
       "performance, CRM/CDP, автоматизація та AI commerce tools",
     ],
+    topicsTitle: "Теми, що визначають наступний цикл eCommerce.",
+    topicsText:
+      "Практичний фокус на каналах, технологіях і бізнес-моделях, які вже змінюють залучення клієнтів, операції та масштабування.",
+    topicsMarquee: ["Аудиторія проекту", "Теми події", "Що очікувати?", "Про що поговоримо"],
     leadersTitle: "Екосистема ринку, яка рухає український commerce вперед.",
     leadersText:
       "Ми не анонсуємо непідтверджених партнерів. Секція показує ролі та категорії бізнесу, для яких створюється конференція: від ритейлу і маркетплейсів до AI-інструментів та брендів.",
@@ -217,6 +310,10 @@ const contentData = {
       "fulfillment, last mile, returns and service",
       "performance, CRM/CDP, automation and AI commerce tools",
     ],
+    topicsTitle: "Topics shaping the next cycle of eCommerce.",
+    topicsText:
+      "A practical focus on the channels, technologies and business models already changing customer acquisition, operations and scale.",
+    topicsMarquee: ["Project audience", "Event topics", "What to expect", "What well discuss"],
     leadersTitle: "The business ecosystem moving Ukrainian commerce forward.",
     leadersText:
       "This section does not imply unconfirmed partnerships. It frames the roles and business categories the conference is built for: from retail and marketplaces to AI tools and brands.",
@@ -314,6 +411,7 @@ export default function ECommerceEventPage() {
   const [lang, setLang] = useState<Lang>("uk");
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     setSeo("E-Commerce Conference 2026", content[lang].seoDescription, canonical, socialImage);
@@ -463,6 +561,77 @@ export default function ECommerceEventPage() {
             </div>
           </motion.div>
         </Section>
+
+        <section className="relative overflow-hidden border-t border-white/[0.04] py-16 sm:py-20 md:py-28">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 bg-[#00FF88]/[0.055] blur-[110px] sm:h-96 sm:w-96 sm:blur-[150px]" />
+            <div className="absolute inset-y-0 left-1/2 w-px bg-gradient-to-b from-transparent via-[#00FF88]/10 to-transparent" />
+          </div>
+
+          <div className="relative mb-12 border-y border-white/[0.06] bg-white/[0.015] py-3 sm:mb-16 sm:py-4">
+            {[false, true].map((reverse, rowIndex) => {
+              const labels = prefersReducedMotion ? t.topicsMarquee : [...t.topicsMarquee, ...t.topicsMarquee];
+
+              return (
+                <div key={`topics-marquee-${rowIndex}`} className={rowIndex === 1 ? "mt-3 sm:mt-4" : ""}>
+                  <motion.div
+                    className="flex w-max items-center"
+                    animate={prefersReducedMotion ? { x: 0 } : { x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { duration: 28, ease: "linear", repeat: Infinity }}
+                  >
+                    {labels.map((label, index) => (
+                      <div key={`${rowIndex}-${index}`} className="flex shrink-0 items-center">
+                        <span className={`px-5 text-xs font-mono font-bold uppercase tracking-[0.2em] sm:px-8 sm:text-sm ${rowIndex === 0 ? "text-white/64" : "text-[#00FF88]/72"}`}>
+                          {label}
+                        </span>
+                        <span className="h-1.5 w-1.5 rotate-45 bg-[#00FF88]" aria-hidden="true" />
+                      </div>
+                    ))}
+                  </motion.div>
+                </div>
+              );
+            })}
+          </div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={staggerContainer}
+            className="relative mx-auto max-w-7xl px-4 sm:px-6 md:px-12"
+          >
+            <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16">
+              <div>
+                <SectionBadge icon={<ShoppingBag className="h-3.5 w-3.5" />} label={getText(sectionLabels.topics, lang)} />
+                <motion.h2 variants={fadeUpChild} className="max-w-2xl text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">
+                  {t.topicsTitle}
+                </motion.h2>
+                <motion.p variants={fadeUpChild} className="mt-5 max-w-xl text-sm leading-relaxed text-white/52 sm:text-base">
+                  {t.topicsText}
+                </motion.p>
+              </div>
+
+              <motion.div variants={fadeUpChild} className="flex content-start flex-wrap gap-2.5 sm:gap-3 lg:pt-1">
+                {topicChips[lang].map((topic) => (
+                  <motion.span
+                    key={topic.id}
+                    data-qa="ecc-topic-chip"
+                    data-topic-id={topic.id}
+                    variants={fadeUpChild}
+                    className={`group relative flex min-h-12 items-center overflow-hidden border px-4 py-3 font-mono text-sm font-bold uppercase tracking-[0.08em] transition-colors sm:min-h-14 sm:px-5 sm:text-base ${
+                      featuredTopicIds.has(topic.id)
+                        ? "border-[#00FF88]/45 bg-[#00FF88] text-black"
+                        : "border-white/[0.12] bg-black/50 text-white/76 hover:border-[#00FF88]/45 hover:text-[#00FF88]"
+                    }`}
+                  >
+                    <span className="relative z-10">{topic.label}</span>
+                    <span className="absolute right-2 top-2 h-1 w-1 bg-[#00FF88] opacity-60 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                  </motion.span>
+                ))}
+              </motion.div>
+            </div>
+          </motion.div>
+        </section>
 
         <Section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
