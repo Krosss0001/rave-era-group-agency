@@ -160,6 +160,28 @@ const topicChips = {
 } satisfies Record<Lang, readonly TopicChip[]>;
 
 const featuredTopicIds = new Set(["ai", "google-shopping", "product-business"]);
+const topicCategoryIds = {
+  growth: new Set(["ai", "automation", "google-ads", "google-shopping", "facebook-ads", "meta", "tiktok"]),
+  commerce: new Set(["product-business", "arbitrage", "marketplaces", "amazon", "dropshipping", "prom", "shopify", "online-stores", "woocommerce"]),
+  revenue: new Set(["cross-border-sales", "dollar-revenue", "export", "sales-funnels", "lead-generation", "ltv", "scaling", "margin"]),
+  audience: new Set(["ugc-content", "influencers", "creatives", "reels", "crm", "retention", "experts", "networking"]),
+} as const;
+
+function getTopicCategory(topicId: string) {
+  if (topicCategoryIds.growth.has(topicId)) return "growth";
+  if (topicCategoryIds.commerce.has(topicId)) return "commerce";
+  if (topicCategoryIds.revenue.has(topicId)) return "revenue";
+  if (topicCategoryIds.audience.has(topicId)) return "audience";
+  return "operations";
+}
+
+const topicCategoryClasses = {
+  growth: "border-[#00FF88]/22 bg-[#00FF88]/[0.055]",
+  commerce: "border-white/[0.14] bg-white/[0.045]",
+  revenue: "border-[#00FF88]/16 bg-gradient-to-r from-[#00FF88]/[0.035] to-white/[0.035]",
+  audience: "border-white/[0.12] bg-white/[0.03]",
+  operations: "border-white/[0.1] bg-black/45",
+} as const;
 
 const contentData = {
   uk: {
@@ -568,29 +590,62 @@ export default function ECommerceEventPage() {
             <div className="absolute inset-y-0 left-1/2 w-px bg-gradient-to-b from-transparent via-[#00FF88]/10 to-transparent" />
           </div>
 
-          <div className="relative mb-12 border-y border-white/[0.06] bg-white/[0.015] py-3 sm:mb-16 sm:py-4">
-            {[false, true].map((reverse, rowIndex) => {
-              const labels = prefersReducedMotion ? t.topicsMarquee : [...t.topicsMarquee, ...t.topicsMarquee];
+          <div
+            data-qa="ecc-topics-marquee"
+            data-reduced-motion={prefersReducedMotion ? "true" : "false"}
+            className="relative mb-12 overflow-hidden border-y border-white/[0.07] bg-white/[0.018] py-4 shadow-[0_0_50px_rgba(0,255,136,0.025)] sm:mb-16 sm:py-5"
+          >
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#050706] to-transparent sm:w-24" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#050706] to-transparent sm:w-24" />
 
-              return (
-                <div key={`topics-marquee-${rowIndex}`} className={rowIndex === 1 ? "mt-3 sm:mt-4" : ""}>
-                  <motion.div
-                    className="flex w-max items-center"
-                    animate={prefersReducedMotion ? { x: 0 } : { x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
-                    transition={prefersReducedMotion ? { duration: 0 } : { duration: 28, ease: "linear", repeat: Infinity }}
-                  >
-                    {labels.map((label, index) => (
-                      <div key={`${rowIndex}-${index}`} className="flex shrink-0 items-center">
-                        <span className={`px-5 text-xs font-mono font-bold uppercase tracking-[0.2em] sm:px-8 sm:text-sm ${rowIndex === 0 ? "text-white/64" : "text-[#00FF88]/72"}`}>
-                          {label}
-                        </span>
-                        <span className="h-1.5 w-1.5 rotate-45 bg-[#00FF88]" aria-hidden="true" />
-                      </div>
-                    ))}
-                  </motion.div>
-                </div>
-              );
-            })}
+            {prefersReducedMotion ? (
+              <div data-qa="ecc-topics-marquee-static" className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-3 px-4 sm:grid-cols-4 sm:px-6 md:px-12">
+                {t.topicsMarquee.map((label, index) => (
+                  <div key={`${lang}-static-${index}`} className="flex min-w-0 items-center justify-center gap-2 text-center">
+                    <span className="h-1.5 w-1.5 shrink-0 rotate-45 bg-[#00FF88] shadow-[0_0_10px_rgba(0,255,136,0.7)]" aria-hidden="true" />
+                    <span className="text-[11px] font-mono font-bold uppercase leading-relaxed tracking-[0.14em] text-white/72 sm:text-xs">
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3 sm:space-y-4">
+                {[false, true].map((reverse, rowIndex) => (
+                  <div key={`topics-marquee-${rowIndex}`} className="overflow-hidden whitespace-nowrap">
+                    <motion.div
+                      data-qa="ecc-topics-marquee-track"
+                      data-row={rowIndex}
+                      className="flex w-max will-change-transform"
+                      animate={{ x: reverse ? ["-25%", "0%"] : ["0%", "-25%"] }}
+                      transition={{ duration: rowIndex === 0 ? 32 : 36, ease: "linear", repeat: Infinity }}
+                    >
+                      {Array.from({ length: 4 }, (_, segmentIndex) => (
+                        <div
+                          key={`${rowIndex}-segment-${segmentIndex}`}
+                          data-qa="ecc-topics-marquee-segment"
+                          className="flex shrink-0 items-center"
+                          aria-hidden={segmentIndex > 0}
+                        >
+                          {t.topicsMarquee.map((label, labelIndex) => (
+                            <div key={`${lang}-${segmentIndex}-${labelIndex}`} className="flex shrink-0 items-center">
+                              <span
+                                className={`px-5 text-xs font-mono font-bold uppercase tracking-[0.2em] sm:px-8 sm:text-sm ${
+                                  rowIndex === 0 ? "text-white/68" : "text-[#00FF88]/78"
+                                }`}
+                              >
+                                {label}
+                              </span>
+                              <span className="h-1.5 w-1.5 rotate-45 bg-[#00FF88] shadow-[0_0_10px_rgba(0,255,136,0.7)]" aria-hidden="true" />
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </motion.div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <motion.div
@@ -611,23 +666,34 @@ export default function ECommerceEventPage() {
                 </motion.p>
               </div>
 
-              <motion.div variants={fadeUpChild} className="flex content-start flex-wrap gap-2.5 sm:gap-3 lg:pt-1">
-                {topicChips[lang].map((topic) => (
-                  <motion.span
-                    key={topic.id}
-                    data-qa="ecc-topic-chip"
-                    data-topic-id={topic.id}
-                    variants={fadeUpChild}
-                    className={`group relative flex min-h-12 items-center overflow-hidden border px-4 py-3 font-mono text-sm font-bold uppercase tracking-[0.08em] transition-colors sm:min-h-14 sm:px-5 sm:text-base ${
-                      featuredTopicIds.has(topic.id)
-                        ? "border-[#00FF88]/45 bg-[#00FF88] text-black"
-                        : "border-white/[0.12] bg-black/50 text-white/76 hover:border-[#00FF88]/45 hover:text-[#00FF88]"
-                    }`}
-                  >
-                    <span className="relative z-10">{topic.label}</span>
-                    <span className="absolute right-2 top-2 h-1 w-1 bg-[#00FF88] opacity-60 transition-opacity group-hover:opacity-100" aria-hidden="true" />
-                  </motion.span>
-                ))}
+              <motion.div variants={fadeUpChild} className="flex content-start flex-wrap gap-2 sm:gap-2.5 lg:pt-1">
+                {topicChips[lang].map((topic) => {
+                  const category = getTopicCategory(topic.id);
+                  const featured = featuredTopicIds.has(topic.id);
+
+                  return (
+                    <motion.span
+                      key={topic.id}
+                      data-qa="ecc-topic-chip"
+                      data-topic-id={topic.id}
+                      data-topic-category={category}
+                      variants={fadeUpChild}
+                      className={`group relative inline-flex min-h-11 max-w-full items-center gap-2 overflow-hidden rounded-full border px-3.5 py-2.5 font-mono text-xs font-bold uppercase leading-tight tracking-[0.07em] text-white/78 backdrop-blur-md transition-colors duration-100 ease-out sm:min-h-12 sm:px-4 sm:text-sm ${
+                        featured
+                          ? "border-[#00FF88]/50 bg-[#00FF88]/[0.105] text-[#B8FFD8] shadow-[inset_0_0_18px_rgba(0,255,136,0.055),0_0_18px_rgba(0,255,136,0.055)]"
+                          : `${topicCategoryClasses[category]} hover:border-[#00FF88]/34 hover:bg-[#00FF88]/[0.07] hover:text-white`
+                      }`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                          featured ? "bg-[#00FF88] shadow-[0_0_9px_rgba(0,255,136,0.9)]" : "bg-[#00FF88]/55"
+                        }`}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 break-words">{topic.label}</span>
+                    </motion.span>
+                  );
+                })}
               </motion.div>
             </div>
           </motion.div>

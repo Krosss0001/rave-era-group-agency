@@ -135,6 +135,9 @@ async function assertVisibleContent(page, width, language) {
         label: chip.textContent?.trim() || "",
         tagName: chip.tagName,
       })),
+      marqueeTracks: document.querySelectorAll('[data-qa="ecc-topics-marquee-track"]').length,
+      marqueeSegments: document.querySelectorAll('[data-qa="ecc-topics-marquee-segment"]').length,
+      marqueeReducedMotion: document.querySelector('[data-qa="ecc-topics-marquee"]')?.getAttribute("data-reduced-motion") || "",
       programItems: document.querySelectorAll('[data-qa="ecc-program-item"]').length,
       faqItems: document.querySelectorAll('button[aria-controls^="ecc-faq-answer-"]').length,
       faq: visibleText('button[aria-controls^="ecc-faq-answer-"]'),
@@ -161,6 +164,9 @@ async function assertVisibleContent(page, width, language) {
   );
   assert(result.topicChips.every(({ tagName }) => tagName === "SPAN"), `${width}px ${language}: topic chips must render as spans`);
   assert(result.topicChips.every(({ label }) => label.length > 0), `${width}px ${language}: topic text disappeared`);
+  assert(result.marqueeTracks === 2, `${width}px ${language}: expected two marquee tracks, found ${result.marqueeTracks}`);
+  assert(result.marqueeSegments === 8, `${width}px ${language}: expected eight marquee segments, found ${result.marqueeSegments}`);
+  assert(result.marqueeReducedMotion === "false", `${width}px ${language}: animated marquee unexpectedly disabled`);
   assert(result.programItems === 6, `${width}px ${language}: expected 6 program items, found ${result.programItems}`);
   assert(result.faqItems === 6, `${width}px ${language}: expected 6 FAQ items, found ${result.faqItems}`);
   assert(result.ticketsTitle.length > 20, `${width}px ${language}: ticket text missing (${JSON.stringify(result.ticketsTitle)})`);
@@ -268,6 +274,23 @@ try {
   const sbcOverflow = await routePage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert(sbcOverflow <= 1, `SBC page overflow is ${sbcOverflow}px`);
   await routePage.close();
+
+  const reducedMotionPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await reducedMotionPage.emulateMedia({ reducedMotion: "reduce" });
+  await reducedMotionPage.goto(`${baseUrl}${eccPath}`, { waitUntil: "networkidle" });
+  const reducedMotionResult = await reducedMotionPage.evaluate(() => ({
+    mode: document.querySelector('[data-qa="ecc-topics-marquee"]')?.getAttribute("data-reduced-motion") || "",
+    staticRows: document.querySelectorAll('[data-qa="ecc-topics-marquee-static"]').length,
+    animatedTracks: document.querySelectorAll('[data-qa="ecc-topics-marquee-track"]').length,
+    staticLabels: document.querySelector('[data-qa="ecc-topics-marquee-static"]')?.textContent?.trim() || "",
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  }));
+  assert(reducedMotionResult.mode === "true", "Reduced-motion marquee mode was not enabled");
+  assert(reducedMotionResult.staticRows === 1, "Reduced-motion marquee static grid is missing");
+  assert(reducedMotionResult.animatedTracks === 0, "Reduced-motion mode still renders animated marquee tracks");
+  assert(reducedMotionResult.staticLabels.length > 20, "Reduced-motion marquee labels are missing");
+  assert(reducedMotionResult.overflow <= 1, `Reduced-motion page overflow is ${reducedMotionResult.overflow}px`);
+  await reducedMotionPage.close();
 
   for (const width of widths) {
     const page = await browser.newPage({ viewport: { width, height: 900 } });
