@@ -142,12 +142,14 @@ async function assertVisibleContent(page, width, language) {
       partnerBenefits: [...document.querySelectorAll('[data-qa="ecc-partner-benefit"]')].map((benefit) => benefit.textContent?.trim() || ""),
       partnerHref: document.querySelector('[data-qa="ecc-partner-link"]')?.getAttribute("href") || "",
       heroImage: {
+        currentSrc: document.querySelector('[data-qa="ecc-hero-image"]')?.currentSrc || "",
         loading: document.querySelector('[data-qa="ecc-hero-image"]')?.getAttribute("loading") || "",
         decoding: document.querySelector('[data-qa="ecc-hero-image"]')?.getAttribute("decoding") || "",
         fetchPriority: document.querySelector('[data-qa="ecc-hero-image"]')?.getAttribute("fetchpriority") || "",
       },
       partnerImage: {
         src: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("src") || "",
+        currentSrc: document.querySelector('[data-qa="ecc-partner-image"]')?.currentSrc || "",
         loading: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("loading") || "",
         decoding: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("decoding") || "",
       },
@@ -213,11 +215,19 @@ async function assertVisibleContent(page, width, language) {
   assert(result.heroImage.loading === "eager", `${width}px ${language}: hero image must load eagerly`);
   assert(result.heroImage.decoding === "async", `${width}px ${language}: hero image must decode asynchronously`);
   assert(result.heroImage.fetchPriority === "high", `${width}px ${language}: hero image fetch priority mismatch`);
+  assert(
+    result.heroImage.currentSrc.endsWith("/images/ecommerce-conference-2026-poster.webp"),
+    `${width}px ${language}: hero did not select optimized WebP`,
+  );
   assert(result.partnerImage.loading === "lazy", `${width}px ${language}: partner image must lazy load`);
   assert(result.partnerImage.decoding === "async", `${width}px ${language}: partner image must decode asynchronously`);
   assert(
     result.partnerImage.src === "/images/ecommerce-partnership-expo-2026.png",
     `${width}px ${language}: partnership image source mismatch`,
+  );
+  assert(
+    result.partnerImage.currentSrc.endsWith("/images/ecommerce-partnership-expo-2026.webp"),
+    `${width}px ${language}: partnership image did not select optimized WebP`,
   );
   assert(
     JSON.stringify(result.partnerBadges) === JSON.stringify(
@@ -284,18 +294,25 @@ try {
       title: document.title,
       canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href"),
       ogImage: document.querySelector('meta[property="og:image"]')?.getAttribute("content"),
+      ogImageType: document.querySelector('meta[property="og:image:type"]')?.getAttribute("content"),
+      ogImageWidth: document.querySelector('meta[property="og:image:width"]')?.getAttribute("content"),
+      ogImageHeight: document.querySelector('meta[property="og:image:height"]')?.getAttribute("content"),
       twitterCard: document.querySelector('meta[name="twitter:card"]')?.getAttribute("content"),
       twitterImage: document.querySelector('meta[name="twitter:image"]')?.getAttribute("content"),
       jsonLd: document.querySelector("#ecc-event-jsonld")?.textContent || "",
     }));
     assert(seo.title === "E-Commerce Conference 2026 | RAVE'ERA GROUP", `${width}px: document title mismatch`);
     assert(seo.canonical === `${baseUrl.startsWith("http://127.0.0.1") ? "https://www.rave-era.com.ua" : baseUrl}${eccPath}`, `${width}px: canonical mismatch`);
-    assert(seo.ogImage?.endsWith("/images/ecommerce-conference-2026-poster.png"), `${width}px: OG image mismatch`);
+    assert(seo.ogImage?.endsWith("/images/ecommerce-conference-2026-poster.webp"), `${width}px: OG image mismatch`);
+    assert(seo.ogImageType === "image/webp", `${width}px: OG image type mismatch`);
+    assert(seo.ogImageWidth === "1672" && seo.ogImageHeight === "941", `${width}px: OG image dimensions mismatch`);
     assert(seo.twitterCard === "summary_large_image", `${width}px: Twitter card mismatch`);
-    assert(seo.twitterImage?.endsWith("/images/ecommerce-conference-2026-poster.png"), `${width}px: Twitter image mismatch`);
+    assert(seo.twitterImage?.endsWith("/images/ecommerce-conference-2026-poster.webp"), `${width}px: Twitter image mismatch`);
     const eventJsonLd = JSON.parse(seo.jsonLd);
+    assert(eventJsonLd.name === "E-Commerce Conference 2026", `${width}px: JSON-LD event name mismatch`);
     assert(eventJsonLd.startDate === "2026-10-06", `${width}px: JSON-LD date mismatch`);
     assert(eventJsonLd.location?.name?.includes("Parkovyi"), `${width}px: JSON-LD location mismatch`);
+    assert(eventJsonLd.location?.address?.addressLocality === "Київ", `${width}px: JSON-LD city mismatch`);
 
     const languageButton = page.getByRole("button", { name: "Switch language" });
     for (const language of ["EN", "UA", "EN", "UA"]) {
@@ -328,6 +345,12 @@ try {
     const response = await routePage.goto(`${baseUrl}${href}`, { waitUntil: "domcontentloaded" });
     assert(response?.ok(), `Legal route failed: ${href}`);
   }
+
+  const sitemapResponse = await routePage.goto(`${baseUrl}/sitemap.xml`, { waitUntil: "domcontentloaded" });
+  assert(sitemapResponse?.ok(), "Sitemap route failed");
+  const sitemap = await sitemapResponse.text();
+  assert(sitemap?.includes("/event/e-commerce-conference-2026"), "Sitemap is missing the ECC event page");
+  assert(!sitemap?.includes("/portfolio/e-commerce-conference-2026"), "Removed ECC portfolio route leaked into sitemap");
 
   await routePage.goto(`${baseUrl}/event/sbc-summit-ukraine-2026`, { waitUntil: "networkidle" });
   const sbcHeading = (await routePage.locator("h1").textContent())?.trim() || "";

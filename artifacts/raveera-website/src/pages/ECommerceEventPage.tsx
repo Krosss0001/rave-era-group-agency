@@ -23,7 +23,7 @@ import {
 const G = "#00FF88";
 const slug = "e-commerce-conference-2026";
 const canonical = "https://www.rave-era.com.ua/event/e-commerce-conference-2026";
-const socialImage = "https://www.rave-era.com.ua/images/ecommerce-conference-2026-poster.png";
+const socialImage = "https://www.rave-era.com.ua/images/ecommerce-conference-2026-poster.webp";
 const mapUrl = "https://www.google.com/maps?q=Parkovyi%20ECC%20Kyiv%20Parkova%20Road%2016A&output=embed";
 const mapExternal = "https://maps.app.goo.gl/bih3ZUsmSrxpcbjW6";
 
@@ -557,17 +557,20 @@ export default function ECommerceEventPage() {
             </div>
             <motion.div variants={fadeUpChild} className="order-first w-full lg:order-last">
               <div className="overflow-hidden rounded-sm border border-white/[0.08] bg-white/[0.02] shadow-[0_0_60px_rgba(0,255,136,0.12)]">
-                <img
-                  data-qa="ecc-hero-image"
-                  src="/images/ecommerce-conference-2026-poster.png"
-                  alt="E-Commerce Conference 2026 event poster"
-                  width="1672"
-                  height="941"
-                  className="aspect-video w-full object-cover"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                />
+                <picture>
+                  <source srcSet="/images/ecommerce-conference-2026-poster.webp" type="image/webp" />
+                  <img
+                    data-qa="ecc-hero-image"
+                    src="/images/ecommerce-conference-2026-poster.png"
+                    alt="E-Commerce Conference 2026 event poster"
+                    width="1672"
+                    height="941"
+                    className="aspect-video w-full object-cover"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                  />
+                </picture>
               </div>
             </motion.div>
           </motion.div>
@@ -738,16 +741,19 @@ export default function ECommerceEventPage() {
               variants={fadeUpChild}
               className="relative min-h-[220px] overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.02] shadow-[0_0_50px_rgba(0,255,136,0.045)] sm:min-h-[340px] lg:min-h-[420px]"
             >
-              <img
-                data-qa="ecc-partner-image"
-                src="/images/ecommerce-partnership-expo-2026.png"
-                alt="E-Commerce Conference 2026 partner and expo presentation"
-                width="1536"
-                height="1024"
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 h-full w-full rounded-2xl object-cover object-center"
-              />
+              <picture>
+                <source srcSet="/images/ecommerce-partnership-expo-2026.webp" type="image/webp" />
+                <img
+                  data-qa="ecc-partner-image"
+                  src="/images/ecommerce-partnership-expo-2026.png"
+                  alt="E-Commerce Conference 2026 partner and expo presentation"
+                  width="1536"
+                  height="1024"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full rounded-2xl object-cover object-center"
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/5" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#00FF88]/[0.08] via-transparent to-transparent" />
               <div className="absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] flex-wrap gap-2 sm:left-6 sm:top-6">
@@ -1102,6 +1108,9 @@ function setSeo(pageTitle: string, pageDescription: string, canonicalUrl: string
   setMeta("og:type", "event", "property");
   setMeta("og:url", canonicalUrl, "property");
   setMeta("og:image", imageUrl, "property");
+  setMeta("og:image:type", "image/webp", "property");
+  setMeta("og:image:width", "1672", "property");
+  setMeta("og:image:height", "941", "property");
   setMeta("twitter:title", pageTitle);
   setMeta("twitter:description", pageDescription);
   setMeta("twitter:card", "summary_large_image");
