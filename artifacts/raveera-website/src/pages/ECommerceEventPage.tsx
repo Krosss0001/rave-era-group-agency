@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion";
 import { Link } from "wouter";
 import {
   ArrowLeft,
@@ -471,8 +471,9 @@ export default function ECommerceEventPage() {
   const t = content[lang];
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen overflow-x-hidden bg-[#0A0A0F] font-sans text-white selection:bg-[#00FF88] selection:text-black">
-      <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "border-b border-white/[0.06] bg-[#0A0A0F]/90 backdrop-blur-md" : "bg-transparent"}`}>
+      <nav className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-200 ${scrolled ? "border-b border-white/[0.06] bg-[#0A0A0F]/95 backdrop-blur-sm" : "bg-transparent"}`}>
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16 sm:px-6 md:px-12">
           <Link href="/" className="inline-flex min-h-10 items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/50 transition-colors hover:text-[#00FF88] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -553,6 +554,7 @@ export default function ECommerceEventPage() {
             <motion.div variants={fadeUpChild} className="order-first w-full lg:order-last">
               <div className="overflow-hidden rounded-sm border border-white/[0.08] bg-white/[0.02] shadow-[0_0_60px_rgba(0,255,136,0.12)]">
                 <img
+                  data-qa="ecc-hero-image"
                   src="/images/ecommerce-conference-2026-poster.png"
                   alt="E-Commerce Conference 2026 event poster"
                   width="1672"
@@ -560,6 +562,7 @@ export default function ECommerceEventPage() {
                   className="aspect-video w-full object-cover"
                   loading="eager"
                   fetchPriority="high"
+                  decoding="async"
                 />
               </div>
             </motion.div>
@@ -636,7 +639,7 @@ export default function ECommerceEventPage() {
                     <motion.div
                       data-qa="ecc-topics-marquee-track"
                       data-row={rowIndex}
-                      className="flex w-max will-change-transform"
+                      className="flex w-max transform-gpu will-change-transform [backface-visibility:hidden] [contain:layout_paint]"
                       animate={{ x: reverse ? ["-25%", "0%"] : ["0%", "-25%"] }}
                       transition={{ duration: rowIndex === 0 ? 32 : 36, ease: "linear", repeat: Infinity }}
                     >
@@ -692,15 +695,14 @@ export default function ECommerceEventPage() {
                   const featured = featuredTopicIds.has(topic.id);
 
                   return (
-                    <motion.span
+                    <span
                       key={topic.id}
                       data-qa="ecc-topic-chip"
                       data-topic-id={topic.id}
                       data-topic-category={category}
-                      variants={fadeUpChild}
-                      className={`group relative inline-flex min-h-11 max-w-full items-center gap-2 overflow-hidden rounded-full border px-3.5 py-2.5 font-mono text-xs font-bold uppercase leading-tight tracking-[0.07em] text-white/78 backdrop-blur-md transition-colors duration-100 ease-out sm:min-h-12 sm:px-4 sm:text-sm ${
+                      className={`group relative inline-flex min-h-11 max-w-full items-center gap-2 overflow-hidden rounded-full border px-3.5 py-2.5 font-mono text-xs font-bold uppercase leading-tight tracking-[0.07em] text-white/78 transition-colors duration-100 ease-out sm:min-h-12 sm:px-4 sm:text-sm ${
                         featured
-                          ? "border-[#00FF88]/50 bg-[#00FF88]/[0.105] text-[#B8FFD8] shadow-[inset_0_0_18px_rgba(0,255,136,0.055),0_0_18px_rgba(0,255,136,0.055)]"
+                          ? "border-[#00FF88]/50 bg-[#00FF88]/[0.105] text-[#B8FFD8] shadow-[0_0_16px_rgba(0,255,136,0.045)]"
                           : `${topicCategoryClasses[category]} hover:border-[#00FF88]/34 hover:bg-[#00FF88]/[0.07] hover:text-white`
                       }`}
                     >
@@ -711,7 +713,7 @@ export default function ECommerceEventPage() {
                         aria-hidden="true"
                       />
                       <span className="min-w-0 break-words">{topic.label}</span>
-                    </motion.span>
+                    </span>
                   );
                 })}
               </motion.div>
@@ -730,12 +732,17 @@ export default function ECommerceEventPage() {
           >
             <motion.div
               variants={fadeUpChild}
-              className="group relative min-h-[280px] overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.02] shadow-[0_0_60px_rgba(0,255,136,0.055)] sm:min-h-[380px] lg:min-h-[440px]"
+              className="relative min-h-[220px] overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.02] shadow-[0_0_50px_rgba(0,255,136,0.045)] sm:min-h-[340px] lg:min-h-[420px]"
             >
               <img
+                data-qa="ecc-partner-image"
                 src="/images/ecommerce-conference-2026-poster.png"
                 alt="E-Commerce Conference 2026 partner and expo presentation"
-                className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 ease-out motion-reduce:transition-none group-hover:scale-[1.02]"
+                width="1672"
+                height="941"
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover object-center"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/5" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#00FF88]/[0.08] via-transparent to-transparent" />
@@ -750,7 +757,7 @@ export default function ECommerceEventPage() {
 
             <motion.div
               variants={fadeUpChild}
-              className="relative flex flex-col overflow-hidden rounded-2xl border border-[#00FF88]/15 bg-white/[0.035] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_50px_rgba(0,255,136,0.035)] backdrop-blur-xl sm:p-8 lg:p-10"
+              className="relative flex flex-col overflow-hidden rounded-2xl border border-[#00FF88]/15 bg-[#101412]/95 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_40px_rgba(0,255,136,0.03)] sm:p-8 lg:p-10"
             >
               <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#00FF88]/[0.07] blur-[90px]" />
               <div className="relative">
@@ -832,7 +839,7 @@ export default function ECommerceEventPage() {
             <motion.h2 variants={fadeUpChild} className="mb-10 text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.ticketsTitle}</motion.h2>
             <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
               {tickets.map((tier) => (
-                <motion.div key={tier.key} data-qa="ecc-ticket-card" variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 md:min-h-[520px] ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
+                <motion.div key={tier.key} data-qa="ecc-ticket-card" variants={fadeUpChild} className={`relative flex flex-col border p-5 sm:p-6 xl:min-h-[520px] ${tier.premium ? "border-white/30 bg-white/[0.045] shadow-[0_0_60px_rgba(255,255,255,0.06)]" : tier.popular ? "border-[#00FF88]/35 bg-[#00FF88]/[0.04]" : "border-white/[0.08] bg-white/[0.02]"}`}>
                   {tier.popular ? <span className="absolute -top-3 left-5 bg-[#00FF88] px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.popular}</span> : null}
                   {tier.premium ? <span className="absolute -top-3 left-5 bg-white px-3 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest text-black sm:left-6">{t.premium}</span> : null}
                   <p className="min-h-8 text-xs font-mono uppercase tracking-widest text-white/40">{getText(tier.name, lang)}</p>
@@ -1021,6 +1028,7 @@ export default function ECommerceEventPage() {
         </div>
       </footer>
     </div>
+    </MotionConfig>
   );
 }
 

@@ -141,6 +141,19 @@ async function assertVisibleContent(page, width, language) {
       partnerTitle: visibleText('[data-qa="ecc-partner-cta"] h2'),
       partnerBenefits: [...document.querySelectorAll('[data-qa="ecc-partner-benefit"]')].map((benefit) => benefit.textContent?.trim() || ""),
       partnerHref: document.querySelector('[data-qa="ecc-partner-link"]')?.getAttribute("href") || "",
+      heroImage: {
+        loading: document.querySelector('[data-qa="ecc-hero-image"]')?.getAttribute("loading") || "",
+        decoding: document.querySelector('[data-qa="ecc-hero-image"]')?.getAttribute("decoding") || "",
+        fetchPriority: document.querySelector('[data-qa="ecc-hero-image"]')?.getAttribute("fetchpriority") || "",
+      },
+      partnerImage: {
+        loading: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("loading") || "",
+        decoding: document.querySelector('[data-qa="ecc-partner-image"]')?.getAttribute("decoding") || "",
+      },
+      ticketCardPositions: [...document.querySelectorAll('[data-qa="ecc-ticket-card"]')].map((card) => {
+        const rect = card.getBoundingClientRect();
+        return { left: Math.round(rect.left), top: Math.round(rect.top) };
+      }),
       partnerBeforeTickets: Boolean(
         document.querySelector('[data-qa="ecc-partner-cta"]')?.compareDocumentPosition(
           document.querySelector('[data-qa="ecc-ticket-card"]'),
@@ -191,6 +204,17 @@ async function assertVisibleContent(page, width, language) {
   assert(
     result.partnerHref === "https://t.me/ravepassbot?start=event_ecommers-conference-2026",
     `${width}px ${language}: partner CTA link mismatch`,
+  );
+  assert(result.heroImage.loading === "eager", `${width}px ${language}: hero image must load eagerly`);
+  assert(result.heroImage.decoding === "async", `${width}px ${language}: hero image must decode asynchronously`);
+  assert(result.heroImage.fetchPriority === "high", `${width}px ${language}: hero image fetch priority mismatch`);
+  assert(result.partnerImage.loading === "lazy", `${width}px ${language}: partner image must lazy load`);
+  assert(result.partnerImage.decoding === "async", `${width}px ${language}: partner image must decode asynchronously`);
+  const ticketColumns = new Set(result.ticketCardPositions.map(({ left }) => left)).size;
+  const expectedTicketColumns = width >= 1280 ? 4 : width >= 768 ? 2 : 1;
+  assert(
+    ticketColumns === expectedTicketColumns,
+    `${width}px ${language}: expected ${expectedTicketColumns} ticket columns, found ${ticketColumns}`,
   );
   assert(result.partnerBeforeTickets, `${width}px ${language}: partner CTA must appear before tickets`);
   assert(result.programItems === 6, `${width}px ${language}: expected 6 program items, found ${result.programItems}`);
