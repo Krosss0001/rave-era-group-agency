@@ -153,6 +153,13 @@ async function assertVisibleContent(page, width, language) {
       mediaPartnersTitle: visibleText('[data-qa="ecc-media-partners-title"]'),
       mediaPartnerCards: document.querySelectorAll('[data-qa="ecc-media-partner-card"]').length,
       mediaPartnerPlaceholders: document.querySelectorAll('[data-qa="ecc-media-partner-placeholder"]').length,
+      mediaPartnerImages: [...document.querySelectorAll('[data-qa="ecc-media-partner-card"] img')].map((image) => ({
+        src: image.getAttribute("src") || "",
+        alt: image.getAttribute("alt") || "",
+        loading: image.getAttribute("loading") || "",
+        decoding: image.getAttribute("decoding") || "",
+        className: image.className,
+      })),
       topicChips: [...document.querySelectorAll('[data-qa="ecc-topic-chip"]')].map((chip) => ({
         id: chip.getAttribute("data-topic-id") || "",
         label: chip.textContent?.trim() || "",
@@ -232,6 +239,14 @@ async function assertVisibleContent(page, width, language) {
   }
   assert(result.mediaPartnerCards === 3, `${width}px ${language}: expected 3 media partners, found ${result.mediaPartnerCards}`);
   assert(result.mediaPartnerPlaceholders === 5, `${width}px ${language}: expected 5 media partner placeholders, found ${result.mediaPartnerPlaceholders}`);
+  assert(result.mediaPartnerImages.length === 3, `${width}px ${language}: expected 3 media partner logos, found ${result.mediaPartnerImages.length}`);
+  for (const [imagePath, alt] of [["kontora22.png", "kontora22"], ["moderno.png", "MODERNO Web Development"], ["booster.png", "BOOSTER"]]) {
+    const image = result.mediaPartnerImages.find(({ src }) => src.endsWith(`/images/media/${imagePath}`));
+    assert(image, `${width}px ${language}: missing media logo ${imagePath}`);
+    assert(image.alt === alt, `${width}px ${language}: media logo alt text mismatch for ${imagePath}`);
+    assert(image.loading === "lazy" && image.decoding === "async", `${width}px ${language}: media logo loading attributes mismatch`);
+    assert(image.className.includes("object-contain"), `${width}px ${language}: media logo fit mismatch`);
+  }
   assert(result.conferencePartnerHref === "https://t.me/bogdan_chekan", `${width}px ${language}: conference partner CTA link mismatch`);
   assert(result.speakersTitle === (language === "UA" ? "Експерти конференції" : "Conference Experts"), `${width}px ${language}: speakers localization mismatch`);
   assert(result.conferencePartnersTitle === (language === "UA" ? "Партнери конференції" : "Conference Partners"), `${width}px ${language}: conference partners localization mismatch`);

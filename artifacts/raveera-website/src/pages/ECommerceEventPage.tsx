@@ -86,9 +86,9 @@ const conferencePartners: Brand[] = [
 ];
 
 const mediaPartners: Brand[] = [
-  { name: "MODERNO", imagePath: null },
-  { name: "kontora22", imagePath: null },
-  { name: "BOOSTER", imagePath: null },
+  { name: "kontora22", imagePath: "/images/media/kontora22.png" },
+  { name: "MODERNO Web Development", imagePath: "/images/media/moderno.png" },
+  { name: "BOOSTER", imagePath: "/images/media/booster.png" },
 ];
 
 const sectionLabels = {
