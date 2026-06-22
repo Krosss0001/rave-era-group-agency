@@ -9,6 +9,7 @@
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "test:ecc-page": "node scripts/ecc-page-audit.mjs",
     "test:api": "rm -rf tmp/api-tests && tsc -p tsconfig.api-test.json && node --test tmp/api-tests/api/*.test.js",
+    "test:vercel-functions": "node scripts/vercel-function-count.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
