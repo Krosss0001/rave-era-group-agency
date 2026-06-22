@@ -10,7 +10,7 @@ import {
   getPublicTicket,
   getSafeCallbackSummary,
   toSafePublicTicketResponse,
-} from "./_payment.js";
+} from "../../api/_payment.js";
 
 class MockResponse {
   statusCode = 200;

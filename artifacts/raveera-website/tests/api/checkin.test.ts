@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import adminCheckinHandler from "./admin-checkin.js";
-import handler from "./[...path].js";
+import adminCheckinHandler from "../../api/admin-checkin.js";
+import handler from "../../api/[...path].js";
 import {
   extractTicketCodeFromCheckinInput,
   markCheckinTicketUsedWithDb,
   verifyCheckinTicketWithDb,
   type DbModule,
-} from "./_payment.js";
+} from "../../api/_payment.js";
 
 class MockResponse {
   statusCode = 200;

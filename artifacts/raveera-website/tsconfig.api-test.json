@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["api/**/*.ts"],
+  "include": ["api/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "allowImportingTsExtensions": false,
