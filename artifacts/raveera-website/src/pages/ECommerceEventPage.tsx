@@ -67,11 +67,11 @@ type Speaker = { name: string; company: string; imagePath: string | null };
 type Brand = { name: string; imagePath: string | null };
 
 const speakers: Speaker[] = [
-  { name: "Андрій Гадай", company: "keyCRM", imagePath: null },
-  { name: "Daniel Vibe", company: "LEMON DROP", imagePath: null },
-  { name: "Денис Волосов", company: "THE / DVIZH", imagePath: null },
-  { name: "Максим Щеков", company: "kontora22", imagePath: null },
-  { name: "Артур Booster", company: "BOOSTER", imagePath: null },
+  { name: "Андрій Гадай", company: "keyCRM", imagePath: "/images/speakers/andrii-hadai.jpg" },
+  { name: "Daniel Vibe", company: "LEMON DROP", imagePath: "/images/speakers/daniel-vibe.jpg" },
+  { name: "Денис Волосов", company: "THE / DVIZH", imagePath: "/images/speakers/denys-volosov.jpg" },
+  { name: "Максим Шечков", company: "kontora22", imagePath: "/images/speakers/maksym-shchekov.jpg" },
+  { name: "Артур Booster", company: "BOOSTER", imagePath: "/images/speakers/artur-booster.png" },
 ];
 
 const conferencePartners: Brand[] = [
@@ -670,13 +670,11 @@ export default function ECommerceEventPage() {
             </motion.div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {speakers.map((speaker) => (
-                <motion.article key={speaker.name} data-qa="ecc-speaker-card" variants={fadeUpChild} className="group overflow-hidden border border-white/[0.09] bg-white/[0.025] transition-colors duration-150 hover:border-[#00FF88]/40 hover:bg-[#00FF88]/[0.035]">
-                  <div className="relative aspect-[4/5] overflow-hidden border-b border-white/[0.07] bg-gradient-to-br from-[#00FF88]/[0.11] via-[#101512] to-black">
-                    {speaker.imagePath ? <img src={speaker.imagePath} alt={speaker.name} width="800" height="1000" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : <SpeakerPlaceholder name={speaker.name} />}
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
-                  </div>
-                  <div className="p-5 sm:p-6">
-                    <p className="text-lg font-black uppercase leading-tight tracking-tight text-white">{speaker.name}</p>
+                <motion.article key={speaker.name} data-qa="ecc-speaker-card" variants={fadeUpChild} className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#101512] shadow-[0_0_36px_rgba(0,255,136,0.025)] transition-[border-color,box-shadow] duration-150 hover:border-[#00FF88]/50 hover:shadow-[0_0_42px_rgba(0,255,136,0.11)]">
+                  {speaker.imagePath ? <img src={speaker.imagePath} alt={speaker.name} width="800" height="1000" loading="lazy" decoding="async" className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none" /> : <SpeakerPlaceholder name={speaker.name} />}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                    <p className="text-lg font-black uppercase leading-tight tracking-tight text-white drop-shadow-md">{speaker.name}</p>
                     <p className="mt-2 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#00FF88]">{speaker.company}</p>
                   </div>
                 </motion.article>

@@ -134,6 +134,12 @@ async function assertVisibleContent(page, width, language) {
       speakersTitle: visibleText('[data-qa="ecc-speakers-title"]'),
       speakerCards: document.querySelectorAll('[data-qa="ecc-speaker-card"]').length,
       speakerPlaceholders: document.querySelectorAll('[data-qa="ecc-speaker-placeholder"]').length,
+      speakerImages: [...document.querySelectorAll('[data-qa="ecc-speaker-card"] img')].map((image) => ({
+        src: image.getAttribute("src") || "",
+        loading: image.getAttribute("loading") || "",
+        decoding: image.getAttribute("decoding") || "",
+        className: image.className,
+      })),
       conferencePartnersTitle: visibleText('[data-qa="ecc-conference-partners-title"]'),
       conferencePartnerCards: document.querySelectorAll('[data-qa="ecc-conference-partner-card"]').length,
       conferencePartnerPlaceholders: document.querySelectorAll('[data-qa="ecc-conference-partner-placeholder"]').length,
@@ -202,6 +208,13 @@ async function assertVisibleContent(page, width, language) {
   assert(result.leaderCards === 8, `${width}px ${language}: expected 8 market leader cards, found ${result.leaderCards}`);
   assert(result.speakerCards === 5, `${width}px ${language}: expected 5 speaker cards, found ${result.speakerCards}`);
   assert(result.speakerPlaceholders === 3, `${width}px ${language}: expected 3 speaker placeholders, found ${result.speakerPlaceholders}`);
+  assert(result.speakerImages.length === 5, `${width}px ${language}: expected 5 speaker images, found ${result.speakerImages.length}`);
+  for (const imagePath of ["andrii-hadai.jpg", "daniel-vibe.jpg", "denys-volosov.jpg", "maksym-shchekov.jpg", "artur-booster.png"]) {
+    const image = result.speakerImages.find(({ src }) => src.endsWith(`/images/speakers/${imagePath}`));
+    assert(image, `${width}px ${language}: missing speaker image ${imagePath}`);
+    assert(image.loading === "lazy" && image.decoding === "async", `${width}px ${language}: speaker image loading attributes mismatch`);
+    assert(image.className.includes("object-cover") && image.className.includes("object-center"), `${width}px ${language}: speaker image fit mismatch`);
+  }
   assert(result.conferencePartnerCards === 8, `${width}px ${language}: expected 8 conference partners, found ${result.conferencePartnerCards}`);
   assert(result.conferencePartnerPlaceholders === 4, `${width}px ${language}: expected 4 conference partner placeholders, found ${result.conferencePartnerPlaceholders}`);
   assert(result.mediaPartnerCards === 3, `${width}px ${language}: expected 3 media partners, found ${result.mediaPartnerCards}`);
