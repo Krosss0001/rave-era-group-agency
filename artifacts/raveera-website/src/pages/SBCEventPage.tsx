@@ -372,12 +372,9 @@ export default function SBCEventPage() {
 
               {/* CTAs */}
               <motion.div variants={fadeUpChild} className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10 sm:mb-14">
-                <a href="/event/sbc-summit-ukraine-2026/ticket-form?type=business" className="group relative overflow-hidden px-6 sm:px-8 py-3.5 sm:py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-black" style={{ background: G }}>
-                  <span className="relative z-10 flex items-center gap-2">
-                    {t.buyTicket} <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                  </span>
-                  <motion.div className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
-                </a>
+                <p className="px-6 sm:px-8 py-3.5 sm:py-4 font-bold text-xs sm:text-sm uppercase tracking-widest text-amber-200 border border-amber-300/30 bg-amber-300/[0.06]">
+                  {lang === "uk" ? "Продаж квитків на цю подію завершено." : "Ticket sales for this event are closed."}
+                </p>
                 <a href="#program" className="inline-flex min-h-10 items-center text-xs sm:text-sm font-semibold uppercase tracking-widest text-white/30 hover:text-white transition-colors border-b border-white/10 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">
                   {t.viewProgram}
                 </a>
@@ -600,17 +597,9 @@ export default function SBCEventPage() {
                       </li>
                     ))}
                   </ul>
-                  <a
-                    href={`/event/sbc-summit-ukraine-2026/ticket-form?type=${tier.key}`}
-                    className={`w-full text-center py-3 sm:py-3.5 font-bold text-xs sm:text-sm uppercase tracking-widest transition-colors ${
-                      tier.popular
-                        ? "text-black hover:bg-white"
-                        : "text-white/70 hover:text-white border border-white/10 hover:border-[#00FF88]/30"
-                    }`}
-                    style={tier.popular ? { background: G } : {}}
-                  >
-                    {t.buyTicket}
-                  </a>
+                  <p className="w-full text-center py-3 sm:py-3.5 font-bold text-xs sm:text-sm uppercase tracking-widest text-amber-200 border border-amber-300/30 bg-amber-300/[0.06]">
+                    {lang === "uk" ? "Продаж квитків на цю подію завершено." : "Ticket sales for this event are closed."}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -766,11 +755,9 @@ export default function SBCEventPage() {
               {t.ctaTitle}
             </motion.h2>
             <motion.div variants={fadeUpChild}>
-              <a href="/event/sbc-summit-ukraine-2026/ticket-form?type=business" className="group relative overflow-hidden inline-flex items-center gap-2 px-8 sm:px-10 py-4 sm:py-5 font-bold text-xs sm:text-sm uppercase tracking-widest text-black" style={{ background: G }}>
-                <span className="relative z-10">{t.buyTicket}</span>
-                <ArrowRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
-                <motion.div className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: 0 }} transition={{ duration: 0.28, ease: "easeOut" }} />
-              </a>
+              <p className="inline-flex items-center px-8 sm:px-10 py-4 sm:py-5 font-bold text-xs sm:text-sm uppercase tracking-widest text-amber-200 border border-amber-300/30 bg-amber-300/[0.06]">
+                {lang === "uk" ? "Продаж квитків на цю подію завершено." : "Ticket sales for this event are closed."}
+              </p>
             </motion.div>
           </motion.div>
         </div>

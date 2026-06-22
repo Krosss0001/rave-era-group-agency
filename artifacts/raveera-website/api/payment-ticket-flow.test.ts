@@ -9,6 +9,7 @@ import {
   getEmailConfigCheck,
   getPublicTicket,
   getSafeCallbackSummary,
+  toSafePublicTicketResponse,
 } from "./_payment.js";
 
 class MockResponse {
@@ -56,6 +57,23 @@ test("invalid public ticket codes are rejected before database access", async ()
   await getPublicTicket("not-a-ticket", response as never);
   assert.equal(response.statusCode, 400);
   assert.equal(JSON.parse(response.body).code, "INVALID_TICKET_CODE");
+});
+
+test("public ticket API contract includes event metadata without payment data or customer PII", () => {
+  const ticket = toSafePublicTicketResponse({
+    id: 2, ticket_code: "ECC-2026-ABCDEF123456", order_id: 2, merchant_request_id: "merchant-ecc", hpp_order_id: "hpp-ecc",
+    event_slug: "e-commerce-conference-2026", event_title: "E-Commerce Conference 2026", ticket_type: "vip",
+    customer_email: "buyer@example.com", customer_first_name: "Olena", customer_last_name: "Kyivska", status: "ACTIVE",
+    qr_payload: "https://www.rave-era.com.ua/ticket/ECC-2026-ABCDEF123456", issued_at: new Date("2026-10-01T10:00:00Z"),
+  });
+  assert.deepEqual(ticket, {
+    ticketCode: "ECC-2026-ABCDEF123456", eventTitle: "E-Commerce Conference 2026", eventSlug: "e-commerce-conference-2026",
+    eventDateTime: "2026-10-06T09:30:00+03:00", eventVenue: "КВЦ Парковий, Київ", eventHref: "/event/e-commerce-conference-2026",
+    ticketType: "vip", status: "ACTIVE", issuedAt: new Date("2026-10-01T10:00:00Z"),
+  });
+  for (const forbiddenField of ["customerName", "customerEmail", "customer_first_name", "customer_last_name", "amount", "currency", "qrPayload"]) {
+    assert.equal(forbiddenField in ticket, false, `${forbiddenField} must not be public`);
+  }
 });
 
 test("migration enforces idempotent one-ticket-per-order issuance", () => {

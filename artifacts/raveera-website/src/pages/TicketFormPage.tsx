@@ -63,13 +63,13 @@ const ecommerceTiers: Record<"online" | "standard" | "vip" | "corporate", Ticket
   },
   standard: {
     name: "STANDARD",
-    price: "1 800 UAH",
+    price: "2 100 UAH",
     scope: "Conference attendance, expo zone, networking zone, private Telegram chat and post-event photo/video report.",
     payment: true,
   },
   vip: {
     name: "VIP + AFTERPARTY",
-    price: "4 000 UAH",
+    price: "5 500 UAH",
     scope: "VIP registration, front-row reserved seating, expo access, VIP Lounge, afterparty with premium catering/bar and personal parking.",
     payment: true,
   },
@@ -111,6 +111,7 @@ const text = {
     corporateTitle: "Корпоративні квитки",
     corporateCopy: "Для оплати від юридичної особи організатор підготує договір, рахунок, акти та умови групового замовлення.",
     corporateCta: "Запитати корпоративний рахунок",
+    salesClosed: "Продаж квитків на цю подію завершено.",
   },
   en: {
     back: "Back",
@@ -141,6 +142,7 @@ const text = {
     corporateTitle: "Corporate tickets",
     corporateCopy: "For legal entity payment, the organizer prepares the contract, invoice, acts and group order terms.",
     corporateCta: "Request corporate invoice",
+    salesClosed: "Ticket sales for this event are closed.",
   },
 };
 
@@ -187,6 +189,7 @@ export default function TicketFormPage() {
   const normalizedTicketType = allowedTicketTypes.includes(ticketType) ? ticketType : allowedTicketTypes[0];
   const tier = activeTiers[normalizedTicketType as keyof typeof activeTiers];
   const isCorporate = eventSlug === "e-commerce-conference-2026" && normalizedTicketType === "corporate";
+  const isSalesClosed = eventSlug === "sbc-summit-ukraine-2026";
 
   useEffect(() => {
     document.title = `${event.title} | Ticket request | RAVE'ERA GROUP`;
@@ -286,7 +289,7 @@ export default function TicketFormPage() {
           <p className="mb-3 text-xs font-mono uppercase tracking-[0.2em] text-[#00FF88]">{event.title}</p>
           <p className="text-sm text-white/45 leading-relaxed mb-8">{t.subtitle}</p>
 
-          {!isCorporate && <div className="mb-8 border border-[#00FF88]/20 bg-[#00FF88]/[0.03] p-4 sm:p-5">
+          {!isSalesClosed && !isCorporate && <div className="mb-8 border border-[#00FF88]/20 bg-[#00FF88]/[0.03] p-4 sm:p-5">
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" style={{ color: G }} />
               <div>
@@ -298,7 +301,11 @@ export default function TicketFormPage() {
             <PaymentLogos />
           </div>}
 
-          <form onSubmit={onSubmit} className="space-y-6" noValidate>
+          {isSalesClosed ? (
+            <div role="status" className="border border-amber-300/30 bg-amber-300/[0.06] p-5 text-center text-sm font-semibold text-amber-100">
+              {t.salesClosed}
+            </div>
+          ) : <form onSubmit={onSubmit} className="space-y-6" noValidate>
             <fieldset>
               <legend className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/35 mb-3">
                 <Ticket className="w-3 h-3" style={{ color: G }} />
@@ -382,7 +389,7 @@ export default function TicketFormPage() {
                 <p className="text-xs leading-relaxed mb-4">{t.submitNote}</p>
               </div>
             )}
-          </form>
+          </form>}
           <div className="mt-8 flex flex-wrap justify-center gap-3 border-t border-white/[0.06] pt-5 text-xs">
             <Link href="/contacts" className="inline-flex min-h-10 items-center text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.contacts}</Link>
             <Link href="/public-offer" className="inline-flex min-h-10 items-center text-[#00FF88] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00FF88]">{t.offer}</Link>

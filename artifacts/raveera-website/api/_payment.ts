@@ -128,8 +128,8 @@ const eventConfigs: Record<EventSlug, EventConfig> = {
     paymentPath: EVENT_PAYMENT_PATH,
     pdfDate: "27 травня 2026",
     pdfVenue: "КВЦ Парковий, Київ",
-    publicDateTime: "27 травня 2026, 09:30-23:00",
-    publicVenue: "КВЦ «Парковий», Київ",
+    publicDateTime: "2026-05-27T09:30:00+03:00",
+    publicVenue: "КВЦ Парковий, Київ",
   },
   "e-commerce-conference-2026": {
     slug: "e-commerce-conference-2026",
@@ -138,8 +138,8 @@ const eventConfigs: Record<EventSlug, EventConfig> = {
     paymentPath: "/event/e-commerce-conference-2026/payment",
     pdfDate: "6 жовтня 2026",
     pdfVenue: "КВЦ Парковий, Київ",
-    publicDateTime: "6 жовтня 2026",
-    publicVenue: "КВЦ «Парковий», Київ",
+    publicDateTime: "2026-10-06T09:30:00+03:00",
+    publicVenue: "КВЦ Парковий, Київ",
   },
 };
 const require = createRequire(import.meta.url);
@@ -158,14 +158,18 @@ export const ticketPrices: Record<EventSlug, Partial<Record<PaymentTicketType, n
   },
   "e-commerce-conference-2026": {
     online: 150000,
-    standard: 180000,
-    vip: 400000,
+    standard: 210000,
+    vip: 550000,
   },
 };
 
 export function getTicketPrice(eventSlug: string | null | undefined, ticketType: string): number {
   const eventConfig = getEventConfig(eventSlug);
   return ticketPrices[eventConfig.slug][ticketType as PaymentTicketType] || 0;
+}
+
+export function isEventSalesClosed(eventSlug: string): boolean {
+  return eventSlug === "sbc-summit-ukraine-2026";
 }
 
 const createOrderBodySchema = z.object({
@@ -1466,6 +1470,21 @@ function toSafeTicketResponse(ticket: TicketRecord): Record<string, unknown> {
   };
 }
 
+export function toSafePublicTicketResponse(ticket: TicketRecord): Record<string, unknown> {
+  const eventConfig = getEventConfig(ticket.event_slug);
+  return {
+    ticketCode: ticket.ticket_code,
+    eventTitle: ticket.event_title,
+    eventSlug: eventConfig.slug,
+    eventDateTime: eventConfig.publicDateTime,
+    eventVenue: eventConfig.publicVenue,
+    eventHref: `/event/${eventConfig.slug}`,
+    ticketType: ticket.ticket_type,
+    status: ticket.status,
+    issuedAt: ticket.issued_at,
+  };
+}
+
 const checkinAttempts = new Map<string, { count: number; resetAt: number }>();
 const CHECKIN_COOKIE_NAME = "raveera_checkin";
 const CHECKIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -1863,6 +1882,13 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     return;
   }
 
+  const { eventSlug, ticketType, firstName, lastName, email, phone } = parsedBody;
+  const eventConfig = getEventConfig(eventSlug);
+  if (isEventSalesClosed(eventConfig.slug)) {
+    sendJson(res, 410, { code: "EVENT_SALES_CLOSED", error: "Ticket sales for this event are closed" });
+    return;
+  }
+
   const missingConfig = getMissingPaymentConfig();
   if (missingConfig.length > 0) {
     console.error("Payment configuration missing", { missingConfig });
@@ -1909,8 +1935,6 @@ export async function createOrder(req: VercelApiRequest, res: ServerResponse): P
     return;
   }
 
-  const { eventSlug, ticketType, firstName, lastName, email, phone } = parsedBody;
-  const eventConfig = getEventConfig(eventSlug);
   const coinAmount = getTicketPrice(eventConfig.slug, ticketType);
   if (!coinAmount) {
     sendJson(res, 400, { code: "INVALID_REQUEST", error: "Unknown ticket type" });
@@ -2225,11 +2249,6 @@ export async function getPaymentStatus(req: VercelApiRequest, res: ServerRespons
   }
 }
 
-function maskCustomerName(firstName: string, lastName: string): string {
-  const mask = (value: string) => value ? `${value[0]}${"*".repeat(Math.max(1, value.length - 1))}` : "";
-  return `${mask(firstName)} ${mask(lastName)}`.trim();
-}
-
 function isValidTicketCode(ticketCode: string): boolean {
   return /^(?:SBC|ECC)-2026-[A-F0-9]{12}$/.test(ticketCode);
 }
@@ -2251,14 +2270,7 @@ export async function getPublicTicket(ticketCode: string, res: ServerResponse): 
 
     sendJson(res, 200, {
       ok: true,
-      ticket: {
-        ticketCode: ticket.ticket_code,
-        eventTitle: ticket.event_title,
-        ticketType: ticket.ticket_type,
-        customerName: maskCustomerName(ticket.customer_first_name, ticket.customer_last_name),
-        status: ticket.status,
-        issuedAt: ticket.issued_at,
-      },
+      ticket: toSafePublicTicketResponse(ticket),
     });
   } catch (err) {
     console.error("Public ticket lookup failed", {

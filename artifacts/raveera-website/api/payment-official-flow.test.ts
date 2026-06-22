@@ -9,6 +9,7 @@ import {
   createOrder,
   getEventConfig,
   getTicketPrice,
+  isEventSalesClosed,
   ticketPrices,
 } from "./_payment.js";
 
@@ -71,16 +72,16 @@ test("ticket prices preserve SBC prices while adding E-Commerce formats", () => 
     },
     "e-commerce-conference-2026": {
       online: 150000,
-      standard: 180000,
-      vip: 400000,
+      standard: 210000,
+      vip: 550000,
     },
   });
   assert.equal(getTicketPrice("sbc-summit-ukraine-2026", "online"), 100);
   assert.equal(getTicketPrice("sbc-summit-ukraine-2026", "sport"), 250000);
   assert.equal(getTicketPrice("sbc-summit-ukraine-2026", "business"), 650000);
   assert.equal(getTicketPrice("e-commerce-conference-2026", "online"), 150000);
-  assert.equal(getTicketPrice("e-commerce-conference-2026", "standard"), 180000);
-  assert.equal(getTicketPrice("e-commerce-conference-2026", "vip"), 400000);
+  assert.equal(getTicketPrice("e-commerce-conference-2026", "standard"), 210000);
+  assert.equal(getTicketPrice("e-commerce-conference-2026", "vip"), 550000);
   assert.equal(getTicketPrice("e-commerce-conference-2026", "corporate"), 0);
 });
 
@@ -92,8 +93,8 @@ test("event production metadata preserves SBC and configures E-Commerce launch d
     paymentPath: "/event/sbc-summit-ukraine-2026/payment",
     pdfDate: "27 травня 2026",
     pdfVenue: "КВЦ Парковий, Київ",
-    publicDateTime: "27 травня 2026, 09:30-23:00",
-    publicVenue: "КВЦ «Парковий», Київ",
+    publicDateTime: "2026-05-27T09:30:00+03:00",
+    publicVenue: "КВЦ Парковий, Київ",
   });
   assert.deepEqual(getEventConfig("e-commerce-conference-2026"), {
     slug: "e-commerce-conference-2026",
@@ -102,8 +103,8 @@ test("event production metadata preserves SBC and configures E-Commerce launch d
     paymentPath: "/event/e-commerce-conference-2026/payment",
     pdfDate: "6 жовтня 2026",
     pdfVenue: "КВЦ Парковий, Київ",
-    publicDateTime: "6 жовтня 2026",
-    publicVenue: "КВЦ «Парковий», Київ",
+    publicDateTime: "2026-10-06T09:30:00+03:00",
+    publicVenue: "КВЦ Парковий, Київ",
   });
 });
 
@@ -136,7 +137,7 @@ test("failed E-Commerce payment status does not issue a ticket", async () => {
       event_slug: "e-commerce-conference-2026",
       event_title: "E-Commerce Conference 2026",
       ticket_type: "standard",
-      amount_kopiykas: 180000,
+      amount_kopiykas: 210000,
       currency: "UAH",
       status: "PENDING",
       payment_status: "PENDING",
@@ -170,4 +171,18 @@ test("E-Commerce corporate tickets are not accepted as direct payment tickets", 
 
   assert.equal(response.statusCode, 400);
   assert.equal(JSON.parse(response.body).code, "INVALID_REQUEST");
+});
+
+test("SBC order creation is closed before payment configuration or database access", async () => {
+  assert.equal(isEventSalesClosed("sbc-summit-ukraine-2026"), true);
+  assert.equal(isEventSalesClosed("e-commerce-conference-2026"), false);
+
+  const response = new MockResponse();
+  await createOrder({
+    body: { eventSlug: "sbc-summit-ukraine-2026", ticketType: "business", firstName: "Test", lastName: "Buyer", email: "buyer@example.com", phone: "+380934307551" },
+    headers: {}, socket: {},
+  } as never, response as never);
+
+  assert.equal(response.statusCode, 410);
+  assert.deepEqual(JSON.parse(response.body), { code: "EVENT_SALES_CLOSED", error: "Ticket sales for this event are closed" });
 });

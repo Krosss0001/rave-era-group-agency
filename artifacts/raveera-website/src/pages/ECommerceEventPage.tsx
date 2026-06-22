@@ -57,8 +57,8 @@ const fadeUpChild = {
 
 const tickets: Array<{ key: TicketKey; name: LocalizedText; price: string; popular?: boolean; premium?: boolean; corporate?: boolean }> = [
   { key: "online", name: { uk: "ONLINE", en: "ONLINE" }, price: "1 500" },
-  { key: "standard", name: { uk: "STANDARD", en: "STANDARD" }, price: "1 800", popular: true },
-  { key: "vip", name: { uk: "VIP + AFTERPARTY", en: "VIP + AFTERPARTY" }, price: "4 000", premium: true },
+  { key: "standard", name: { uk: "STANDARD", en: "STANDARD" }, price: "2 100", popular: true },
+  { key: "vip", name: { uk: "VIP + AFTERPARTY", en: "VIP + AFTERPARTY" }, price: "5 500", premium: true },
   { key: "corporate", name: { uk: "КОРПОРАТИВНІ КВИТКИ", en: "CORPORATE" }, price: "INVOICE", corporate: true },
 ];
 
@@ -1165,7 +1165,7 @@ function setEventJsonLd(description: string) {
       {
         "@type": "Offer",
         name: "STANDARD",
-        price: "1800",
+        price: "2100",
         priceCurrency: "UAH",
         availability: "https://schema.org/InStock",
         url: `${canonical}/ticket-form?type=standard`,
@@ -1173,7 +1173,7 @@ function setEventJsonLd(description: string) {
       {
         "@type": "Offer",
         name: "VIP + AFTERPARTY",
-        price: "4000",
+        price: "5500",
         priceCurrency: "UAH",
         availability: "https://schema.org/InStock",
         url: `${canonical}/ticket-form?type=vip`,

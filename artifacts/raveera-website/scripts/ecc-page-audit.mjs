@@ -128,6 +128,7 @@ async function assertVisibleContent(page, width, language) {
       hero: visibleText("h1"),
       ticketsTitle: visibleText('[data-qa="ecc-ticket-card"]'),
       ticketCards: document.querySelectorAll('[data-qa="ecc-ticket-card"]').length,
+      ticketCardText: [...document.querySelectorAll('[data-qa="ecc-ticket-card"]')].map((card) => card.textContent?.trim() || ""),
       ticketFeatures: document.querySelectorAll('[data-qa="ecc-ticket-feature"]').length,
       leaderCards: document.querySelectorAll('[data-qa="ecc-leader-card"]').length,
       topicChips: [...document.querySelectorAll('[data-qa="ecc-topic-chip"]')].map((chip) => ({
@@ -183,6 +184,10 @@ async function assertVisibleContent(page, width, language) {
 
   assert(result.hero.includes("E-COMMERCE CONFERENCE 2026"), `${width}px ${language}: hero text missing`);
   assert(result.ticketCards === 4, `${width}px ${language}: expected 4 ticket cards, found ${result.ticketCards}`);
+  for (const price of ["1 500", "2 100", "5 500"]) {
+    assert(result.ticketCardText.some((text) => text.includes(price)), `${width}px ${language}: missing ECC price ${price}`);
+  }
+  assert(result.ticketCardText.every((text) => !text.includes("1 800") && !text.includes("4 000")), `${width}px ${language}: stale ECC price displayed`);
   assert(result.ticketFeatures === 21, `${width}px ${language}: expected 21 ticket benefits, found ${result.ticketFeatures}`);
   assert(result.leaderCards === 8, `${width}px ${language}: expected 8 market leader cards, found ${result.leaderCards}`);
   assert(result.topicChips.length === 39, `${width}px ${language}: expected 39 topic chips, found ${result.topicChips.length}`);
@@ -398,21 +403,19 @@ try {
             ticketCode: "ECC-2026-ABCDEF123456",
             eventTitle: "E-Commerce Conference 2026",
             eventSlug: "e-commerce-conference-2026",
-            eventDateTime: "6 жовтня 2026",
-            eventVenue: "КВЦ «Парковий», Київ",
+            eventDateTime: "2026-10-06T09:30:00+03:00",
+            eventVenue: "КВЦ Парковий, Київ",
             eventHref: "/event/e-commerce-conference-2026",
             ticketType: "vip",
-            customerName: "Test Buyer",
             status: "ACTIVE",
-            qrPayload: "https://www.rave-era.com.ua/ticket/ECC-2026-ABCDEF123456",
             issuedAt: "2026-10-01T10:00:00.000Z",
           },
         }),
       });
     });
     await page.goto(`${baseUrl}/ticket/ECC-2026-ABCDEF123456`, { waitUntil: "domcontentloaded" });
-    await page.getByText("6 жовтня 2026").waitFor();
-    assert(await page.getByText("КВЦ «Парковий», Київ").isVisible(), `${width}px: ECC ticket venue missing`);
+    await page.getByText("2026-10-06T09:30:00+03:00").waitFor();
+    assert(await page.getByText("КВЦ Парковий, Київ").isVisible(), `${width}px: ECC ticket venue missing`);
     assert(
       (await page.locator("nav a").first().getAttribute("href")) === eccPath,
       `${width}px: ECC ticket back link mismatch`,
