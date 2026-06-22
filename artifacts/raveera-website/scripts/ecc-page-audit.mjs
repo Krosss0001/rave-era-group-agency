@@ -131,6 +131,16 @@ async function assertVisibleContent(page, width, language) {
       ticketCardText: [...document.querySelectorAll('[data-qa="ecc-ticket-card"]')].map((card) => card.textContent?.trim() || ""),
       ticketFeatures: document.querySelectorAll('[data-qa="ecc-ticket-feature"]').length,
       leaderCards: document.querySelectorAll('[data-qa="ecc-leader-card"]').length,
+      speakersTitle: visibleText('[data-qa="ecc-speakers-title"]'),
+      speakerCards: document.querySelectorAll('[data-qa="ecc-speaker-card"]').length,
+      speakerPlaceholders: document.querySelectorAll('[data-qa="ecc-speaker-placeholder"]').length,
+      conferencePartnersTitle: visibleText('[data-qa="ecc-conference-partners-title"]'),
+      conferencePartnerCards: document.querySelectorAll('[data-qa="ecc-conference-partner-card"]').length,
+      conferencePartnerPlaceholders: document.querySelectorAll('[data-qa="ecc-conference-partner-placeholder"]').length,
+      conferencePartnerHref: document.querySelector('[data-qa="ecc-conference-partners-link"]')?.getAttribute("href") || "",
+      mediaPartnersTitle: visibleText('[data-qa="ecc-media-partners-title"]'),
+      mediaPartnerCards: document.querySelectorAll('[data-qa="ecc-media-partner-card"]').length,
+      mediaPartnerPlaceholders: document.querySelectorAll('[data-qa="ecc-media-partner-placeholder"]').length,
       topicChips: [...document.querySelectorAll('[data-qa="ecc-topic-chip"]')].map((chip) => ({
         id: chip.getAttribute("data-topic-id") || "",
         label: chip.textContent?.trim() || "",
@@ -190,6 +200,16 @@ async function assertVisibleContent(page, width, language) {
   assert(result.ticketCardText.every((text) => !text.includes("1 800") && !text.includes("4 000")), `${width}px ${language}: stale ECC price displayed`);
   assert(result.ticketFeatures === 21, `${width}px ${language}: expected 21 ticket benefits, found ${result.ticketFeatures}`);
   assert(result.leaderCards === 8, `${width}px ${language}: expected 8 market leader cards, found ${result.leaderCards}`);
+  assert(result.speakerCards === 5, `${width}px ${language}: expected 5 speaker cards, found ${result.speakerCards}`);
+  assert(result.speakerPlaceholders === 3, `${width}px ${language}: expected 3 speaker placeholders, found ${result.speakerPlaceholders}`);
+  assert(result.conferencePartnerCards === 8, `${width}px ${language}: expected 8 conference partners, found ${result.conferencePartnerCards}`);
+  assert(result.conferencePartnerPlaceholders === 4, `${width}px ${language}: expected 4 conference partner placeholders, found ${result.conferencePartnerPlaceholders}`);
+  assert(result.mediaPartnerCards === 3, `${width}px ${language}: expected 3 media partners, found ${result.mediaPartnerCards}`);
+  assert(result.mediaPartnerPlaceholders === 5, `${width}px ${language}: expected 5 media partner placeholders, found ${result.mediaPartnerPlaceholders}`);
+  assert(result.conferencePartnerHref === "https://t.me/bogdan_chekan", `${width}px ${language}: conference partner CTA link mismatch`);
+  assert(result.speakersTitle === (language === "UA" ? "Експерти конференції" : "Conference Experts"), `${width}px ${language}: speakers localization mismatch`);
+  assert(result.conferencePartnersTitle === (language === "UA" ? "Партнери конференції" : "Conference Partners"), `${width}px ${language}: conference partners localization mismatch`);
+  assert(result.mediaPartnersTitle === (language === "UA" ? "Медіа партнери" : "Media Partners"), `${width}px ${language}: media partners localization mismatch`);
   assert(result.topicChips.length === 39, `${width}px ${language}: expected 39 topic chips, found ${result.topicChips.length}`);
   assert(
     JSON.stringify(result.topicChips.map(({ id, label }) => [id, label])) === JSON.stringify(expectedTopics[language]),

@@ -13,6 +13,7 @@ import {
   Globe,
   MapPin,
   Mic2,
+  Newspaper,
   PackageCheck,
   ShoppingBag,
   Ticket,
@@ -60,6 +61,34 @@ const tickets: Array<{ key: TicketKey; name: LocalizedText; price: string; popul
   { key: "standard", name: { uk: "STANDARD", en: "STANDARD" }, price: "2 100", popular: true },
   { key: "vip", name: { uk: "VIP + AFTERPARTY", en: "VIP + AFTERPARTY" }, price: "5 500", premium: true },
   { key: "corporate", name: { uk: "КОРПОРАТИВНІ КВИТКИ", en: "CORPORATE" }, price: "INVOICE", corporate: true },
+];
+
+type Speaker = { name: string; company: string; imagePath: string | null };
+type Brand = { name: string; imagePath: string | null };
+
+const speakers: Speaker[] = [
+  { name: "Андрій Гадай", company: "keyCRM", imagePath: null },
+  { name: "Daniel Vibe", company: "LEMON DROP", imagePath: null },
+  { name: "Денис Волосов", company: "THE / DVIZH", imagePath: null },
+  { name: "Максим Щеков", company: "kontora22", imagePath: null },
+  { name: "Артур Booster", company: "BOOSTER", imagePath: null },
+];
+
+const conferencePartners: Brand[] = [
+  { name: "LEMON DROP", imagePath: null },
+  { name: "keyCRM", imagePath: null },
+  { name: "KEEP CALL", imagePath: null },
+  { name: "PRICER24", imagePath: null },
+  { name: "RavePass", imagePath: null },
+  { name: "Business Club", imagePath: null },
+  { name: "tv7.studio", imagePath: null },
+  { name: "InfoVision", imagePath: null },
+];
+
+const mediaPartners: Brand[] = [
+  { name: "MODERNO", imagePath: null },
+  { name: "kontora22", imagePath: null },
+  { name: "BOOSTER", imagePath: null },
 ];
 
 const sectionLabels = {
@@ -212,6 +241,15 @@ const contentData = {
       "fulfillment, last mile, повернення і сервіс",
       "performance, CRM/CDP, автоматизація та AI commerce tools",
     ],
+    speakersTitle: "Експерти конференції",
+    speakersSubtitle: "Практики, власники бізнесів та керівники напрямків з топових компаній.",
+    speakerComingSoon: "Спікер очікується",
+    conferencePartnersTitle: "Партнери конференції",
+    conferencePartnersSubtitle: "Компанії, які підтримують розвиток українського eCommerce",
+    becomePartner: "Стати партнером",
+    mediaPartnersTitle: "Медіа партнери",
+    comingSoon: "Очікуємо...",
+    companyPlaceholder: "Ваша компанія може бути тут",
     topicsTitle: "Теми, що визначають наступний цикл eCommerce.",
     topicsText:
       "Практичний фокус на каналах, технологіях і бізнес-моделях, які вже змінюють залучення клієнтів, операції та масштабування.",
@@ -344,6 +382,15 @@ const contentData = {
       "fulfillment, last mile, returns and service",
       "performance, CRM/CDP, automation and AI commerce tools",
     ],
+    speakersTitle: "Conference Experts",
+    speakersSubtitle: "Practitioners, business owners and leaders from top companies.",
+    speakerComingSoon: "Speaker coming soon",
+    conferencePartnersTitle: "Conference Partners",
+    conferencePartnersSubtitle: "Companies supporting the growth of Ukrainian eCommerce",
+    becomePartner: "Become a Partner",
+    mediaPartnersTitle: "Media Partners",
+    comingSoon: "Coming Soon...",
+    companyPlaceholder: "Your company could be here",
     topicsTitle: "Topics shaping the next cycle of eCommerce.",
     topicsText:
       "A practical focus on the channels, technologies and business models already changing customer acquisition, operations and scale.",
@@ -610,6 +657,69 @@ export default function ECommerceEventPage() {
                   <p className="mt-4 text-sm leading-relaxed text-white/48">{t.locationText}</p>
                 </div>
               </motion.div>
+            </div>
+          </motion.div>
+        </Section>
+
+        <Section id="speakers">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
+            <SectionBadge icon={<Mic2 className="h-3.5 w-3.5" />} label={t.speakersTitle} />
+            <motion.div variants={fadeUpChild} className="max-w-2xl">
+              <h2 data-qa="ecc-speakers-title" className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.speakersTitle}</h2>
+              <p className="mt-5 text-sm leading-relaxed text-white/52 sm:text-base">{t.speakersSubtitle}</p>
+            </motion.div>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {speakers.map((speaker) => (
+                <motion.article key={speaker.name} data-qa="ecc-speaker-card" variants={fadeUpChild} className="group overflow-hidden border border-white/[0.09] bg-white/[0.025] transition-colors duration-150 hover:border-[#00FF88]/40 hover:bg-[#00FF88]/[0.035]">
+                  <div className="relative aspect-[4/5] overflow-hidden border-b border-white/[0.07] bg-gradient-to-br from-[#00FF88]/[0.11] via-[#101512] to-black">
+                    {speaker.imagePath ? <img src={speaker.imagePath} alt={speaker.name} width="800" height="1000" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : <SpeakerPlaceholder name={speaker.name} />}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <p className="text-lg font-black uppercase leading-tight tracking-tight text-white">{speaker.name}</p>
+                    <p className="mt-2 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#00FF88]">{speaker.company}</p>
+                  </div>
+                </motion.article>
+              ))}
+              {Array.from({ length: 3 }, (_, index) => (
+                <motion.article key={`speaker-placeholder-${index}`} data-qa="ecc-speaker-placeholder" variants={fadeUpChild} className="flex min-h-[300px] flex-col justify-end border border-dashed border-white/[0.14] bg-white/[0.012] p-5 sm:p-6">
+                  <span className="mb-auto h-10 w-10 border border-[#00FF88]/25 bg-[#00FF88]/[0.04]" aria-hidden="true" />
+                  <p className="text-base font-black uppercase tracking-tight text-white/52">{t.speakerComingSoon}</p>
+                  <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-white/25">ECC-2026</p>
+                </motion.article>
+              ))}
+            </div>
+          </motion.div>
+        </Section>
+
+        <Section id="conference-partners">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
+            <SectionBadge icon={<Users className="h-3.5 w-3.5" />} label={t.conferencePartnersTitle} />
+            <motion.div variants={fadeUpChild} className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
+                <h2 data-qa="ecc-conference-partners-title" className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.conferencePartnersTitle}</h2>
+                <p className="mt-5 text-sm leading-relaxed text-white/52 sm:text-base">{t.conferencePartnersSubtitle}</p>
+              </div>
+              <a data-qa="ecc-conference-partners-link" href="https://t.me/bogdan_chekan" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 border border-[#00FF88]/45 bg-[#00FF88] px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-black transition-colors duration-150 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00FF88]">
+                {t.becomePartner}<ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </motion.div>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {conferencePartners.map((partner) => <BrandCard key={partner.name} brand={partner} qa="ecc-conference-partner-card" />)}
+              {Array.from({ length: 4 }, (_, index) => <BrandPlaceholderCard key={`partner-placeholder-${index}`} qa="ecc-conference-partner-placeholder" title={t.comingSoon} copy={t.companyPlaceholder} />)}
+            </div>
+          </motion.div>
+        </Section>
+
+        <Section id="media-partners">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
+            <SectionBadge icon={<Newspaper className="h-3.5 w-3.5" />} label={t.mediaPartnersTitle} />
+            <motion.div variants={fadeUpChild} className="max-w-2xl">
+              <h2 data-qa="ecc-media-partners-title" className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.mediaPartnersTitle}</h2>
+            </motion.div>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {mediaPartners.map((partner) => <BrandCard key={partner.name} brand={partner} qa="ecc-media-partner-card" />)}
+              {Array.from({ length: 5 }, (_, index) => <BrandPlaceholderCard key={`media-placeholder-${index}`} qa="ecc-media-partner-placeholder" title={t.comingSoon} copy={t.companyPlaceholder} />)}
             </div>
           </motion.div>
         </Section>
@@ -1070,6 +1180,29 @@ function SectionBadge({ icon, label }: { icon: ReactNode; label: string }) {
       {icon}
       {label}
     </motion.div>
+  );
+}
+
+function SpeakerPlaceholder({ name }: { name: string }) {
+  const initials = name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+  return <span className="absolute inset-0 flex items-center justify-center text-5xl font-black tracking-tighter text-[#00FF88]/70 sm:text-6xl">{initials}</span>;
+}
+
+function BrandCard({ brand, qa }: { brand: Brand; qa: string }) {
+  return (
+    <motion.article data-qa={qa} variants={fadeUpChild} className="group flex min-h-40 items-center justify-center overflow-hidden border border-white/[0.09] bg-white/[0.025] p-6 text-center transition-colors duration-150 hover:border-[#00FF88]/40 hover:bg-[#00FF88]/[0.035] sm:min-h-44">
+      {brand.imagePath ? <img src={brand.imagePath} alt={brand.name} width="640" height="360" loading="lazy" decoding="async" className="max-h-20 w-auto max-w-full object-contain" /> : <span className="break-words text-xl font-black uppercase leading-tight tracking-tighter text-white/85 sm:text-2xl">{brand.name}</span>}
+    </motion.article>
+  );
+}
+
+function BrandPlaceholderCard({ qa, title, copy }: { qa: string; title: string; copy: string }) {
+  return (
+    <motion.article data-qa={qa} variants={fadeUpChild} className="flex min-h-40 flex-col justify-end border border-dashed border-white/[0.14] bg-white/[0.012] p-5 sm:min-h-44 sm:p-6">
+      <span className="mb-auto h-8 w-8 border border-[#00FF88]/25 bg-[#00FF88]/[0.04]" aria-hidden="true" />
+      <p className="text-sm font-black uppercase tracking-tight text-white/55">{title}</p>
+      <p className="mt-2 text-xs leading-relaxed text-white/30">{copy}</p>
+    </motion.article>
   );
 }
 
