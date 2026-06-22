@@ -143,6 +143,12 @@ async function assertVisibleContent(page, width, language) {
       conferencePartnersTitle: visibleText('[data-qa="ecc-conference-partners-title"]'),
       conferencePartnerCards: document.querySelectorAll('[data-qa="ecc-conference-partner-card"]').length,
       conferencePartnerPlaceholders: document.querySelectorAll('[data-qa="ecc-conference-partner-placeholder"]').length,
+      conferencePartnerImages: [...document.querySelectorAll('[data-qa="ecc-conference-partner-card"] img')].map((image) => ({
+        src: image.getAttribute("src") || "",
+        loading: image.getAttribute("loading") || "",
+        decoding: image.getAttribute("decoding") || "",
+        className: image.className,
+      })),
       conferencePartnerHref: document.querySelector('[data-qa="ecc-conference-partners-link"]')?.getAttribute("href") || "",
       mediaPartnersTitle: visibleText('[data-qa="ecc-media-partners-title"]'),
       mediaPartnerCards: document.querySelectorAll('[data-qa="ecc-media-partner-card"]').length,
@@ -217,6 +223,13 @@ async function assertVisibleContent(page, width, language) {
   }
   assert(result.conferencePartnerCards === 8, `${width}px ${language}: expected 8 conference partners, found ${result.conferencePartnerCards}`);
   assert(result.conferencePartnerPlaceholders === 4, `${width}px ${language}: expected 4 conference partner placeholders, found ${result.conferencePartnerPlaceholders}`);
+  assert(result.conferencePartnerImages.length === 8, `${width}px ${language}: expected 8 partner logos, found ${result.conferencePartnerImages.length}`);
+  for (const imagePath of ["lemon-drop.png", "keycrm.png", "keep-call.png", "pricer24.png", "ravepass.png", "business-club.png", "tv7-studio.png", "infovision.png"]) {
+    const image = result.conferencePartnerImages.find(({ src }) => src.endsWith(`/images/partners/${imagePath}`));
+    assert(image, `${width}px ${language}: missing partner logo ${imagePath}`);
+    assert(image.loading === "lazy" && image.decoding === "async", `${width}px ${language}: partner logo loading attributes mismatch`);
+    assert(image.className.includes("object-contain"), `${width}px ${language}: partner logo fit mismatch`);
+  }
   assert(result.mediaPartnerCards === 3, `${width}px ${language}: expected 3 media partners, found ${result.mediaPartnerCards}`);
   assert(result.mediaPartnerPlaceholders === 5, `${width}px ${language}: expected 5 media partner placeholders, found ${result.mediaPartnerPlaceholders}`);
   assert(result.conferencePartnerHref === "https://t.me/bogdan_chekan", `${width}px ${language}: conference partner CTA link mismatch`);

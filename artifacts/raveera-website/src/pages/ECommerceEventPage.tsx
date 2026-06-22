@@ -75,14 +75,14 @@ const speakers: Speaker[] = [
 ];
 
 const conferencePartners: Brand[] = [
-  { name: "LEMON DROP", imagePath: null },
-  { name: "keyCRM", imagePath: null },
-  { name: "KEEP CALL", imagePath: null },
-  { name: "PRICER24", imagePath: null },
-  { name: "RavePass", imagePath: null },
-  { name: "Business Club", imagePath: null },
-  { name: "tv7.studio", imagePath: null },
-  { name: "InfoVision", imagePath: null },
+  { name: "LEMON DROP", imagePath: "/images/partners/lemon-drop.png" },
+  { name: "keyCRM", imagePath: "/images/partners/keycrm.png" },
+  { name: "KEEP CALL", imagePath: "/images/partners/keep-call.png" },
+  { name: "PRICER24", imagePath: "/images/partners/pricer24.png" },
+  { name: "RavePass", imagePath: "/images/partners/ravepass.png" },
+  { name: "Business Club", imagePath: "/images/partners/business-club.png" },
+  { name: "tv7.studio", imagePath: "/images/partners/tv7-studio.png" },
+  { name: "InfoVision", imagePath: "/images/partners/infovision.png" },
 ];
 
 const mediaPartners: Brand[] = [
