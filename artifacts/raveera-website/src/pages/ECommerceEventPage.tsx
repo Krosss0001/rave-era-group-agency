@@ -63,15 +63,16 @@ const tickets: Array<{ key: TicketKey; name: LocalizedText; price: string; popul
   { key: "corporate", name: { uk: "КОРПОРАТИВНІ КВИТКИ", en: "CORPORATE" }, price: "INVOICE", corporate: true },
 ];
 
-type Speaker = { name: string; company: string; imagePath: string | null };
+type Speaker = { id: string; name: string; company: string; imagePath: string | null };
 type Brand = { name: string; imagePath: string | null };
 
 const speakers: Speaker[] = [
-  { name: "Андрій Гадай", company: "keyCRM", imagePath: "/images/speakers/andrii-hadai.jpg" },
-  { name: "Daniel Vibe", company: "LEMON DROP", imagePath: "/images/speakers/daniel-vibe.jpg" },
-  { name: "Денис Волосов", company: "THE / DVIZH", imagePath: "/images/speakers/denys-volosov.jpg" },
-  { name: "Максим Шечков", company: "kontora22", imagePath: "/images/speakers/maksym-shchekov.jpg" },
-  { name: "Артур Booster", company: "BOOSTER", imagePath: "/images/speakers/artur-booster.png" },
+  { id: "andrii-hadai", name: "Андрій Гадай", company: "keyCRM", imagePath: "/images/speakers/andrii-hadai.jpg" },
+  { id: "daniel-vibe", name: "Daniel Vibe", company: "LEMON DROP", imagePath: "/images/speakers/daniel-vibe.jpg" },
+  { id: "denys-volosov", name: "Денис Волосов", company: "THE / DVIZH", imagePath: "/images/speakers/denys-volosov.jpg" },
+  { id: "maksym-shchekov", name: "Максим Шечков", company: "kontora22", imagePath: "/images/speakers/maksym-shchekov.jpg" },
+  { id: "artur-booster", name: "Артур Booster", company: "BOOSTER", imagePath: "/images/speakers/artur-booster.png" },
+  { id: "artem-stepanchuk", name: "Артем Степанчук", company: "FAST ENERGY / LIFT", imagePath: "/images/speakers/artem-stepanchuk.jpg" },
 ];
 
 const conferencePartners: Brand[] = [
@@ -684,22 +685,24 @@ export default function ECommerceEventPage() {
         <Section id="speakers">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer}>
             <SectionBadge icon={<Mic2 className="h-3.5 w-3.5" />} label={t.speakersTitle} />
-            <motion.div variants={fadeUpChild} className="max-w-2xl">
+            <motion.div variants={fadeUpChild} className="max-w-2xl border-l border-[#00FF88]/25 pl-4 sm:pl-5">
               <h2 data-qa="ecc-speakers-title" className="text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.speakersTitle}</h2>
-              <p className="mt-5 text-sm leading-relaxed text-white/52 sm:text-base">{t.speakersSubtitle}</p>
+              <p className="mt-4 text-sm leading-relaxed text-white/55 sm:text-base">{t.speakersSubtitle}</p>
             </motion.div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-9 grid gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
               {speakers.map((speaker) => (
-                <motion.article key={speaker.name} data-qa="ecc-speaker-card" variants={fadeUpChild} className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#101512] shadow-[0_0_36px_rgba(0,255,136,0.025)] transition-[border-color,box-shadow] duration-150 hover:border-[#00FF88]/50 hover:shadow-[0_0_42px_rgba(0,255,136,0.11)]">
+                <motion.article key={speaker.id} data-qa="ecc-speaker-card" variants={fadeUpChild} className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/[0.13] bg-[#101512] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_36px_rgba(0,255,136,0.025)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:border-[#00FF88]/55 hover:shadow-[0_12px_42px_rgba(0,0,0,0.38),0_0_42px_rgba(0,255,136,0.12)] motion-reduce:transform-none">
                   {speaker.imagePath ? <img src={speaker.imagePath} alt={speaker.name} width="800" height="1000" loading="lazy" decoding="async" className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none" /> : <SpeakerPlaceholder name={speaker.name} />}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/55 via-35% to-black/5" />
+                  <span className="absolute left-4 top-4 h-2.5 w-2.5 border border-[#00FF88]/65 bg-[#00FF88]/15 shadow-[0_0_12px_rgba(0,255,136,0.25)] sm:left-5 sm:top-5" aria-hidden="true" />
+                  <span className="absolute right-4 top-4 h-px w-8 bg-gradient-to-r from-[#00FF88]/0 to-[#00FF88]/75 sm:right-5 sm:top-5" aria-hidden="true" />
                   <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
                     <p className="text-lg font-black uppercase leading-tight tracking-tight text-white drop-shadow-md">{speaker.name}</p>
-                    <p className="mt-2 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#00FF88]">{speaker.company}</p>
+                    <p className="mt-2 inline-flex border-t border-[#00FF88]/30 pt-2 text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[#b8ffd8]">{speaker.company}</p>
                   </div>
                 </motion.article>
               ))}
-              {Array.from({ length: 3 }, (_, index) => <SpeakerPlaceholderCard key={`speaker-placeholder-${index}`} label={t.speakerComingSoon} />)}
+              {Array.from({ length: 2 }, (_, index) => <SpeakerPlaceholderCard key={`speaker-placeholder-${index}`} label={t.speakerComingSoon} />)}
             </div>
           </motion.div>
         </Section>
@@ -1219,7 +1222,7 @@ function Section({ children, id }: { children: ReactNode; id?: string }) {
 
 function SectionBadge({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <motion.div variants={fadeUpChild} className="mb-6 inline-flex items-center gap-2 border border-[#00FF88]/20 bg-[#00FF88]/[0.05] px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.22em] text-[#00FF88]">
+    <motion.div variants={fadeUpChild} className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#00FF88]/25 bg-[#00FF88]/[0.055] px-3.5 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-[#b8ffd8] shadow-[0_0_18px_rgba(0,255,136,0.045)]">
       {icon}
       {label}
     </motion.div>
@@ -1233,7 +1236,7 @@ function SpeakerPlaceholder({ name }: { name: string }) {
 
 function SpeakerPlaceholderCard({ label }: { label: string }) {
   return (
-    <motion.article data-qa="ecc-speaker-placeholder" variants={fadeUpChild} className="group relative flex min-h-[300px] flex-col justify-end overflow-hidden rounded-2xl border border-dashed border-[#00FF88]/30 bg-[radial-gradient(circle_at_50%_35%,rgba(0,255,136,0.09),transparent_34%),linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.008))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_32px_rgba(0,255,136,0.035)] sm:p-6">
+    <motion.article data-qa="ecc-speaker-placeholder" variants={fadeUpChild} className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl border border-dashed border-[#00FF88]/30 bg-[radial-gradient(circle_at_50%_35%,rgba(0,255,136,0.09),transparent_34%),linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.008))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_32px_rgba(0,255,136,0.035)] sm:p-6">
       <span className="absolute left-5 top-5 h-3 w-3 border border-[#00FF88]/55 bg-[#00FF88]/15 shadow-[0_0_14px_rgba(0,255,136,0.22)]" aria-hidden="true" />
       <span className="absolute left-1/2 top-[27%] h-16 w-16 -translate-x-1/2 rounded-full border border-white/[0.15] bg-gradient-to-b from-white/[0.12] to-white/[0.025] shadow-[0_10px_30px_rgba(0,0,0,0.25)]" aria-hidden="true" />
       <span className="absolute left-1/2 top-[43%] h-20 w-32 -translate-x-1/2 rounded-t-[999px] border border-white/[0.12] bg-gradient-to-b from-white/[0.09] to-transparent" aria-hidden="true" />

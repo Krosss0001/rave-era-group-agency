@@ -134,6 +134,7 @@ async function assertVisibleContent(page, width, language) {
       speakersTitle: visibleText('[data-qa="ecc-speakers-title"]'),
       speakerCards: document.querySelectorAll('[data-qa="ecc-speaker-card"]').length,
       speakerPlaceholders: document.querySelectorAll('[data-qa="ecc-speaker-placeholder"]').length,
+      speakerNames: [...document.querySelectorAll('[data-qa="ecc-speaker-card"] p:first-of-type')].map((name) => name.textContent?.trim() || ""),
       speakerImages: [...document.querySelectorAll('[data-qa="ecc-speaker-card"] img')].map((image) => ({
         src: image.getAttribute("src") || "",
         loading: image.getAttribute("loading") || "",
@@ -223,10 +224,11 @@ async function assertVisibleContent(page, width, language) {
   assert(result.ticketCardText.every((text) => !text.includes("1 800") && !text.includes("4 000")), `${width}px ${language}: stale ECC price displayed`);
   assert(result.ticketFeatures === 21, `${width}px ${language}: expected 21 ticket benefits, found ${result.ticketFeatures}`);
   assert(result.leaderCards === 8, `${width}px ${language}: expected 8 market leader cards, found ${result.leaderCards}`);
-  assert(result.speakerCards === 5, `${width}px ${language}: expected 5 speaker cards, found ${result.speakerCards}`);
-  assert(result.speakerPlaceholders === 3, `${width}px ${language}: expected 3 speaker placeholders, found ${result.speakerPlaceholders}`);
-  assert(result.speakerImages.length === 5, `${width}px ${language}: expected 5 speaker images, found ${result.speakerImages.length}`);
-  for (const imagePath of ["andrii-hadai.jpg", "daniel-vibe.jpg", "denys-volosov.jpg", "maksym-shchekov.jpg", "artur-booster.png"]) {
+  assert(result.speakerCards === 6, `${width}px ${language}: expected 6 speaker cards, found ${result.speakerCards}`);
+  assert(result.speakerPlaceholders === 2, `${width}px ${language}: expected 2 speaker placeholders, found ${result.speakerPlaceholders}`);
+  assert(result.speakerImages.length === 6, `${width}px ${language}: expected 6 speaker images, found ${result.speakerImages.length}`);
+  assert(result.speakerNames.includes("Артем Степанчук"), `${width}px ${language}: Artem Stepanchuk is missing`);
+  for (const imagePath of ["andrii-hadai.jpg", "daniel-vibe.jpg", "denys-volosov.jpg", "maksym-shchekov.jpg", "artur-booster.png", "artem-stepanchuk.jpg"]) {
     const image = result.speakerImages.find(({ src }) => src.endsWith(`/images/speakers/${imagePath}`));
     assert(image, `${width}px ${language}: missing speaker image ${imagePath}`);
     assert(image.loading === "lazy" && image.decoding === "async", `${width}px ${language}: speaker image loading attributes mismatch`);
