@@ -160,6 +160,10 @@ async function assertVisibleContent(page, width, language) {
         decoding: image.getAttribute("decoding") || "",
         className: image.className,
       })),
+      programPreviewTitle: visibleText('[data-qa="ecc-program-preview-title"]'),
+      programPreviewBadge: visibleText('[data-qa="ecc-program-preview-badge"]'),
+      programPreviewRows: document.querySelectorAll('[data-qa="ecc-program-preview-row"]').length,
+      programPreviewHref: document.querySelector('[data-qa="ecc-program-preview-cta"]')?.getAttribute("href") || "",
       topicChips: [...document.querySelectorAll('[data-qa="ecc-topic-chip"]')].map((chip) => ({
         id: chip.getAttribute("data-topic-id") || "",
         label: chip.textContent?.trim() || "",
@@ -240,6 +244,10 @@ async function assertVisibleContent(page, width, language) {
   assert(result.mediaPartnerCards === 3, `${width}px ${language}: expected 3 media partners, found ${result.mediaPartnerCards}`);
   assert(result.mediaPartnerPlaceholders === 5, `${width}px ${language}: expected 5 media partner placeholders, found ${result.mediaPartnerPlaceholders}`);
   assert(result.mediaPartnerImages.length === 3, `${width}px ${language}: expected 3 media partner logos, found ${result.mediaPartnerImages.length}`);
+  assert(result.programPreviewTitle === (language === "UA" ? "Програма заходу" : "Event Program"), `${width}px ${language}: program preview title mismatch`);
+  assert(result.programPreviewBadge === (language === "UA" ? "Програма формується" : "Program is being formed"), `${width}px ${language}: program preview badge mismatch`);
+  assert(result.programPreviewRows === 4, `${width}px ${language}: expected four program preview rows`);
+  assert(result.programPreviewHref === "/event/e-commerce-conference-2026/ticket-form?type=standard", `${width}px ${language}: program preview CTA mismatch`);
   for (const [imagePath, alt] of [["kontora22.png", "kontora22"], ["moderno.png", "MODERNO Web Development"], ["booster.png", "BOOSTER"]]) {
     const image = result.mediaPartnerImages.find(({ src }) => src.endsWith(`/images/media/${imagePath}`));
     assert(image, `${width}px ${language}: missing media logo ${imagePath}`);

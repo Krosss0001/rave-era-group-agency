@@ -250,6 +250,16 @@ const contentData = {
     mediaPartnersTitle: "Медіа партнери",
     comingSoon: "Очікуємо...",
     companyPlaceholder: "Ваша компанія може бути тут",
+    programPreviewTitle: "Програма заходу",
+    programPreviewSubtitle: "9 годин нетворкінгу, реальних кейсів та докладів від провідних експертів індустрії.",
+    programPreviewBadge: "Програма формується",
+    programPreviewCta: "Купити квиток",
+    programPreviewRows: [
+      ["09:30", "Реєстрація", "welcome coffee"],
+      ["11:00", "Кейси зростання eCommerce", "growth cases"],
+      ["13:00", "Маркетплейси та логістика", "panel"],
+      ["16:00", "AI, CRM та retention", "talks"],
+    ],
     topicsTitle: "Теми, що визначають наступний цикл eCommerce.",
     topicsText:
       "Практичний фокус на каналах, технологіях і бізнес-моделях, які вже змінюють залучення клієнтів, операції та масштабування.",
@@ -391,6 +401,16 @@ const contentData = {
     mediaPartnersTitle: "Media Partners",
     comingSoon: "Coming Soon...",
     companyPlaceholder: "Your company could be here",
+    programPreviewTitle: "Event Program",
+    programPreviewSubtitle: "9 hours of networking, real cases and talks from leading industry experts.",
+    programPreviewBadge: "Program is being formed",
+    programPreviewCta: "Buy Ticket",
+    programPreviewRows: [
+      ["09:30", "Registration", "welcome coffee"],
+      ["11:00", "eCommerce growth cases", "growth cases"],
+      ["13:00", "Marketplace and logistics", "panel"],
+      ["16:00", "AI, CRM and retention", "talks"],
+    ],
     topicsTitle: "Topics shaping the next cycle of eCommerce.",
     topicsText:
       "A practical focus on the channels, technologies and business models already changing customer acquisition, operations and scale.",
@@ -679,13 +699,7 @@ export default function ECommerceEventPage() {
                   </div>
                 </motion.article>
               ))}
-              {Array.from({ length: 3 }, (_, index) => (
-                <motion.article key={`speaker-placeholder-${index}`} data-qa="ecc-speaker-placeholder" variants={fadeUpChild} className="flex min-h-[300px] flex-col justify-end border border-dashed border-white/[0.14] bg-white/[0.012] p-5 sm:p-6">
-                  <span className="mb-auto h-10 w-10 border border-[#00FF88]/25 bg-[#00FF88]/[0.04]" aria-hidden="true" />
-                  <p className="text-base font-black uppercase tracking-tight text-white/52">{t.speakerComingSoon}</p>
-                  <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-white/25">ECC-2026</p>
-                </motion.article>
-              ))}
+              {Array.from({ length: 3 }, (_, index) => <SpeakerPlaceholderCard key={`speaker-placeholder-${index}`} label={t.speakerComingSoon} />)}
             </div>
           </motion.div>
         </Section>
@@ -719,6 +733,37 @@ export default function ECommerceEventPage() {
               {mediaPartners.map((partner) => <BrandCard key={partner.name} brand={partner} qa="ecc-media-partner-card" />)}
               {Array.from({ length: 5 }, (_, index) => <BrandPlaceholderCard key={`media-placeholder-${index}`} qa="ecc-media-partner-placeholder" title={t.comingSoon} copy={t.companyPlaceholder} />)}
             </div>
+          </motion.div>
+        </Section>
+
+        <Section id="program-preview">
+          <motion.div data-qa="ecc-program-preview" initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={staggerContainer} className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
+            <div>
+              <SectionBadge icon={<Clock className="h-3.5 w-3.5" />} label={getText(sectionLabels.program, lang)} />
+              <motion.h2 data-qa="ecc-program-preview-title" variants={fadeUpChild} className="max-w-xl text-3xl font-black uppercase leading-[0.9] tracking-tighter sm:text-5xl">{t.programPreviewTitle}</motion.h2>
+              <motion.p variants={fadeUpChild} className="mt-5 max-w-xl text-sm leading-relaxed text-white/55 sm:text-base">{t.programPreviewSubtitle}</motion.p>
+              <motion.div variants={fadeUpChild} className="mt-8">
+                <Link data-qa="ecc-program-preview-cta" href="/event/e-commerce-conference-2026/ticket-form?type=standard" className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-xl border border-[#00FF88]/50 bg-[#00FF88] px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-black shadow-[0_0_28px_rgba(0,255,136,0.14)] transition-[background-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_0_36px_rgba(0,255,136,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00FF88] motion-reduce:transform-none">
+                  {t.programPreviewCta}<ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+                </Link>
+              </motion.div>
+            </div>
+            <motion.div variants={fadeUpChild} className="relative isolate overflow-hidden rounded-2xl border border-[#00FF88]/20 bg-[#090c0a] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_48px_rgba(0,255,136,0.055)] sm:p-6">
+              <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#00FF88]/[0.09] blur-[70px]" />
+              <div className="pointer-events-none absolute bottom-0 left-1/4 h-24 w-24 rounded-full bg-orange-400/[0.045] blur-[54px]" />
+              <div className="relative space-y-3 opacity-55 [filter:blur(1.3px)]" aria-hidden="true">
+                {t.programPreviewRows.map(([time, title, detail]) => (
+                  <div key={time} data-qa="ecc-program-preview-row" className="grid min-h-16 grid-cols-[3.7rem_minmax(0,1fr)] items-center gap-3 rounded-xl border border-white/[0.075] bg-white/[0.025] px-3 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_7rem] sm:px-4">
+                    <span className="font-mono text-xs font-bold tracking-[0.12em] text-[#00FF88]">{time}</span>
+                    <span className="min-w-0 text-sm font-bold text-white/90">{title}</span>
+                    <span className="hidden text-right font-mono text-[10px] uppercase tracking-[0.12em] text-white/38 sm:block">{detail}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-0 z-10 flex items-center justify-center p-5">
+                <span data-qa="ecc-program-preview-badge" className="rounded-full border border-[#00FF88]/45 bg-black/85 px-4 py-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#b8ffd8] shadow-[0_0_30px_rgba(0,255,136,0.17)] backdrop-blur-sm sm:px-5 sm:text-xs">{t.programPreviewBadge}</span>
+              </div>
+            </motion.div>
           </motion.div>
         </Section>
 
@@ -1186,6 +1231,19 @@ function SpeakerPlaceholder({ name }: { name: string }) {
   return <span className="absolute inset-0 flex items-center justify-center text-5xl font-black tracking-tighter text-[#00FF88]/70 sm:text-6xl">{initials}</span>;
 }
 
+function SpeakerPlaceholderCard({ label }: { label: string }) {
+  return (
+    <motion.article data-qa="ecc-speaker-placeholder" variants={fadeUpChild} className="group relative flex min-h-[300px] flex-col justify-end overflow-hidden rounded-2xl border border-dashed border-[#00FF88]/30 bg-[radial-gradient(circle_at_50%_35%,rgba(0,255,136,0.09),transparent_34%),linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.008))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_32px_rgba(0,255,136,0.035)] sm:p-6">
+      <span className="absolute left-5 top-5 h-3 w-3 border border-[#00FF88]/55 bg-[#00FF88]/15 shadow-[0_0_14px_rgba(0,255,136,0.22)]" aria-hidden="true" />
+      <span className="absolute left-1/2 top-[27%] h-16 w-16 -translate-x-1/2 rounded-full border border-white/[0.15] bg-gradient-to-b from-white/[0.12] to-white/[0.025] shadow-[0_10px_30px_rgba(0,0,0,0.25)]" aria-hidden="true" />
+      <span className="absolute left-1/2 top-[43%] h-20 w-32 -translate-x-1/2 rounded-t-[999px] border border-white/[0.12] bg-gradient-to-b from-white/[0.09] to-transparent" aria-hidden="true" />
+      <span className="absolute right-5 top-5 flex h-7 w-7 items-center justify-center rounded-full border border-[#00FF88]/25" aria-hidden="true"><span className="h-1.5 w-1.5 rounded-full bg-[#00FF88] shadow-[0_0_10px_rgba(0,255,136,0.9)] motion-safe:animate-pulse" /></span>
+      <p className="relative text-base font-black uppercase tracking-tight text-white/72">{label}</p>
+      <p className="relative mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-white/30">ECC-2026 / SPEAKER SLOT</p>
+    </motion.article>
+  );
+}
+
 function BrandCard({ brand, qa }: { brand: Brand; qa: string }) {
   return (
     <motion.article data-qa={qa} variants={fadeUpChild} className="group flex min-h-40 items-center justify-center overflow-hidden border border-white/[0.09] bg-white/[0.025] p-6 text-center transition-colors duration-150 hover:border-[#00FF88]/40 hover:bg-[#00FF88]/[0.035] sm:min-h-44">
@@ -1196,10 +1254,11 @@ function BrandCard({ brand, qa }: { brand: Brand; qa: string }) {
 
 function BrandPlaceholderCard({ qa, title, copy }: { qa: string; title: string; copy: string }) {
   return (
-    <motion.article data-qa={qa} variants={fadeUpChild} className="flex min-h-40 flex-col justify-end border border-dashed border-white/[0.14] bg-white/[0.012] p-5 sm:min-h-44 sm:p-6">
-      <span className="mb-auto h-8 w-8 border border-[#00FF88]/25 bg-[#00FF88]/[0.04]" aria-hidden="true" />
-      <p className="text-sm font-black uppercase tracking-tight text-white/55">{title}</p>
-      <p className="mt-2 text-xs leading-relaxed text-white/30">{copy}</p>
+    <motion.article data-qa={qa} variants={fadeUpChild} className="relative flex min-h-40 flex-col justify-end overflow-hidden rounded-xl border border-dashed border-[#00FF88]/28 bg-[radial-gradient(circle_at_85%_15%,rgba(0,255,136,0.075),transparent_30%),linear-gradient(145deg,rgba(255,255,255,0.035),rgba(255,255,255,0.008))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_28px_rgba(0,255,136,0.025)] sm:min-h-44 sm:p-6">
+      <span className="absolute left-5 top-5 h-3 w-3 border border-[#00FF88]/55 bg-[#00FF88]/12 shadow-[0_0_12px_rgba(0,255,136,0.2)]" aria-hidden="true" />
+      <span className="absolute right-5 top-5 flex h-7 w-7 items-center justify-center rounded-full border border-[#00FF88]/20" aria-hidden="true"><span className="h-1.5 w-1.5 rounded-full bg-[#00FF88] shadow-[0_0_9px_rgba(0,255,136,0.85)] motion-safe:animate-pulse" /></span>
+      <p className="relative text-sm font-black uppercase tracking-tight text-white/68">{title}</p>
+      <p className="relative mt-2 max-w-[14rem] text-xs leading-relaxed text-white/38">{copy}</p>
     </motion.article>
   );
 }
