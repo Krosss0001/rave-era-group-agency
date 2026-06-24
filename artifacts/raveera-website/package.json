@@ -8,6 +8,7 @@
     "build": "vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "test:ecc-page": "node scripts/ecc-page-audit.mjs",
+    "test:site-pages": "node scripts/site-pages-audit.mjs",
     "test:api": "rm -rf tmp/api-tests && tsc -p tsconfig.api-test.json && node --test tmp/api-tests/tests/api/*.test.js",
     "test:vercel-functions": "node scripts/vercel-function-count.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"

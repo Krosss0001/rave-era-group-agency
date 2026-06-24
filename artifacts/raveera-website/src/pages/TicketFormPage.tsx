@@ -413,7 +413,7 @@ function PaymentLogos() {
         ["/images/payment-alliancepay.png", "AlliancePay"],
       ].map(([src, alt]) => (
         <div key={alt} className="flex h-8 items-center justify-center rounded-md bg-white px-2.5">
-          <img src={src} alt={alt} className="h-4 w-auto object-contain" />
+          <img src={src} alt={alt} width="96" height="32" loading="lazy" decoding="async" className="h-4 w-auto object-contain" />
         </div>
       ))}
     </div>

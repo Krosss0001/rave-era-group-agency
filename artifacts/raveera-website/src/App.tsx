@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useEffect, useRef } from "react";
 import {
   motion, AnimatePresence, useScroll, useTransform,
-  useInView, useMotionValue, useSpring,
+  useInView, useMotionValue, useSpring, useReducedMotion,
 } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, ChevronDown, Menu, X, Globe,
@@ -682,8 +682,13 @@ function Counter({ target, suffix }: { target: number; suffix: string }) {
   const inView = useInView(ref, { once: true });
   const mv = useMotionValue(0);
   const spring = useSpring(mv, { stiffness: 55, damping: 18 });
+  const reduceMotion = useReducedMotion();
   const [val, setVal] = useState(0);
-  useEffect(() => { if (inView) mv.set(target); }, [inView, mv, target]);
+  useEffect(() => {
+    if (!inView) return;
+    if (reduceMotion) setVal(target);
+    else mv.set(target);
+  }, [inView, mv, reduceMotion, target]);
   useEffect(() => spring.on("change", (v) => setVal(Math.round(v))), [spring]);
   return <span ref={ref}>{val}{suffix}</span>;
 }
@@ -696,6 +701,7 @@ function HomePage() {
   const [navScrolled, setNavScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const tr = T[lang];
+  const reduceMotion = useReducedMotion();
 
   const { scrollY, scrollYProgress } = useScroll();
   useEffect(() => scrollY.on("change", (v) => setNavScrolled(v > 50)), [scrollY]);
@@ -796,11 +802,11 @@ function HomePage() {
       {/* ── Hero ── */}
       <section id="hero" className="relative h-screen min-h-[680px] flex flex-col justify-center px-6 md:px-12 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <motion.div animate={{ scale: [1, 1.14, 1], opacity: [0.09, 0.14, 0.09] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          <motion.div animate={reduceMotion ? { scale: 1, opacity: 0.09 } : { scale: [1, 1.14, 1], opacity: [0.09, 0.14, 0.09] }} transition={reduceMotion ? { duration: 0 } : { duration: 9, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-[5%] right-[-5%] w-[60vw] h-[60vw] rounded-full blur-[140px]" style={{ background: G }} />
-          <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.06, 0.03] }} transition={{ duration: 13, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+          <motion.div animate={reduceMotion ? { scale: 1, opacity: 0.03 } : { scale: [1, 1.2, 1], opacity: [0.03, 0.06, 0.03] }} transition={reduceMotion ? { duration: 0 } : { duration: 13, repeat: Infinity, ease: "easeInOut", delay: 4 }}
             className="absolute bottom-[0%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px]" style={{ background: G }} />
-          <motion.div animate={{ scale: [1, 1.08, 1], opacity: [0.02, 0.04, 0.02] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          <motion.div animate={reduceMotion ? { scale: 1, opacity: 0.02 } : { scale: [1, 1.08, 1], opacity: [0.02, 0.04, 0.02] }} transition={reduceMotion ? { duration: 0 } : { duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
             className="absolute top-[50%] left-[40%] w-[30vw] h-[30vw] rounded-full blur-[90px] bg-emerald-900/20" />
         </div>
         <div className="absolute inset-0 pointer-events-none"
@@ -811,7 +817,7 @@ function HomePage() {
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.div variants={fadeIn} className="inline-flex items-center gap-2.5 mb-8">
               <span className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.24em] border px-4 py-2" style={{ borderColor: `${G}40`, color: G, background: `${G}08` }}>
-                <motion.span animate={{ opacity: [1, 0.25, 1] }} transition={{ duration: 2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full" style={{ background: G }} />
+                <motion.span animate={reduceMotion ? { opacity: 1 } : { opacity: [1, 0.25, 1] }} transition={reduceMotion ? { duration: 0 } : { duration: 2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full" style={{ background: G }} />
                 {tr.hero.badge}
               </span>
             </motion.div>
@@ -897,7 +903,7 @@ function HomePage() {
                   {/* Image side */}
                   <div className={`${i % 2 === 1 ? "lg:order-2" : ""}`}>
                     <div className="relative overflow-hidden aspect-video bg-black group">
-                      <img src={c.img} alt={c.title}
+                      <img src={c.img} alt={c.title} width="1408" height="768" loading="lazy" decoding="async"
                         className={`w-full h-full transition-all duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 ${c.fit === "contain" ? "object-contain" : "object-cover"}`} />
                       {c.fit !== "contain" && (
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
@@ -974,10 +980,10 @@ function HomePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }} className="mt-10">
-                  <img src="/images/about-1.png" alt="RAVE'ERA event production backstage" className="w-full aspect-square object-cover" />
+                  <img src="/images/about-1.png" alt="RAVE'ERA event production backstage" width="1408" height="768" loading="lazy" decoding="async" className="w-full aspect-square object-cover" />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.22 }}>
-                  <img src="/images/about-2.png" alt="RAVE'ERA stage lighting and audience experience" className="w-full aspect-[4/5] object-cover" />
+                  <img src="/images/about-2.png" alt="RAVE'ERA stage lighting and audience experience" width="1408" height="768" loading="lazy" decoding="async" className="w-full aspect-[4/5] object-cover" />
                 </motion.div>
               </div>
             </div>
@@ -1021,7 +1027,7 @@ function HomePage() {
                 backgroundSize: "32px 32px",
               }} />
               {/* Radial glow */}
-              <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.65, 0.4] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          <motion.div animate={reduceMotion ? { scale: 1, opacity: 0.4 } : { scale: [1, 1.15, 1], opacity: [0.4, 0.65, 0.4] }} transition={reduceMotion ? { duration: 0 } : { duration: 6, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] rounded-full blur-[80px]" style={{ background: G }} />
               {/* Corner brackets */}
               {[
@@ -1112,8 +1118,8 @@ function HomePage() {
           <div className="flex overflow-hidden">
             <motion.div
               className="flex shrink-0 gap-12 md:gap-16 pr-12 md:pr-16 items-center"
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+              animate={reduceMotion ? undefined : { x: ["0%", "-50%"] }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 50, repeat: Infinity, ease: "linear" }}
             >
               {[...tr.trusted.items, ...tr.trusted.items].map((name, i) => (
                 <span key={i} className="text-xl md:text-3xl font-black tracking-tighter uppercase text-white/30 hover:text-white whitespace-nowrap transition-colors duration-300 cursor-default flex items-center gap-12 md:gap-16">
@@ -1127,8 +1133,8 @@ function HomePage() {
           <div className="flex overflow-hidden">
             <motion.div
               className="flex shrink-0 gap-10 md:gap-14 pr-10 md:pr-14 items-center"
-              animate={{ x: ["-50%", "0%"] }}
-              transition={{ duration: 65, repeat: Infinity, ease: "linear" }}
+              animate={reduceMotion ? undefined : { x: ["-50%", "0%"] }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 65, repeat: Infinity, ease: "linear" }}
             >
               {[...tr.trusted.items.slice().reverse(), ...tr.trusted.items.slice().reverse()].map((name, i) => (
                 <span key={i} className="text-base md:text-xl font-bold tracking-[0.18em] uppercase text-white/15 hover:text-[#00FF88] whitespace-nowrap transition-colors duration-300 cursor-default flex items-center gap-10 md:gap-14">
@@ -1155,7 +1161,7 @@ function HomePage() {
               {tr.team.members.map((m, i) => (
                 <motion.div key={i} variants={fadeUp} className="group relative overflow-hidden border border-white/[0.07] hover:border-white/[0.18] transition-all duration-500 bg-[#080808]">
                   <div className="relative aspect-[4/5] overflow-hidden bg-zinc-950">
-                    <img src={m.img} alt={m.name} onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+                    <img src={m.img} alt={m.name} width="1024" height="1280" loading="lazy" decoding="async" onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
                       className="w-full h-full object-cover object-center grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-[1.05]" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-600" style={{ background: `linear-gradient(to top, ${G}18, transparent 55%)` }} />
@@ -1181,7 +1187,7 @@ function HomePage() {
       {/* ── Contact ── */}
       <section id="contact" className="py-24 md:py-36 px-6 md:px-12 relative overflow-hidden border-t border-white/[0.04]">
         <div className="absolute inset-0 pointer-events-none">
-          <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.05, 0.1, 0.05] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          <motion.div animate={reduceMotion ? { scale: 1, opacity: 0.05 } : { scale: [1, 1.15, 1], opacity: [0.05, 0.1, 0.05] }} transition={reduceMotion ? { duration: 0 } : { duration: 10, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full blur-[160px]" style={{ background: G }} />
         </div>
 

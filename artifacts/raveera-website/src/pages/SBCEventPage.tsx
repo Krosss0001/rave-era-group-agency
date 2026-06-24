@@ -396,8 +396,11 @@ export default function SBCEventPage() {
               <img
                 src="/images/case-sbc-summit.jpg"
                 alt="SBC Summit Ukraine 2026"
-                className="w-full rounded-sm border border-white/[0.06]"
+                width="1849"
+                height="1080"
                 loading="eager"
+                decoding="async"
+                className="w-full rounded-sm border border-white/[0.06]"
               />
             </div>
           </motion.div>
@@ -609,19 +612,19 @@ export default function SBCEventPage() {
               {/* Payment logos */}
               <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
                 <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                  <img src="/images/payment-visa.png" alt="Visa" className="h-4 w-auto object-contain" />
+                  <img src="/images/payment-visa.png" alt="Visa" width="96" height="32" loading="lazy" decoding="async" className="h-4 w-auto object-contain" />
                 </div>
                 <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                  <img src="/images/payment-mastercard.png" alt="Mastercard" className="h-5 w-auto object-contain" />
+                  <img src="/images/payment-mastercard.png" alt="Mastercard" width="96" height="32" loading="lazy" decoding="async" className="h-5 w-auto object-contain" />
                 </div>
                 <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                  <img src="/images/payment-applepay.png" alt="Apple Pay" className="h-4 w-auto object-contain" />
+                  <img src="/images/payment-applepay.png" alt="Apple Pay" width="96" height="32" loading="lazy" decoding="async" className="h-4 w-auto object-contain" />
                 </div>
                 <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                  <img src="/images/payment-googlepay.png" alt="Google Pay" className="h-4 w-auto object-contain" />
+                  <img src="/images/payment-googlepay.png" alt="Google Pay" width="96" height="32" loading="lazy" decoding="async" className="h-4 w-auto object-contain" />
                 </div>
                 <div className="h-8 px-2.5 bg-white rounded-md flex items-center justify-center">
-                  <img src="/images/payment-alliancepay.png" alt="AlliancePay" className="h-5 w-auto object-contain" />
+                  <img src="/images/payment-alliancepay.png" alt="AlliancePay" width="96" height="32" loading="lazy" decoding="async" className="h-5 w-auto object-contain" />
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] font-mono text-white/20 uppercase tracking-widest">

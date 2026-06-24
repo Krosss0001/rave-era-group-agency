@@ -86,6 +86,7 @@
     scroll-behavior: smooth;
     text-rendering: optimizeLegibility;
     -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
   }
 
   body {
@@ -94,6 +95,7 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
     overflow-x: hidden;
+    min-width: 320px;
   }
 
   img {
@@ -104,6 +106,11 @@
 
   button {
     cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid #00FF88;
+    outline-offset: 3px;
   }
 
   ::selection {
@@ -126,6 +133,40 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: #00FF88;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Blurring a large, scrolling backdrop is notably expensive on mobile GPUs. */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-xl {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .blur-\[140px\],
+  .blur-\[150px\],
+  .blur-\[160px\],
+  .blur-\[170px\],
+  .blur-\[180px\],
+  .blur-\[200px\] {
+    filter: blur(72px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
